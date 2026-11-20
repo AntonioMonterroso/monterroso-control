@@ -11,6 +11,7 @@ export interface Columna<T> {
   oculto?: boolean
   orden?: (f: T) => string | number
   sinOrden?: boolean
+  destacado?: boolean
 }
 
 export function textoDe(n: ReactNode): string {
@@ -76,6 +77,8 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
   const presion = useRef<{ t: number; usado: boolean }>({ t: 0, usado: false })
   const cerrarMenu = useCallback(() => setMenuPos(null), [])
   const cols = columnas.filter((c) => !c.oculto)
+  const iDestacado = (() => { const d = cols.findIndex((c) => c.destacado); if (d >= 0) return d; const e = cols.findIndex((c) => c.titulo === 'Estado'); if (e >= 0) return e; for (let i = cols.length - 1; i >= 0; i--) if (cols[i].num && !cols[i].principal) return i; return -1 })()
+  const vacio_ = (n: ReactNode) => { const t = textoDe(n).trim(); return t === '' || t === '—' || t === 'Sin anotar' }
   const [orden, setOrden] = useState<{ i: number; dir: 1 | -1 } | null>(null)
   const [q, setQ] = useState('')
   const conBuscador = buscador && filas.length > 10
@@ -100,7 +103,7 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
       {(titulo || nota || conBuscador || (marcar && !marcarExterno)) && (
         <div className="m-tabla-titulo">
           {titulo && <b>{titulo}</b>}
-          {nota && <span>{nota}</span>}
+          {nota && <span className="c-tabla-nota">{nota}</span>}
           {marcar && !marcarExterno && marcables.length > 1 && (
             <span className="c-tabla-masa">
               <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => marcar.cambiar(marcables, !todasMarcadas)} title={todasMarcadas ? 'Quita la marca de todas las filas que se ven' : filtrando ? 'Marca solo las filas que quedan con la búsqueda' : 'Marca todas las filas de la tabla'}>
@@ -150,7 +153,7 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
               onTouchMove={menu ? () => window.clearTimeout(presion.current.t) : undefined}
               onTouchEnd={menu ? () => window.clearTimeout(presion.current.t) : undefined} tabIndex={onFila ? 0 : undefined} onKeyDown={onFila ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onFila(f) } : undefined}>
               {marcar && <td className="c-marca" data-campo="Marcar" onClick={(e) => e.stopPropagation()}>{marcar.puede(f) && <input type="checkbox" aria-label="Marcar" title="Marcar para hacerlo junto con otros" checked={marcar.marcadas.has(clave(f))} onChange={(e) => marcar.cambiar([clave(f)], e.target.checked)} />}</td>}
-              {cols.map((c) => <td key={c.titulo} data-campo={c.titulo} className={[c.num ? 'm-num' : '', c.principal ? 'c-principal' : ''].join(' ').trim() || undefined}>{c.valor(f)}</td>)}
+              {cols.map((c, i) => { const v = c.valor(f); return <td key={c.titulo} data-campo={c.titulo} className={[c.num ? 'm-num' : '', c.principal ? 'c-principal' : i === iDestacado ? 'c-destacado' : 'c-campo', vacio_(v) ? 'c-celda-vacia' : ''].join(' ').trim()}>{v}</td> })}
               {acciones && <td className="c-acciones" onClick={(e) => e.stopPropagation()}><div className="c-acc">{acciones(f)}</div></td>}
             </tr>
           ))}
