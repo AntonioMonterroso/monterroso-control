@@ -1,5 +1,5 @@
 import Pasos from '../../componentes/Pasos'
-import { ListPlus, Pencil, Plus, Receipt, Trash2 } from 'lucide-react'
+import { Check, ListPlus, Pencil, Plus, Receipt, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
 import FormRegistro from '../../componentes/FormRegistro'
@@ -9,7 +9,7 @@ import { useDatos } from '../../lib/datos'
 import { aCentavos, deCentavos, quetzales } from '../../lib/dinero'
 import { fechaCorta } from '../../lib/fechas'
 import { useQuitar } from '../../lib/quitar'
-import { TRAMITES_BASE, type Tramite } from '../../lib/sa'
+import { INSTITUCIONES, institucionDe, TRAMITES_BASE, type Tramite } from '../../lib/sa'
 import { useSA } from '../../lib/saModelo'
 import { useHoy } from '../../lib/usos'
 
@@ -42,28 +42,44 @@ export default function TramitesSA() {
           <button type="button" className="m-btn m-btn-primario" onClick={() => setEditar('nuevo')} title="Agregar un paso propio"><Plus size={16} aria-hidden /> Paso</button>
         </div>
       </div>
-      <div className="erp-kpis">
-        <div className="erp-kpi"><span className="m-etiqueta">Avance</span><b>{hechos} de {m.tramites.length}</b><small>pasos hechos o que no aplican</small></div>
-        <div className="erp-kpi"><span className="m-etiqueta">Costo de constitución</span><b>{quetzales(total)}</b><small>{m.tramites.filter((x) => x.gasto_id).length} ya registrados en Gastos</small></div>
+      <div className="c-stepper" aria-label={`Avance: ${hechos} de ${m.tramites.length} pasos`}>
+        <div className="c-stepper-cab"><b>{hechos} de {m.tramites.length}</b><span>pasos hechos o que no aplican · costo {quetzales(total)} · {m.tramites.filter((x) => x.gasto_id).length} ya en Gastos</span></div>
+        <ol className="c-stepper-pasos">
+          {[...m.tramites].sort((a, b) => a.orden - b.orden).map((x, i) => (
+            <li key={x.id} className={`c-paso-${x.estado}`} title={`${i + 1}. ${x.nombre} · ${ESTADOS[x.estado][0]}`}><span>{x.estado === 'hecho' ? <Check size={12} aria-hidden /> : i + 1}</span></li>
+          ))}
+        </ol>
       </div>
-      <Tabla filas={m.tramites} clave={(x) => x.id} vacio="Sin pasos. Agrega los pasos de Guatemala o uno propio."
-        quitarVarias={(l) => q.pedir('ctl_sa_tramites', l, `Se quitan ${l.length} pasos.`)}
-        columnas={[
-          { titulo: 'Paso', principal: true, valor: (x) => <>{x.nombre}{x.detalle && <small>{x.detalle}</small>}</>, orden: (x) => x.orden },
-          { titulo: 'Estado', valor: (x) => <span className={`m-estado ${ESTADOS[x.estado][1]}`}>{ESTADOS[x.estado][0]}</span>, orden: (x) => ['pendiente', 'en_proceso', 'hecho', 'no_aplica'].indexOf(x.estado) },
-          { titulo: 'Fecha', valor: (x) => (x.fecha ? fechaCorta(x.fecha) : <span className="m-vacia">—</span>), orden: (x) => x.fecha ?? '' },
-          { titulo: 'Responsable', valor: (x) => x.responsable ?? <span className="m-vacia">—</span> },
-          { titulo: 'Costo', num: true, valor: (x) => quetzales(x.costo), orden: (x) => x.costo },
-        ]}
-        acciones={(x) => (
-          <>
-            <Ojito ruta={x.archivo} titulo={x.nombre} />
-            {x.costo > 0 && !x.gasto_id && <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => void registrarGasto(x)} title="Registrarlo en Gastos como gasto de constitución de la sociedad"><Receipt size={14} aria-hidden /> Gasto</button>}
-            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Editar el paso"><Pencil aria-hidden /></button>
-            <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_sa_tramites', [x], `Se quita «${x.nombre}».`)} aria-label="Quitar" title="Quitar el paso (se puede deshacer)"><Trash2 aria-hidden /></button>
-          </>
-        )}
-        pie={<tr><td colSpan={4}>Total</td><td className="m-num">{quetzales(total)}</td><td /></tr>} />
+      {m.tramites.length === 0 && <div className="m-vacio m-tarjeta"><b>Sin pasos todavía</b><span>Toca «Agregar los pasos de Guatemala» o agrega uno propio con «Paso».</span></div>}
+      {INSTITUCIONES.map((inst) => {
+        const l = m.tramites.filter((x) => institucionDe(x.nombre) === inst).sort((a, b) => a.orden - b.orden)
+        if (!l.length) return null
+        const listos = l.filter((x) => x.estado === 'hecho' || x.estado === 'no_aplica').length
+        return (
+          <section key={inst} className="c-grupo-tramite">
+            <h2 className="m-seccion-titulo">{inst} <span className="c-grupo-n">{listos} de {l.length}</span></h2>
+            <Tabla filas={l} clave={(x) => x.id} vacio=""
+              quitarVarias={(ls) => q.pedir('ctl_sa_tramites', ls, `Se quitan ${ls.length} pasos.`)}
+              masa={[{ texto: 'Marcar hechos', titulo: (k) => `Marca los ${k} pasos como hechos con la fecha de hoy`, hacer: (ls) => void Promise.all(ls.map((x) => guardar('ctl_sa_tramites', x.id, { estado: 'hecho', fecha: x.fecha ?? hoy }))) }]}
+              columnas={[
+                { titulo: 'Paso', principal: true, valor: (x) => <>{x.orden}. {x.nombre}{x.detalle && <small>{x.detalle}</small>}</>, orden: (x) => x.orden },
+                { titulo: 'Estado', valor: (x) => <span className={`m-estado ${ESTADOS[x.estado][1]}`}>{ESTADOS[x.estado][0]}</span>, orden: (x) => ['pendiente', 'en_proceso', 'hecho', 'no_aplica'].indexOf(x.estado) },
+                { titulo: 'Fecha', valor: (x) => (x.fecha ? fechaCorta(x.fecha) : <span className="m-vacia">—</span>), orden: (x) => x.fecha ?? '' },
+                { titulo: 'Responsable', valor: (x) => x.responsable ?? <span className="m-vacia">—</span> },
+                { titulo: 'Costo', num: true, valor: (x) => quetzales(x.costo), orden: (x) => x.costo },
+              ]}
+              acciones={(x) => (
+                <>
+                  <Ojito ruta={x.archivo} titulo={x.nombre} />
+                  {x.costo > 0 && !x.gasto_id && <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => void registrarGasto(x)} title="Lo registra en Gastos como gasto de constitución de la sociedad"><Receipt size={14} aria-hidden /> A Gastos</button>}
+                  <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Abre el paso para corregirlo"><Pencil aria-hidden /></button>
+                  <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_sa_tramites', [x], `Se quita «${x.nombre}».`)} aria-label="Quitar" title="Quita el paso; se puede deshacer"><Trash2 aria-hidden /></button>
+                </>
+              )}
+              pie={<tr><td colSpan={4}>Total {inst}</td><td className="m-num">{quetzales(deCentavos(l.reduce((t, x) => t + aCentavos(x.costo), 0)))}</td><td /></tr>} />
+          </section>
+        )
+      })}
       <FormRegistro abierta={editar != null} titulo={t ? 'Editar paso' : 'Nuevo paso'} carpeta="sociedad"
         campos={[
           { k: 'nombre', etiqueta: 'Paso', tipo: 'texto', requerido: true, max: 200, ancho: true },

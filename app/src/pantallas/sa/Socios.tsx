@@ -1,5 +1,6 @@
 import Pasos from '../../componentes/Pasos'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowRight, Pencil, Plus, Trash2 } from 'lucide-react'
+import Ojito from '../../componentes/Ojito'
 import { useState } from 'react'
 import FormRegistro, { type Campo } from '../../componentes/FormRegistro'
 import Pestanas from '../../componentes/Pestanas'
@@ -29,6 +30,11 @@ export default function SociosSA() {
   const cap = capital(m.acciones, m.aportes)
   const nombre = (id: string) => m.socios.find((x) => x.id === id)?.nombre ?? ''
   const opcSocios = m.socios.filter((x) => x.activo).map((x) => ({ valor: x.id, nombre: x.nombre }))
+  const iniciales = (n: string) => { const w = n.split(/\s+/).filter((x) => x.length > 2 && !['del', 'las', 'los'].includes(x.toLowerCase())); return ((w[0]?.[0] ?? '') + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase() }
+  const suscritoDe = (id: string) => deCentavos(m.aportes.filter((a) => a.socio_id === id).reduce((t, a) => t + aCentavos(a.monto), 0))
+  const rangos = (id: string) => m.acciones.filter((a) => a.socio_id === id && a.estado === 'vigente' && a.numero_desde).map((a) => `${a.serie ? `${a.serie} ` : ''}${a.numero_desde}–${a.numero_hasta ?? a.numero_desde}`).join(' · ')
+  const totalSuscrito = deCentavos(m.aportes.reduce((t, a) => t + aCentavos(a.monto), 0))
+  const totalAportado = deCentavos(m.aportes.reduce((t, a) => t + aCentavos(a.pagado), 0))
   const aportadoDe = (id: string) => deCentavos(m.aportes.filter((a) => a.socio_id === id).reduce((t, a) => t + aCentavos(a.pagado), 0))
   const usado = (id: string) => m.acciones.some((a) => a.socio_id === id) || m.aportes.some((a) => a.socio_id === id) || m.transmisiones.some((t) => t.de_socio_id === id || t.a_socio_id === id) || m.repartoSocios.some((r) => r.socio_id === id)
   const so = socio && socio !== 'nuevo' ? socio : null
@@ -46,6 +52,7 @@ export default function SociosSA() {
     { k: 'valor_nominal', etiqueta: 'Valor nominal de cada una', tipo: 'monto', requerido: true },
     { k: 'estado', etiqueta: 'Estado', tipo: 'select', requerido: true, opciones: [{ valor: 'vigente', nombre: 'Vigente' }, { valor: 'transmitida', nombre: 'Transmitida' }, { valor: 'anulada', nombre: 'Anulada' }] },
     { k: 'nota', etiqueta: 'Nota', tipo: 'texto', max: 500, ancho: true },
+    { k: 'archivo', etiqueta: 'Título escaneado', tipo: 'archivo', ancho: true },
   ]
   return (
     <>
@@ -69,24 +76,27 @@ export default function SociosSA() {
       {vista === 'socios' && (
         <Tabla filas={m.socios} clave={(x) => x.id} vacio="Todavía no hay socios." marcable={(x) => !usado(x.id)} quitarVarias={(l) => q.pedir('ctl_sa_socios', l, `Se quitan ${l.length} socios sin acciones ni aportaciones.`)}
           columnas={[
-            { titulo: 'Socio', principal: true, valor: (x) => <>{x.nombre}{(x.nit || x.dpi) && <small>{[x.nit && `NIT ${x.nit}`, x.dpi && `DPI ${x.dpi}`].filter(Boolean).join(' · ')}</small>}{!x.activo && <span className="m-estado bloqueado">Inactivo</span>}</> },
-            { titulo: 'Acciones', num: true, valor: (x) => porSocio.get(x.id) ?? 0, orden: (x) => porSocio.get(x.id) ?? 0 },
-            { titulo: 'Participación', num: true, valor: (x) => `${totalAcc ? (((porSocio.get(x.id) ?? 0) / totalAcc) * 100).toFixed(2) : '0.00'} %`, orden: (x) => porSocio.get(x.id) ?? 0 },
-            { titulo: 'Aportado', num: true, valor: (x) => quetzales(aportadoDe(x.id)), orden: (x) => aportadoDe(x.id) },
+            { titulo: 'Socio', principal: true, valor: (x) => <span className="c-socio"><span className="c-iniciales" aria-hidden>{iniciales(x.nombre)}</span><span>{x.nombre}{(x.nit || x.dpi) && <small>{[x.nit && `NIT ${x.nit}`, x.dpi && `DPI ${x.dpi}`].filter(Boolean).join(' · ')}</small>}{!x.activo && <span className="m-estado bloqueado">Inactivo</span>}</span></span> },
+            { titulo: 'Acciones', num: true, valor: (x) => <>{porSocio.get(x.id) ?? 0}{rangos(x.id) && <small>{rangos(x.id)}</small>}</>, orden: (x) => porSocio.get(x.id) ?? 0 },
+            { titulo: 'Participación', valor: (x) => { const pc = totalAcc ? ((porSocio.get(x.id) ?? 0) / totalAcc) * 100 : 0; return <span className="c-barra-fila" title={`${pc.toFixed(2)} % de las acciones`}><span className="c-barra-mini"><i style={{ width: `${pc}%` }} /></span><b>{pc.toFixed(2)} %</b></span> }, orden: (x) => porSocio.get(x.id) ?? 0 },
+            { titulo: 'Aportado de lo suscrito', valor: (x) => { const sus = suscritoDe(x.id), ap = aportadoDe(x.id), pc = sus ? Math.min(100, (ap / sus) * 100) : 0; return <span className="c-barra-fila c-barra-col"><span className="c-barra-mini c-barra-verde"><i style={{ width: `${pc}%` }} /></span><span>{quetzales(ap)} de {quetzales(sus)}{sus > ap && <small className="c-alerta-txt">Falta {quetzales(deCentavos(aCentavos(sus) - aCentavos(ap)))}</small>}</span></span> }, orden: (x) => aportadoDe(x.id) },
           ]}
           acciones={(x) => (
             <>
               <button type="button" className="m-icono-btn" onClick={() => setSocio(x)} aria-label="Editar" title="Editar el socio"><Pencil aria-hidden /></button>
               {!usado(x.id) && <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_sa_socios', [x], `Se quita a ${x.nombre}.`)} aria-label="Quitar" title="Quitar el socio (no tiene acciones ni aportaciones; se puede deshacer)"><Trash2 aria-hidden /></button>}
             </>
-          )} />
+          )}
+          pie={<tr><td>Total · {m.socios.length} {m.socios.length === 1 ? 'socio' : 'socios'}</td><td className="m-num">{totalAcc}</td><td>100 %</td><td>{quetzales(totalAportado)} de {quetzales(totalSuscrito)}</td><td /></tr>} />
       )}
       {vista === 'acciones' && (
         <Tabla filas={m.acciones} clave={(x) => x.id} vacio="Sin acciones registradas." quitarVarias={(l) => q.pedir('ctl_sa_acciones', l, `Se quitan ${l.length} registros de acciones.`)}
           columnas={[
-            { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha), orden: (x) => x.fecha },
-            { titulo: 'Accionista', principal: true, valor: (x) => <>{nombre(x.socio_id)}{x.titulo && <small>Título {x.titulo}</small>}</> },
-            { titulo: 'Serie y números', valor: (x) => [x.serie && `Serie ${x.serie}`, x.numero_desde && `${x.numero_desde}–${x.numero_hasta ?? x.numero_desde}`].filter(Boolean).join(' · ') || <span className="m-vacia">—</span> },
+            { titulo: 'Título No.', valor: (x) => x.titulo ? <b>{x.titulo}</b> : <span className="m-vacia">—</span>, orden: (x) => Number(x.titulo) || 0 },
+            { titulo: 'Serie', valor: (x) => x.serie ?? <span className="m-vacia">—</span> },
+            { titulo: 'Del – al', valor: (x) => (x.numero_desde ? `${x.numero_desde} – ${x.numero_hasta ?? x.numero_desde}` : <span className="m-vacia">—</span>), orden: (x) => x.numero_desde ?? 0 },
+            { titulo: 'Accionista', principal: true, valor: (x) => <span className="c-socio"><span className="c-iniciales" aria-hidden>{iniciales(nombre(x.socio_id))}</span>{nombre(x.socio_id)}</span> },
+            { titulo: 'Emisión', valor: (x) => fechaCorta(x.fecha), orden: (x) => x.fecha },
             { titulo: 'Cantidad', num: true, valor: (x) => x.cantidad, orden: (x) => x.cantidad },
             { titulo: 'Valor nominal', num: true, valor: (x) => quetzales(x.valor_nominal), orden: (x) => x.valor_nominal },
             { titulo: 'Total', num: true, valor: (x) => quetzales(deCentavos(Math.round(x.cantidad * aCentavos(x.valor_nominal)))), orden: (x) => x.cantidad * x.valor_nominal },
@@ -94,6 +104,7 @@ export default function SociosSA() {
           ]}
           acciones={(x) => (
             <>
+              <Ojito ruta={x.archivo ?? null} titulo={`Título ${x.titulo ?? ''} · ${nombre(x.socio_id)}`} />
               <button type="button" className="m-icono-btn" onClick={() => setAccion(x)} aria-label="Editar" title="Editar el registro"><Pencil aria-hidden /></button>
               <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_sa_acciones', [x], `Se quita el registro de ${x.cantidad} acciones de ${nombre(x.socio_id)}.`)} aria-label="Quitar" title="Quitar el registro (se puede deshacer)"><Trash2 aria-hidden /></button>
             </>
@@ -120,8 +131,7 @@ export default function SociosSA() {
         <Tabla filas={m.transmisiones} clave={(x) => x.id} vacio="Sin transmisiones de acciones." quitarVarias={(l) => q.pedir('ctl_sa_transmisiones', l, `Se quitan ${l.length} transmisiones.`)}
           columnas={[
             { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha), orden: (x) => x.fecha },
-            { titulo: 'De', principal: true, valor: (x) => nombre(x.de_socio_id) },
-            { titulo: 'A', valor: (x) => nombre(x.a_socio_id) },
+            { titulo: 'De → a', principal: true, valor: (x) => <span className="c-flecha-de-a">{nombre(x.de_socio_id)} <ArrowRight size={14} aria-label="pasa a" /> {nombre(x.a_socio_id)}</span> },
             { titulo: 'Acciones', num: true, valor: (x) => x.cantidad, orden: (x) => x.cantidad },
             { titulo: 'Precio', num: true, valor: (x) => (x.precio != null ? quetzales(x.precio) : <span className="m-vacia">—</span>), orden: (x) => x.precio ?? 0 },
           ]}

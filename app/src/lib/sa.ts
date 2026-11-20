@@ -29,7 +29,7 @@ export interface Sociedad {
 }
 
 export interface Socio { id: string; nombre: string; nit: string | null; dpi: string | null; correo: string | null; telefono: string | null; activo: boolean }
-export interface Accion { id: string; socio_id: string; serie: string | null; numero_desde: number | null; numero_hasta: number | null; cantidad: number; valor_nominal: number; fecha: string; titulo: string | null; estado: 'vigente' | 'transmitida' | 'anulada'; nota: string | null }
+export interface Accion { id: string; archivo?: string | null; socio_id: string; serie: string | null; numero_desde: number | null; numero_hasta: number | null; cantidad: number; valor_nominal: number; fecha: string; titulo: string | null; estado: 'vigente' | 'transmitida' | 'anulada'; nota: string | null }
 export interface Aporte { id: string; socio_id: string; fecha: string; monto: number; pagado: number; forma: 'efectivo' | 'especie'; descripcion: string | null }
 export interface Transmision { id: string; fecha: string; de_socio_id: string; a_socio_id: string; cantidad: number; serie: string | null; precio: number | null; nota: string | null }
 export interface Reparto { id: string; desde: string; hasta: string; utilidad: number; isr_sociedad: number; reserva: number; repartido: number; isr_dividendos_tasa: number; fecha_acuerdo: string; isr_pagado_el: string | null; nota: string | null }
@@ -175,4 +175,17 @@ export function avisosSA(recs: Recordatorio[], s: Pick<Sociedad, 'nombramiento_v
     if (d <= 60) r.push({ id: `sa:nombramiento:${s.nombramiento_vence}:${d < 0 ? 'v' : d <= 15 ? '15' : '60'}`, clave: 'sa:nombramiento', nivel: d <= 15 ? 'peligro' : 'aviso', tipo: 'sociedad', titulo: 'Nombramiento del representante legal', detalle: d < 0 ? `Venció hace ${-d} días.` : `Vence en ${d} ${d === 1 ? 'día' : 'días'}.`, dias: d, proyecto_id: null, registro_id: 'sa' })
   }
   return r
+}
+
+export const INSTITUCIONES = ['Notario', 'Registro Mercantil', 'SAT', 'Banco', 'IGSS', 'Otros'] as const
+export type Institucion = (typeof INSTITUCIONES)[number]
+
+export function institucionDe(nombre: string): Institucion {
+  const n = nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  if (/igss/.test(n)) return 'IGSS'
+  if (/banc|cuenta bancaria/.test(n)) return 'Banco'
+  if (/\bsat\b|nit|rtu|fel|factura|libros contables/.test(n)) return 'SAT'
+  if (/notari|escritura/.test(n)) return 'Notario'
+  if (/registro|patente|edicto|nombramiento|libros de actas|accionistas/.test(n)) return 'Registro Mercantil'
+  return 'Otros'
 }

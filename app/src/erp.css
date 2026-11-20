@@ -440,3 +440,63 @@ p.c-alerta-txt { font-size: var(--t-sm); margin: 0 0 var(--e-3); }
 .c-previa-faltan { margin: 0; padding: var(--e-2) var(--e-3); border-radius: 8px; background: color-mix(in srgb, #f59e0b 18%, var(--card)); font-size: var(--t-sm); }
 .c-previa-caja { max-height: min(72dvh, 900px); overflow: auto; border-radius: var(--radio-md); border: 1px solid var(--hairline); background: #d9dee5; }
 .c-pest-doble { margin-bottom: var(--e-3); }
+.c-ef-hoja { display: grid; gap: var(--e-3); }
+.c-ef-cab { display: grid; justify-items: center; text-align: center; gap: 2px; }
+.c-ef-cab b { font-size: var(--t-md, 1rem); }
+.c-ef-cab span { font-size: var(--t-sm); color: var(--text-muted); }
+.c-ef-envoltura { overflow-x: auto; }
+.c-ef { width: 100%; border-collapse: collapse; font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+.c-ef th { text-align: left; padding: 8px 10px; background: var(--primary); color: var(--sobre-primary, #fff); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.c-ef th.m-num { text-align: right; }
+.c-ef td { padding: 6px 10px; }
+.c-ef .c-ef-nota { width: 52px; text-align: center; color: var(--text-muted); }
+.c-ef td.m-num { text-align: right; white-space: nowrap; }
+.c-ef .c-ef-n0 { padding-left: 10px; }
+.c-ef .c-ef-n1 { padding-left: 26px; }
+.c-ef .c-ef-n2 { padding-left: 42px; }
+.c-ef-grupo td { font-weight: 700; padding-top: 14px; }
+.c-ef-subtotal td { font-weight: 600; }
+.c-ef-subtotal td.m-num { border-top: 1px solid var(--text); }
+.c-ef-total td, .c-ef-resultado td { font-weight: 700; }
+.c-ef-total td.m-num, .c-ef-resultado td.m-num { border-top: 1px solid var(--text); border-bottom: 3px double var(--text); }
+.c-ef-neg { color: var(--peligro, #c0392b); }
+.c-ef-cuadre { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--e-3); padding: var(--e-3); border-radius: var(--radio-md); background: var(--bg3); font-weight: 600; }
+.c-ef-notas { margin: 0; padding-left: 1.4em; font-size: var(--t-sm); color: var(--text-muted); display: grid; gap: 4px; }
+.c-socio { display: inline-flex; align-items: center; gap: var(--e-2); }
+.c-socio small { display: block; }
+.c-iniciales { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-tinte, color-mix(in srgb, var(--primary) 18%, var(--card))); color: var(--primary-texto, var(--primary)); font-weight: 700; font-size: 12px; letter-spacing: .02em; }
+.c-barra-fila { display: inline-flex; align-items: center; gap: var(--e-2); min-width: 0; }
+.c-barra-col { flex-direction: column; align-items: stretch; gap: 4px; }
+.c-barra-mini { position: relative; display: block; width: 110px; max-width: 100%; height: 8px; border-radius: 4px; background: var(--bg3); overflow: hidden; }
+.c-barra-mini i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--primary); }
+.c-barra-verde i { background: var(--exito, #16a34a); }
+.c-flecha-de-a { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.c-cascada { list-style: none; margin: var(--e-3) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--e-2); }
+.c-cascada li { display: grid; gap: 2px; padding: var(--e-3); border-radius: var(--radio-md); background: var(--bg3); border-left: 3px solid var(--primary); }
+.c-cascada small { color: var(--text-muted); font-size: var(--t-xs); }
+.c-cascada b { font-variant-numeric: tabular-nums; }
+.c-cascada .c-cascada-menos { border-left-color: var(--peligro, #c0392b); }
+.c-cascada .c-cascada-sub { background: var(--primary-tinte, var(--bg3)); }
+.c-cascada .c-cascada-fin { background: color-mix(in srgb, var(--exito, #16a34a) 16%, var(--card)); border-left-color: var(--exito, #16a34a); }
+.c-tarjetas-banco { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--e-3); }
+.c-tarjeta-banco { position: relative; border-radius: var(--radio-lg); border: 1px solid var(--hairline); background: var(--card); box-shadow: var(--sombra-1); transition: border-color var(--dur-boton) var(--ease-out); }
+.c-tarjeta-banco-on { border-color: var(--primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent); }
+.c-tarjeta-banco-abrir { display: grid; gap: 4px; width: 100%; padding: var(--e-4); padding-right: 84px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: transform var(--dur-boton) var(--ease-out); }
+.c-tarjeta-banco-abrir:active { transform: scale(0.99); }
+.c-tarjeta-banco-banco { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.c-tarjeta-banco-num { color: var(--text-muted); font-size: var(--t-sm); }
+.c-tarjeta-banco-saldo { font-size: var(--t-lg); font-variant-numeric: tabular-nums; margin-top: var(--e-2); }
+.c-tarjeta-banco small { color: var(--text-muted); font-size: var(--t-xs); }
+.c-tarjeta-banco-acc { position: absolute; top: var(--e-3); right: var(--e-3); display: flex; gap: 4px; }
+.c-stepper { display: grid; gap: var(--e-2); padding: var(--e-4); border-radius: var(--radio-lg); background: var(--card); border: 1px solid var(--hairline); }
+.c-stepper-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--e-2); }
+.c-stepper-cab b { font-size: var(--t-lg); }
+.c-stepper-cab span { color: var(--text-muted); font-size: var(--t-sm); }
+.c-stepper-pasos { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.c-stepper-pasos li { position: relative; display: flex; align-items: center; }
+.c-stepper-pasos li + li::before { content: ''; width: 10px; height: 2px; background: var(--hairline); margin-right: 6px; }
+.c-stepper-pasos span { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; border: 2px solid var(--hairline); background: var(--bg3); color: var(--text-muted); }
+.c-paso-hecho span { background: var(--exito, #16a34a); border-color: var(--exito, #16a34a); color: #fff; }
+.c-paso-en_proceso span { border-color: var(--primary); color: var(--primary-texto, var(--primary)); }
+.c-paso-no_aplica span { opacity: .5; text-decoration: line-through; }
+.c-grupo-tramite .c-grupo-n { margin-left: var(--e-2); font-size: var(--t-xs); color: var(--text-muted); font-weight: 600; }

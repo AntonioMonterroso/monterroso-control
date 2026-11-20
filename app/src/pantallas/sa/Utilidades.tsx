@@ -59,25 +59,26 @@ export default function UtilidadesSA() {
           <div className="m-campo"><label htmlFor="ut-m">Monto a repartir</label><input id="ut-m" className="m-entrada m-num" inputMode="decimal" placeholder={quetzales(dist.distribuible)} value={monto} onChange={(e) => setMonto(e.target.value)} /><span className="m-ayuda">Vacío: todo lo distribuible.</span></div>
           <div className="m-campo"><label htmlFor="ut-f">Fecha del acuerdo de asamblea</label><input id="ut-f" type="date" className="m-entrada" value={fecha} onChange={(e) => setFecha(e.target.value)} /></div>
         </div>
-        <dl className="c-datos">
-          <div><dt>Utilidad del período</dt><dd className={utilidad < 0 ? 'm-negativo' : undefined}>{quetzales(utilidad)}</dd></div>
-          <div><dt>Menos ISR de la sociedad</dt><dd>{quetzales(leerMonto(isrSoc) ?? 0)}</dd></div>
-          <div><dt>Utilidad neta</dt><dd>{quetzales(dist.neta)}</dd></div>
-          <div><dt>Reserva legal ({TASA_RESERVA} %)</dt><dd>{quetzales(dist.reserva)}</dd></div>
-          <div><dt>Distribuible</dt><dd><b>{quetzales(dist.distribuible)}</b></dd></div>
-          <div><dt>A repartir</dt><dd><b>{quetzales(aRepartir)}</b></dd></div>
-        </dl>
+        <ol className="c-cascada" aria-label="De la utilidad a lo que recibe cada socio">
+          <li><small>Utilidad del período</small><b className={utilidad < 0 ? 'm-negativo' : undefined}>{quetzales(utilidad)}</b></li>
+          <li className="c-cascada-menos"><small>Menos ISR de la sociedad</small><b>{quetzales(leerMonto(isrSoc) ?? 0)}</b></li>
+          <li className="c-cascada-menos"><small>Menos reserva legal ({TASA_RESERVA} %)</small><b>{quetzales(dist.reserva)}</b></li>
+          <li className="c-cascada-sub"><small>Disponible para repartir</small><b>{quetzales(dist.distribuible)}</b></li>
+          <li className="c-cascada-menos"><small>Menos ISR de dividendos ({TASA_ISR_DIVIDENDOS} %)</small><b>{quetzales(deCentavos(lineas.reduce((t, l) => t + aCentavos(l.isr), 0)))}</b></li>
+          <li className="c-cascada-fin"><small>Neto a los socios</small><b>{quetzales(deCentavos(lineas.reduce((t, l) => t + aCentavos(l.neto), 0)))}</b></li>
+        </ol>
       </section>
       <Tabla titulo={`Reparto a ${fechaCorta(hasta)}`} filas={lineas} clave={(l) => l.socio_id} vacio={problema ?? 'Sin socios.'}
         columnas={[
           { titulo: 'Socio', principal: true, valor: (l) => nombre(l.socio_id) },
           { titulo: 'Acciones', num: true, valor: (l) => l.acciones, orden: (l) => l.acciones },
-          { titulo: 'Participación', num: true, valor: (l) => `${l.porcentaje.toFixed(2)} %`, orden: (l) => l.porcentaje },
-          { titulo: 'Dividendo', num: true, valor: (l) => quetzales(l.bruto), orden: (l) => l.bruto },
+          { titulo: '%', num: true, valor: (l) => `${l.porcentaje.toFixed(2)} %`, orden: (l) => l.porcentaje },
+          { titulo: 'Utilidad asignada', num: true, valor: (l) => quetzales(deCentavos(Math.round(aCentavos(dist.neta) * l.porcentaje / 100))) },
+          { titulo: `Reserva ${TASA_RESERVA} %`, num: true, valor: (l) => quetzales(deCentavos(Math.round(aCentavos(dist.reserva) * l.porcentaje / 100))) },
           { titulo: `ISR ${TASA_ISR_DIVIDENDOS} %`, num: true, valor: (l) => quetzales(l.isr), orden: (l) => l.isr },
-          { titulo: 'Neto a pagar', num: true, valor: (l) => quetzales(l.neto), orden: (l) => l.neto },
+          { titulo: 'Neto a pagar', num: true, valor: (l) => <b>{quetzales(l.neto)}</b>, orden: (l) => l.neto },
         ]}
-        pie={<tr><td colSpan={3}>Total</td><td className="m-num">{quetzales(aRepartir)}</td><td className="m-num">{quetzales(deCentavos(lineas.reduce((t, l) => t + aCentavos(l.isr), 0)))}</td><td className="m-num">{quetzales(deCentavos(lineas.reduce((t, l) => t + aCentavos(l.neto), 0)))}</td></tr>} />
+        pie={<tr><td>Total</td><td className="m-num">{lineas.reduce((t, l) => t + l.acciones, 0)}</td><td className="m-num">100 %</td><td className="m-num">{quetzales(dist.neta)}</td><td className="m-num">{quetzales(dist.reserva)}</td><td className="m-num">{quetzales(deCentavos(lineas.reduce((t, l) => t + aCentavos(l.isr), 0)))}</td><td className="m-num">{quetzales(deCentavos(lineas.reduce((t, l) => t + aCentavos(l.neto), 0)))}</td></tr>} />
       <div className="c-fila-botones"><button type="button" className="m-btn m-btn-primario" disabled={!!problema} onClick={() => void registrar()} title={problema ?? 'Guardar el reparto acordado por la asamblea'}>Registrar el reparto</button></div>
       <section className="c-seccion-dev">
         <h2 className="m-seccion-titulo">Repartos registrados</h2>
@@ -89,11 +90,16 @@ export default function UtilidadesSA() {
                 filas={ls} clave={(l) => l.id} vacio=""
                 columnas={[
                   { titulo: 'Socio', principal: true, valor: (l) => nombre(l.socio_id) },
-                  { titulo: 'Dividendo', num: true, valor: (l) => quetzales(l.bruto) },
+                  { titulo: 'Acciones', num: true, valor: (l) => l.acciones },
+                  { titulo: '%', num: true, valor: (l) => `${l.porcentaje.toFixed(2)} %` },
+                  { titulo: 'Utilidad asignada', num: true, valor: (l) => quetzales(deCentavos(Math.round((aCentavos(r.utilidad) - aCentavos(r.isr_sociedad)) * l.porcentaje / 100))) },
+                  { titulo: `Reserva ${TASA_RESERVA} %`, num: true, valor: (l) => quetzales(deCentavos(Math.round(aCentavos(r.reserva) * l.porcentaje / 100))) },
                   { titulo: 'ISR', num: true, valor: (l) => quetzales(l.isr) },
                   { titulo: 'Neto', num: true, valor: (l) => quetzales(l.neto) },
-                  { titulo: 'Estado', valor: (l) => (l.pagado_el ? <span className="m-estado aprobado">Pagado {fechaCorta(l.pagado_el)}</span> : <span className="m-estado pendiente">Por pagar</span>) },
+                  { titulo: 'Pagado', num: true, valor: (l) => (l.pagado_el ? <>{quetzales(l.neto)}<small>{fechaCorta(l.pagado_el)}</small></> : quetzales(0)) },
+                  { titulo: 'Falta', num: true, valor: (l) => (l.pagado_el ? <span className="m-estado aprobado">Pagado</span> : <b>{quetzales(l.neto)}</b>) },
                 ]}
+                pie={<tr><td>Total</td><td className="m-num">{ls.reduce((t, l) => t + l.acciones, 0)}</td><td className="m-num">100 %</td><td className="m-num">{quetzales(deCentavos(aCentavos(r.utilidad) - aCentavos(r.isr_sociedad)))}</td><td className="m-num">{quetzales(r.reserva)}</td><td className="m-num">{quetzales(deCentavos(ls.reduce((t, l) => t + aCentavos(l.isr), 0)))}</td><td className="m-num">{quetzales(deCentavos(ls.reduce((t, l) => t + aCentavos(l.neto), 0)))}</td><td className="m-num">{quetzales(deCentavos(ls.filter((l) => l.pagado_el).reduce((t, l) => t + aCentavos(l.neto), 0)))}</td><td className="m-num">{quetzales(deCentavos(ls.filter((l) => !l.pagado_el).reduce((t, l) => t + aCentavos(l.neto), 0)))}</td><td /></tr>}
                 acciones={(l) => (!l.pagado_el ? <button type="button" className="m-btn m-btn-primario m-btn-sm" onClick={() => setPagar(l)} title="Registrar el pago al socio"><HandCoins size={14} aria-hidden /> Pagado</button> : null)} />
               <div className="c-fila-botones">
                 {!r.isr_pagado_el && <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => void guardar('ctl_sa_repartos', r.id, { isr_pagado_el: hoy })} title="Marcar que ya se pagó a la SAT el ISR retenido">ISR pagado hoy</button>}

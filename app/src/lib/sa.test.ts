@@ -47,3 +47,17 @@ describe('sociedad anónima', () => {
     expect(siguienteFecha('2026-04-30', 'anual')).toBe('2027-04-30')
   })
 })
+
+import { institucionDe, TRAMITES_BASE } from './sa'
+
+describe('trámites agrupados por institución', () => {
+  it('cada paso base cae en su institución', () => {
+    const g = Object.fromEntries(TRAMITES_BASE.map((t) => [t.nombre, institucionDe(t.nombre)]))
+    expect(g['Escritura constitutiva ante notario']).toBe('Notario')
+    expect(g['Publicación del edicto']).toBe('Registro Mercantil')
+    expect(g['Inscripción en la SAT: NIT y RTU']).toBe('SAT')
+    expect(g['Apertura de la cuenta bancaria de la sociedad']).toBe('Banco')
+    expect(g['Inscripción en el IGSS']).toBe('IGSS')
+    expect(TRAMITES_BASE.every((t) => institucionDe(t.nombre) !== 'Otros')).toBe(true)
+  })
+})

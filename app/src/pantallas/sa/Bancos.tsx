@@ -1,5 +1,6 @@
 import Pasos from '../../componentes/Pasos'
-import { Download, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Download, Landmark, Pencil, Plus, Trash2 } from 'lucide-react'
+import { enmascarar } from '../../lib/pagosDestino'
 import { useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
 import FormRegistro from '../../componentes/FormRegistro'
@@ -8,15 +9,17 @@ import Tabla from '../../componentes/Tabla'
 import Ventana from '../../componentes/Ventana'
 import { conceptoDePago } from '../../lib/cobros'
 import { useDatos } from '../../lib/datos'
-import { leerMonto, quetzales } from '../../lib/dinero'
+import { aCentavos, deCentavos, leerMonto, quetzales } from '../../lib/dinero'
 import { fechaCorta, nombreMes, partes } from '../../lib/fechas'
-import { periodoDe } from '../../lib/finanzas'
+import { periodoDe, sumarMeses } from '../../lib/finanzas'
 import { useQuitar } from '../../lib/quitar'
 import { conciliar, saldoCuenta, type CuentaBanco, type MovBanco } from '../../lib/sa'
 import { useSA } from '../../lib/saModelo'
 import { useCobros, useHoy, usePeriodo } from '../../lib/usos'
 
 interface Candidato { origen: 'pago' | 'gasto' | 'aporte' | 'deuda' | 'anticipo'; origen_id: string; fecha: string; tipo: 'ingreso' | 'egreso'; monto: number; descripcion: string }
+
+const ORIGENES: Record<string, [string, string]> = { manual: ['A mano', 'bloqueado'], pago: ['Cobro', 'aprobado'], anticipo: ['Anticipo', 'aprobado'], gasto: ['Gasto', 'error'], aporte: ['Aportación', 'en-proceso'], dividendo: ['Dividendo', 'pendiente'], deuda: ['Deuda', 'error'], traslado: ['Traslado', 'en-proceso'] }
 
 export default function BancosSA() {
   const { m, ids, inicio } = useSA()
@@ -36,6 +39,12 @@ export default function BancosSA() {
   const cu = cuenta && cuenta !== 'nueva' ? cuenta : null
   const mv = mov && mov !== 'nuevo' ? mov : null
   const movsMes = c ? m.movBancos.filter((x) => x.cuenta_id === c.id && periodoDe(x.fecha) === periodo) : []
+  const movsOrden = [...movsMes].sort((a, b) => a.fecha.localeCompare(b.fecha) || a.id.localeCompare(b.id))
+  const saldoAntes = c ? saldoCuenta(c, m.movBancos, `${sumarMeses(periodo, -1)}-31`) : 0
+  const corrido = new Map<string, number>()
+  movsOrden.reduce((t, x) => { const n = t + (x.tipo === 'ingreso' ? 1 : -1) * aCentavos(x.monto); corrido.set(x.id, deCentavos(n)); return n }, aCentavos(saldoAntes))
+  const entroMes = deCentavos(movsMes.filter((x) => x.tipo === 'ingreso').reduce((t, x) => t + aCentavos(x.monto), 0))
+  const salioMes = deCentavos(movsMes.filter((x) => x.tipo === 'egreso').reduce((t, x) => t + aCentavos(x.monto), 0))
   const guardada = c ? m.conciliaciones.find((x) => x.cuenta_id === c.id && x.periodo === periodo) : undefined
   const saldoB = saldoBanco.trim() ? leerMonto(saldoBanco) : guardada?.saldo_banco ?? null
   const con = c ? conciliar(c, m.movBancos, periodo, saldoB) : null
@@ -74,21 +83,24 @@ export default function BancosSA() {
           <button type="button" className="m-btn m-btn-primario" onClick={() => setCuenta('nueva')} title="Agregar una cuenta bancaria de la sociedad"><Plus size={16} aria-hidden /> Cuenta</button>
         </div>
       </div>
-      <Tabla
-        marcable={(x) => !m.movBancos.some((y) => y.cuenta_id === x.id)}
-        quitarVarias={(l) => q.pedir('ctl_bancos', l, `Se quitan ${l.length} cuentas sin movimientos.`)} filas={m.bancos} clave={(x) => x.id} vacio="Sin cuentas. Agrega la cuenta de la sociedad cuando la abras." onFila={(x) => setSel(x.id)}
-        columnas={[
-          { titulo: 'Cuenta', principal: true, valor: (x) => <>{x.banco} {x.numero}{x.nombre && <small>{x.nombre}</small>}{c?.id === x.id && <span className="m-estado en-proceso">Viendo</span>}</> },
-          { titulo: 'Moneda', valor: (x) => (x.moneda === 'GTQ' ? 'Quetzales' : 'Dólares') },
-          { titulo: 'Saldo inicial', num: true, valor: (x) => quetzales(x.saldo_inicial), orden: (x) => x.saldo_inicial },
-          { titulo: 'Saldo hoy', num: true, valor: (x) => quetzales(saldoCuenta(x, m.movBancos, hoy)), orden: (x) => saldoCuenta(x, m.movBancos, hoy) },
-        ]}
-        acciones={(x) => (
-          <>
-            <button type="button" className="m-icono-btn" onClick={() => setCuenta(x)} aria-label="Editar" title="Editar la cuenta"><Pencil aria-hidden /></button>
-            {!m.movBancos.some((y) => y.cuenta_id === x.id) && <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_bancos', [x], `Se quita la cuenta ${x.banco} ${x.numero}.`)} aria-label="Quitar" title="Quitar la cuenta (no tiene movimientos; se puede deshacer)"><Trash2 aria-hidden /></button>}
-          </>
-        )} />
+      {m.bancos.length === 0 ? <div className="m-vacio m-tarjeta"><b>Sin cuentas todavía</b><span>Agrega la cuenta de la sociedad con «Cuenta» cuando la abras.</span></div> : (
+        <div className="c-tarjetas-banco" role="list" aria-label="Cuentas de la sociedad">
+          {m.bancos.map((x) => (
+            <div key={x.id} role="listitem" className={`c-tarjeta-banco${c?.id === x.id ? ' c-tarjeta-banco-on' : ''}`}>
+              <button type="button" className="c-tarjeta-banco-abrir" onClick={() => setSel(x.id)} aria-pressed={c?.id === x.id} title={`Muestra los movimientos de ${x.banco} ${enmascarar(x.numero)}`}>
+                <span className="c-tarjeta-banco-banco"><Landmark size={16} aria-hidden /> {x.banco}</span>
+                <span className="c-tarjeta-banco-num">{enmascarar(x.numero)}{x.nombre ? ` · ${x.nombre}` : ''} · {x.moneda === 'GTQ' ? 'Quetzales' : 'Dólares'}</span>
+                <b className="c-tarjeta-banco-saldo">{quetzales(saldoCuenta(x, m.movBancos, hoy))}</b>
+                <small>saldo en libros hoy{!x.activo ? ' · apagada' : ''}</small>
+              </button>
+              <span className="c-tarjeta-banco-acc">
+                <button type="button" className="m-icono-btn" onClick={() => setCuenta(x)} aria-label={`Editar ${x.banco}`} title="Abre la cuenta para corregirla"><Pencil aria-hidden /></button>
+                {!m.movBancos.some((y) => y.cuenta_id === x.id) && <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_bancos', [x], `Se quita la cuenta ${x.banco} ${x.numero}.`)} aria-label="Quitar cuenta" title="Quita la cuenta (no tiene movimientos); se puede deshacer"><Trash2 aria-hidden /></button>}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
       {c && con && (
         <>
           <section className="c-seccion-dev">
@@ -99,7 +111,13 @@ export default function BancosSA() {
                 <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => setMov('nuevo')} title="Agregar un movimiento a mano"><Plus size={14} aria-hidden /> Movimiento</button>
               </span>
             </div>
-            <Tabla filas={movsMes} clave={(x) => x.id} vacio="Sin movimientos en este mes."
+            <div className="erp-kpis c-kpis-chicos">
+              <div className="erp-kpi"><span className="m-etiqueta">Saldo inicial del mes</span><b>{quetzales(saldoAntes)}</b></div>
+              <div className="erp-kpi exito"><span className="m-etiqueta">Entró</span><b>{quetzales(entroMes)}</b></div>
+              <div className="erp-kpi peligro"><span className="m-etiqueta">Salió</span><b>{quetzales(salioMes)}</b></div>
+              <div className="erp-kpi"><span className="m-etiqueta">Saldo final del mes</span><b>{quetzales(deCentavos(aCentavos(saldoAntes) + aCentavos(entroMes) - aCentavos(salioMes)))}</b></div>
+            </div>
+            <Tabla filas={movsOrden} clave={(x) => x.id} vacio="Sin movimientos en este mes."
               quitarVarias={(l) => q.pedir('ctl_banco_movimientos', l, `Se quitan ${l.length} movimientos de la cuenta. Lo registrado en Cobros y Gastos no cambia.`)}
               masa={[
                 { texto: 'Marcar conciliadas', titulo: (n) => `Marca los ${n} movimientos como ya salidos en el estado de cuenta`, hacer: (l) => void Promise.all(l.map((x) => guardar('ctl_banco_movimientos', x.id, { conciliado: true }))) },
@@ -108,9 +126,10 @@ export default function BancosSA() {
               columnas={[
                 { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha), orden: (x) => x.fecha },
                 { titulo: 'Descripción', principal: true, valor: (x) => <>{x.descripcion}{x.referencia && <small>Ref. {x.referencia}</small>}</> },
-                { titulo: 'Origen', valor: (x) => ({ manual: 'A mano', pago: 'Cobro', gasto: 'Gasto', aporte: 'Aportación', dividendo: 'Dividendo', deuda: 'Deuda', traslado: 'Traslado desde cuenta personal', anticipo: 'Anticipo' } as Record<string, string>)[x.origen] ?? x.origen },
+                { titulo: 'Origen', valor: (x) => { const [t, k] = ORIGENES[x.origen] ?? [x.origen, 'bloqueado']; return <span className={`m-estado ${k}`}>{t}</span> }, orden: (x) => x.origen },
                 { titulo: 'Entra', num: true, valor: (x) => (x.tipo === 'ingreso' ? quetzales(x.monto) : ''), orden: (x) => (x.tipo === 'ingreso' ? x.monto : 0) },
                 { titulo: 'Sale', num: true, valor: (x) => (x.tipo === 'egreso' ? quetzales(x.monto) : ''), orden: (x) => (x.tipo === 'egreso' ? x.monto : 0) },
+                { titulo: 'Saldo', num: true, valor: (x) => quetzales(corrido.get(x.id) ?? 0), sinOrden: true },
                 { titulo: 'Conciliado', valor: (x) => <label className="c-casilla" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={x.conciliado} onChange={(e) => void guardar('ctl_banco_movimientos', x.id, { conciliado: e.target.checked })} title="Marca o quita si ya salió en el estado de cuenta" aria-label="Conciliado" /> {x.conciliado ? 'Sí' : 'No'}</label>, orden: (x) => (x.conciliado ? 1 : 0) },
               ]}
               acciones={(x) => (
