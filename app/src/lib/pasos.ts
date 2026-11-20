@@ -80,8 +80,8 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'Escribe un título, cliente o número en el buscador, o toca un chip de tipo para filtrar.', ir: '.c-herramientas' },
       { texto: 'Toca el ojito para ver el documento encima; el estado («Borrador», «Enviado», «Aceptado» o «Rechazado») se cambia con el lápiz.', ir: '.m-tabla-envoltura' },
       { texto: 'En cotizaciones y propuestas toca el ícono de compartir: «Compartir en la web» tiene «Copiar link», «Enviar por WhatsApp», «Ver como el cliente», «Bajar PDF», «Retirar link» y «Crear link nuevo». Los contratos no van a la web.' },
-      { texto: 'Junto al ícono ves si el cliente lo abrió: «Sin abrir», «Visto 2 veces» o «Aceptado».' },
-      { texto: 'Marca varias casillas y toca «Quitar las marcadas» para quitarlas juntas; quitar se puede deshacer.' },
+      { texto: 'Al armar o editar ves a la derecha la vista previa igual al PDF, con «Bajar PDF» y «Enviar por WhatsApp»; lo que falta se resalta.' },
+      { texto: 'Junto al ícono ves si el cliente lo abrió: «Sin abrir», «Visto 2 veces» o «Aceptado»; marca varias para quitarlas juntas.' },
     ],
   },
   {
@@ -212,6 +212,8 @@ export const PASOS: GuiaPasos[] = [
     ruta: '/contratos',
     pasos: [
       { texto: 'Toca «Armar contrato» para hacer un contrato con los datos de un cliente.', ir: 'button[title="Armar un contrato con los datos de un cliente"]' },
+      { texto: 'En el armador ves a la derecha la vista previa igual al PDF (en pantallas angostas, la pestaña «Vista previa»); lo que falta sale como «[Falta: …]».' },
+      { texto: 'Arriba de la vista previa: «Ajustar al ancho» o «100 %», la página, «Bajar PDF» y «Enviar por WhatsApp».' },
       { texto: 'Usa las pestañas «Contratos» y «Plantillas».', ir: '.c-pestanas' },
       { texto: 'Escribe el cliente o el título en el buscador para encontrar un contrato.', ir: '.c-herramientas' },
       { texto: 'En cada contrato puedes verlo, abrir su PDF, editar la firma o el texto, o quitarlo; quitar se puede deshacer.' },

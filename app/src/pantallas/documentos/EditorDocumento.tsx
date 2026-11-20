@@ -1,3 +1,6 @@
+import VistaPrevia, { useAncho } from '../../componentes/VistaPrevia'
+import Pestanas from '../../componentes/Pestanas'
+import { numeroWhatsApp } from '../../lib/cobros'
 import { FileDown, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
@@ -22,7 +25,7 @@ export function useHtmlDocumento() {
     const c = m.clientes.find((x) => x.id === d.cliente_id)
     const p = m.proyectos.find((x) => x.id === d.proyecto_id)
     const dev = m.negocios.find((n) => n.clave === 'dev')
-    const ctx = { cliente: c?.nombre ?? '—', nit: c?.nit ?? null, proyecto: p?.nombre ?? null, regimen: c ? regimenVigente(m.modos, d.fecha.slice(0, 7), dev?.id ?? '', c.id) : null, firmante: m.marca?.nombre ?? '', cargo: m.marca?.cargo ?? '', sitio: m.marca?.sitio ?? 'studiomonterroso.com', correo: m.marca?.correo ?? '' }
+    const ctx = { cliente: c?.nombre ?? (d.tipo === 'membretada' ? '—' : '[Falta: cliente]'), nit: c?.nit ?? null, proyecto: p?.nombre ?? null, regimen: c ? regimenVigente(m.modos, d.fecha.slice(0, 7), dev?.id ?? '', c.id) : null, firmante: m.marca?.nombre ?? '', cargo: m.marca?.cargo ?? '', sitio: m.marca?.sitio ?? 'studiomonterroso.com', correo: m.marca?.correo ?? '' }
     const tipo = TIPOS_DOC.find((t) => t.valor === d.tipo)?.nombre ?? ''
     return { titulo: `${tipo} ${c?.nombre ?? ''}`.trim(), cuerpo: htmlDocumento(d, ctx) }
   }
@@ -42,6 +45,9 @@ export default function EditorDocumento({ abierto, documento, tipoInicial, clien
   const avisar = useAvisar()
   const hoy = useHoy()
   const imprimirDoc = useImprimirDocumento()
+  const armarHtml = useHtmlDocumento()
+  const [pest, setPest] = useState<'datos' | 'previa'>('datos')
+  const dos = useAncho(1100)
   const [tipo, setTipo] = useState<TipoDocumento>('cotizacion')
   const [area, setArea] = useState<Area>('web')
   const [cliente, setCliente] = useState('')
@@ -79,6 +85,17 @@ export default function EditorDocumento({ abierto, documento, tipoInicial, clien
     if (p && !titulo.trim()) setTitulo(`${nombreTipo}: ${p.nombre}`)
   }
 
+  const datosActuales = () => ({
+    ...(tipo === 'cotizacion' ? { renglones: r, condiciones: texto.condiciones || undefined } : {}),
+    ...(tipo === 'propuesta' ? { alcance: texto.alcance || undefined, entregables: texto.entregables || undefined, plazo: texto.plazo || undefined, condiciones: texto.condiciones || undefined, inscripcion: leerMonto(texto.inscripcion) ?? 0, mensualidad: leerMonto(texto.mensualidad) ?? 0 } : {}),
+    ...(tipo === 'membretada' ? { destinatario: texto.destinatario || undefined } : {}),
+  })
+  const borrador = (): Documento => ({ id: documento?.id ?? '', tipo, area, anio: Number(fecha.slice(0, 4)), numero: documento?.numero ?? null, cliente_id: cliente || null, proyecto_id: proyecto || null, fecha, vigencia_dias: tipo === 'cotizacion' || tipo === 'propuesta' ? Number(vigencia) || null : null, titulo: titulo.trim() || '[Falta: título]', datos: datosActuales(), contenido: tipo === 'acuerdo' || tipo === 'membretada' ? contenido : null, estado, creado: '' } as unknown as Documento)
+  const previa = armarHtml(borrador())
+  const faltan = [!titulo.trim() && 'título', tipo !== 'membretada' && !cliente && 'cliente', tipo === 'cotizacion' && !r.length && 'al menos un renglón'].filter(Boolean) as string[]
+  const pdfBorrador = () => { const d = borrador(); imprimir(previa.titulo, previa.cuerpo, '', d.area) }
+  const whatsappBorrador = () => { pdfBorrador(); const c = m.clientes.find((x) => x.id === cliente); window.open(`https://wa.me/${numeroWhatsApp(c?.whatsapp ?? null)}?text=${encodeURIComponent(`Hola${c ? `, ${c.nombre}` : ''}. Te comparto ${nombreTipo.toLowerCase()} en PDF.`)}`, '_blank') }
+
   const guardarDoc = async (pdf: boolean) => {
     if (problema || ocupado) return
     setOcupado(true)
@@ -101,13 +118,16 @@ export default function EditorDocumento({ abierto, documento, tipoInicial, clien
     <div className="m-campo c-ancho"><label htmlFor={`doc-${k}`}>{etiqueta} <span className="c-opcional">(opcional)</span></label><textarea id={`doc-${k}`} className="m-entrada" rows={filas} value={texto[k] ?? ''} onChange={(e) => setTexto((t) => ({ ...t, [k]: e.target.value }))} />{ayuda && <span className="m-ayuda">{ayuda}</span>}</div>
   )
   return (
-    <Ventana abierta={abierto} ancho="amplia" titulo={documento ? `Editar ${nombreTipo.toLowerCase()}` : 'Nuevo documento'} subtitulo={documento?.numero ? `No. ${numeroVisible(documento)}` : 'Se guarda en la ficha del cliente.'} onCerrar={onCerrar} pie={
+    <Ventana abierta={abierto} ancho="doble" titulo={documento ? `Editar ${nombreTipo.toLowerCase()}` : 'Nuevo documento'} subtitulo={documento?.numero ? `No. ${numeroVisible(documento)}` : 'Se guarda en la ficha del cliente.'} onCerrar={onCerrar} pie={
       <>
-        <button type="button" className="m-btn m-btn-fantasma" onClick={onCerrar} title="Cerrar sin guardar">Cancelar</button>
+        <button type="button" className="m-btn m-btn-secundario" onClick={onCerrar} title="Cierra sin guardar">Cancelar</button>
         <button type="button" className="m-btn m-btn-secundario" disabled={!!problema || ocupado} onClick={() => void guardarDoc(false)} title={problema ?? 'Guardar el documento'}>Guardar</button>
         <button type="button" className="m-btn m-btn-primario" disabled={!!problema || ocupado} onClick={() => void guardarDoc(true)} title={problema ?? 'Guardar y abrir el PDF listo para enviar'}><FileDown size={16} aria-hidden /> Guardar y PDF</button>
       </>
     }>
+      {!dos && <div className="c-pest-doble"><Pestanas etiqueta="Ver" valor={pest} onCambio={setPest} opciones={[{ valor: 'datos', nombre: 'Datos' }, { valor: 'previa', nombre: 'Vista previa' }]} /></div>}
+      <div className={`c-doble${dos ? ' c-doble-dos' : ''}`}>
+      {(dos || pest === 'datos') && <div className="c-armador">
       <div className="c-form">
         <div className="m-campo"><label htmlFor="doc-tipo">Documento</label><select id="doc-tipo" className="m-entrada" value={tipo} disabled={!!documento} onChange={(e) => setTipo(e.target.value as TipoDocumento)}>{TIPOS_DOC.filter((t) => t.valor !== 'acuerdo').map((t) => <option key={t.valor} value={t.valor}>{t.nombre}</option>)}</select>{!documento && <span className="m-ayuda">El acuerdo de servicios se arma en Contratos.</span>}</div>
         {documento && <div className="m-campo"><label htmlFor="doc-estado">Estado</label><select id="doc-estado" className="m-entrada" value={estado} onChange={(e) => setEstado(e.target.value as Documento['estado'])}>{ESTADOS_DOC.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select></div>}
@@ -150,6 +170,9 @@ export default function EditorDocumento({ abierto, documento, tipoInicial, clien
       {(tipo === 'cotizacion' || tipo === 'propuesta') && area_('condiciones', 'Condiciones', 'Forma de pago, qué no incluye, etc.')}
       {tipo === 'membretada' && area_('destinatario', 'Destinatario', 'Nombre y cargo de a quien va dirigida.', 2)}
       {(tipo === 'membretada' || tipo === 'acuerdo') && <div className="m-campo"><label htmlFor="doc-txt">Texto</label><textarea id="doc-txt" className="m-entrada c-texto-contrato" value={contenido} maxLength={60000} onChange={(e) => setContenido(e.target.value)} /></div>}
+      </div>}
+      {(dos || pest === 'previa') && <VistaPrevia titulo={previa.titulo} cuerpo={previa.cuerpo} area={area} faltan={faltan} onPdf={pdfBorrador} onWhatsapp={tipo !== 'membretada' || cliente ? whatsappBorrador : undefined} />}
+      </div>
     </Ventana>
   )
 }

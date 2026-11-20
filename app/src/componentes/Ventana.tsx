@@ -15,7 +15,7 @@ export default function Ventana({ abierta, titulo, subtitulo, ancho = 'normal', 
   abierta: boolean
   titulo: string
   subtitulo?: string
-  ancho?: 'normal' | 'amplia'
+  ancho?: 'normal' | 'amplia' | 'doble'
   onCerrar: () => void
   children: ReactNode
   pie?: ReactNode
@@ -53,7 +53,7 @@ export default function Ventana({ abierta, titulo, subtitulo, ancho = 'normal', 
   return (
     <dialog
       ref={ref}
-      className={`c-ventana${ancho === 'amplia' ? ' c-ventana-amplia' : ''}`}
+      className={`c-ventana${ancho === 'amplia' ? ' c-ventana-amplia' : ancho === 'doble' ? ' c-ventana-amplia c-ventana-doble' : ''}`}
       onCancel={(e) => { e.preventDefault(); if (e.target === e.currentTarget) intentarCerrar() }}
       onClick={(e) => { if (e.target === e.currentTarget && !avisoAfueraVisto) { avisoAfueraVisto = true; setAvisoAfuera(true) } }}
       onDoubleClick={(e) => { if (e.target === e.currentTarget) intentarCerrar() }}

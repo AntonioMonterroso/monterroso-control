@@ -7,7 +7,11 @@ import { armarContrato, clausulasQueAplican } from '../../lib/contratos'
 import { useDatos } from '../../lib/datos'
 import { useModelo } from '../../lib/modelo'
 import { useHoy } from '../../lib/usos'
-import { imprimirContrato } from './imprimir'
+import { htmlContrato, imprimirContrato } from './imprimir'
+import VistaPrevia, { useAncho } from '../../componentes/VistaPrevia'
+import Pestanas from '../../componentes/Pestanas'
+import { faltantes } from '../../lib/contratos'
+import { numeroWhatsApp } from '../../lib/cobros'
 
 const LLAVE = 'mc_contrato_prestador'
 
@@ -30,6 +34,8 @@ export default function Armador({ abierto, clienteFijo, onCerrar }: { abierto: b
   const [texto, setTexto] = useState('')
   const [tocado, setTocado] = useState(false)
   const [ocupado, setOcupado] = useState(false)
+  const [pest, setPest] = useState<'datos' | 'previa'>('datos')
+  const dos = useAncho(1100)
 
   useEffect(() => {
     if (!abierto) return
@@ -46,6 +52,10 @@ export default function Armador({ abierto, clienteFijo, onCerrar }: { abierto: b
   const armado = useMemo(() => (pl && c ? armarContrato(pl.encabezado, clausulasQueAplican(pl.clausulas, elegidas, pr), pl.cierre, { ciudad, prestador, fecha, cliente: c, proyecto: pr }) : ''), [pl, c, pr, elegidas, ciudad, prestador, fecha])
   useEffect(() => { if (!tocado) setTexto(armado) }, [armado, tocado])
   const titulo = `Contrato ${pr ? `de ${pr.nombre}` : 'de servicios'} · ${c?.nombre ?? ''}`
+  const faltan = [...(!c ? ['cliente'] : []), ...faltantes(texto)]
+  const textoPrevia = texto || 'Elige el cliente para armar el contrato.'
+  const pdf = () => imprimirContrato(titulo, texto, prestador, c?.nombre ?? '')
+  const whatsapp = () => { pdf(); window.open(`https://wa.me/${numeroWhatsApp(c?.whatsapp ?? null)}?text=${encodeURIComponent(`Hola${c ? `, ${c.nombre}` : ''}. Te comparto el contrato en PDF para revisarlo.`)}`, '_blank') }
 
   const guardar = async (pdf: boolean) => {
     if (!c || !texto.trim()) return
@@ -60,14 +70,16 @@ export default function Armador({ abierto, clienteFijo, onCerrar }: { abierto: b
   }
 
   return (
-    <Ventana abierta={abierto} ancho="amplia" titulo="Armar contrato" subtitulo="Los datos del cliente y del proyecto se llenan solos." onCerrar={onCerrar} pie={
+    <Ventana abierta={abierto} ancho="doble" titulo="Armar contrato" subtitulo="Los datos del cliente y del proyecto se llenan solos." onCerrar={onCerrar} pie={
       <>
-        <button type="button" className="m-btn m-btn-fantasma" onClick={onCerrar} title="Cerrar sin guardar">Cancelar</button>
+        <button type="button" className="m-btn m-btn-secundario" onClick={onCerrar} title="Cierra sin guardar">Cancelar</button>
         <button type="button" className="m-btn m-btn-secundario" disabled={!c || ocupado} onClick={() => void guardar(false)} title={c ? 'Guardar el contrato en la ficha del cliente' : 'Elige el cliente'}>Guardar</button>
-        <button type="button" className="m-btn m-btn-primario" disabled={!c || ocupado} onClick={() => void guardar(true)} title={c ? 'Guardar y abrir el PDF para imprimir y firmar' : 'Elige el cliente'}><FileDown size={16} aria-hidden /> Guardar y PDF</button>
+        <button type="button" className="m-btn m-btn-primario" disabled={!c || ocupado} onClick={() => void guardar(true)} title={!c ? 'Apagado: elige el cliente' : faltan.length ? `Guarda y abre el PDF; todavía falta: ${faltan.join(', ')}` : 'Guarda y abre el PDF para imprimir y firmar'}><FileDown size={16} aria-hidden /> Guardar y PDF</button>
       </>
     }>
-      <div className="c-armador">
+      {!dos && <div className="c-pest-doble"><Pestanas etiqueta="Ver" valor={pest} onCambio={setPest} opciones={[{ valor: 'datos', nombre: 'Datos' }, { valor: 'previa', nombre: 'Vista previa' }]} /></div>}
+      <div className={`c-doble${dos ? ' c-doble-dos' : ''}`}>
+      {(dos || pest === 'datos') && <div className="c-armador">
         <div className="c-form">
           <div className="m-campo">
             <label htmlFor="ar-cli">Cliente</label>
@@ -112,6 +124,8 @@ export default function Armador({ abierto, clienteFijo, onCerrar }: { abierto: b
           <textarea id="ar-txt" className="m-entrada c-texto-contrato" value={texto} onChange={(e) => { setTexto(e.target.value); setTocado(true) }} placeholder="Elige el cliente para armarlo." />
           <span className="m-ayuda">Puedes corregir el texto antes de guardarlo. Revísalo antes de firmar.</span>
         </div>
+      </div>}
+      {(dos || pest === 'previa') && <VistaPrevia titulo={titulo} cuerpo={htmlContrato(titulo, textoPrevia, prestador || '[Falta: nombre del prestador]', c?.nombre ?? '[Falta: cliente]')} area="web" faltan={faltan} onPdf={pdf} onWhatsapp={whatsapp} />}
       </div>
     </Ventana>
   )

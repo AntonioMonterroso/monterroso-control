@@ -32,8 +32,11 @@ const guia: GuiaVideo = {
       t: '1 · Armar y revisar',
       e0: contratos(),
       tomas: [
-        { t: 'Toca «Armar contrato» para hacer un contrato con los datos de un cliente.', en: 'armar', clic: true, luego: { hoja: { titulo: 'Armar contrato', piezas: [{ k: 'campos', g: 'datos', l: [{ et: 'Cliente', v: 'Panadería La Espiga' }, { et: 'Proyecto', v: 'Página de Panadería La Espiga' }, { et: 'Plantilla', v: 'Acuerdo de servicios' }] }], pie: [{ t: 'Cancelar' }, { t: 'Guardar' }, { t: 'Guardar y PDF', g: 'guardarPdf', p: true }] } } },
-        { t: 'Los datos del cliente y del proyecto se llenan solos; toca «Guardar y PDF» para imprimirlo y firmarlo.', en: 'guardarPdf', clic: true, luego: { hoja: null } },
+        { t: 'Toca «Armar contrato» para hacer un contrato con los datos de un cliente.', en: 'armar', clic: true, luego: { hoja: { titulo: 'Armar contrato', piezas: [{ k: 'campos', g: 'datos', l: [{ et: 'Cliente', v: 'Panadería La Espiga' }, { et: 'Proyecto', v: 'Página de Panadería La Espiga' }, { et: 'Plantilla', v: 'Acuerdo de servicios' }] }, { k: 'chips', g: 'zoom', l: [{ t: 'Ajustar al ancho', on: true }, { t: '100 %' }] }, { k: 'texto', g: 'previa', t: 'Vista previa · Página 1 de 2 · NIT [Falta: NIT del cliente]' }, { k: 'botones', g: 'salidas', l: [{ t: 'Bajar PDF', g: 'bajarPdf' }, { t: 'Enviar por WhatsApp' }] }], pie: [{ t: 'Cancelar' }, { t: 'Guardar' }, { t: 'Guardar y PDF', g: 'guardarPdf', p: true }] } } },
+        { t: 'Los datos del cliente y del proyecto se llenan solos. A la derecha (o en la pestaña «Vista previa» en pantallas angostas) ves el contrato igual al PDF mientras escribes.', en: 'previa', ms: 4800 },
+        { t: 'Lo que falta sale resaltado, por ejemplo «[Falta: NIT del cliente]». «Ajustar al ancho» o «100 %» cambian el tamaño de la hoja.', en: 'zoom', ms: 4400 },
+        { t: '«Bajar PDF» abre el PDF y «Enviar por WhatsApp» lo abre para guardarlo y adjuntarlo en el chat del cliente.', en: 'salidas' },
+        { t: 'Toca «Guardar y PDF» para guardarlo en el cliente e imprimirlo para firmar.', en: 'guardarPdf', clic: true, luego: { hoja: null } },
         { t: 'Escribe el cliente o el título en el buscador para encontrar un contrato.', en: 'busca' },
         { t: 'En cada contrato puedes verlo, abrir su PDF, editar la firma o el texto, o quitarlo; quitar se puede deshacer.', en: 'lapiz1', ms: 4600 },
       ],

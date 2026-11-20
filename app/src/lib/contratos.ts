@@ -11,25 +11,31 @@ export interface DatosContrato {
   proyecto: Proyecto | null
 }
 
+const falta = (que: string) => `[Falta: ${que}]`
+
 export function valores(d: DatosContrato): Record<string, string> {
   const p = d.proyecto
   return {
-    ciudad: d.ciudad || '__________',
+    ciudad: d.ciudad || falta('ciudad'),
     fecha: fechaLarga(d.fecha),
-    prestador: d.prestador || '__________',
+    prestador: d.prestador || falta('nombre del prestador'),
     cliente: d.cliente.nombre,
-    nit: d.cliente.nit ?? 'CF',
-    direccion: d.cliente.direccion ?? '__________',
-    proyecto: p?.nombre ?? '__________',
+    nit: d.cliente.nit || falta('NIT del cliente'),
+    direccion: d.cliente.direccion || falta('dirección del cliente'),
+    proyecto: p?.nombre ?? falta('proyecto'),
     descripcion: p?.descripcion ?? '',
-    inscripcion: p ? quetzales(p.inscripcion_total) : '__________',
+    inscripcion: p ? quetzales(p.inscripcion_total) : falta('inscripción'),
     partes: p && p.partes.length ? p.partes.map((x) => `${quetzales(x.monto)} ${x.momento === 'fecha' ? `el ${fechaLarga(x.fecha)}` : textoMomento(x).toLowerCase()}`).join('; ') : 'en un solo pago al firmar',
-    mensualidad: p ? quetzales(p.mensualidad) : '__________',
-    dia_cobro: p?.dia_cobro ? String(p.dia_cobro) : '__',
-    inicio: p?.mensualidad_inicio ? fechaLarga(p.mensualidad_inicio) : '__________',
+    mensualidad: p ? quetzales(p.mensualidad) : falta('mensualidad'),
+    dia_cobro: p?.dia_cobro ? String(p.dia_cobro) : falta('día de cobro'),
+    inicio: p?.mensualidad_inicio ? fechaLarga(p.mensualidad_inicio) : falta('fecha de inicio de la mensualidad'),
     fin: p?.mensualidad_fin ? `, hasta el ${fechaLarga(p.mensualidad_fin)}` : '',
-    entrega: p?.fecha_entrega ? fechaLarga(p.fecha_entrega) : '__________',
+    entrega: p?.fecha_entrega ? fechaLarga(p.fecha_entrega) : falta('fecha de entrega'),
   }
+}
+
+export function faltantes(texto: string): string[] {
+  return [...new Set([...texto.matchAll(/\[Falta: ([^\]]+)\]/g)].map((x) => x[1]))]
 }
 
 export function rellenar(texto: string, v: Record<string, string>): string {

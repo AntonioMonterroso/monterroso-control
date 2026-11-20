@@ -430,3 +430,13 @@ p.c-alerta-txt { font-size: var(--t-sm); margin: 0 0 var(--e-3); }
 .c-indice { display: flex; flex-wrap: wrap; gap: var(--e-2); position: sticky; top: 0; z-index: 3; padding: var(--e-2) 0; background: var(--bg); }
 .c-info-world { display: grid; gap: 6px; justify-items: start; padding: var(--e-3); border-radius: var(--radio-md); background: var(--bg3); font-size: var(--t-sm); }
 .c-tabla-erp .m-estado { white-space: nowrap; }
+.c-ventana-doble { max-width: min(1440px, calc(100vw - 24px)); }
+.c-doble { display: grid; gap: var(--e-5); }
+.c-doble-dos { grid-template-columns: minmax(360px, 1fr) minmax(0, 1.15fr); align-items: start; }
+.c-doble-dos > .c-previa-doc { position: sticky; top: 0; }
+.c-previa-doc { display: grid; gap: var(--e-2); min-width: 0; }
+.c-previa-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--e-2); }
+.c-previa-pagina { font-size: var(--t-xs); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.c-previa-faltan { margin: 0; padding: var(--e-2) var(--e-3); border-radius: 8px; background: color-mix(in srgb, #f59e0b 18%, var(--card)); font-size: var(--t-sm); }
+.c-previa-caja { max-height: min(72dvh, 900px); overflow: auto; border-radius: var(--radio-md); border: 1px solid var(--hairline); background: #d9dee5; }
+.c-pest-doble { margin-bottom: var(--e-3); }
