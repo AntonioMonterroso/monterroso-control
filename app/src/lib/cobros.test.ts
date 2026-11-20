@@ -11,7 +11,7 @@ const proyecto: Proyecto = {
   ],
 }
 
-const pago = (clave: string, monto: number): Pago => ({ id: clave + monto, cliente_id: 'c1', cobro_clave: clave, fecha: '2026-10-02', monto, cuenta: 'Banco', referencia: null, nota: null, recibo_numero: 1, creado: '' })
+const pago = (clave: string, monto: number): Pago => ({ id: clave + monto, cliente_id: 'c1', cobro_clave: clave, fecha: '2026-10-02', monto, cuenta: 'Banco', referencia: null, nota: null, recibo_numero: 1, creado: '', forma: null, destino: null, comprobantes: [], anticipo_id: null, registrado_por: null, proyecto_id: null })
 
 describe('cobros', () => {
   it('genera inscripción y mensualidades hasta la fecha', () => {

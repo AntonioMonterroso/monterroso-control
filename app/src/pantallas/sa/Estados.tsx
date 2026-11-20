@@ -32,7 +32,7 @@ export default function EstadosSA() {
 
   const filasER: [string, number | null, boolean?][] = [['Ingresos', null], ...ing.map((x): [string, number] => [x.n, x.t]), ['Total ingresos', r.ingresos, true], ['Gastos', null], ...gas.map((x): [string, number] => [x.n, x.t]), ['Total gastos', r.gastos, true], [r.utilidad >= 0 ? 'Utilidad del período' : 'Pérdida del período', r.utilidad, true]]
   const filasBG: [string, number | null, boolean?][] = [
-    ['Activo', null], ['Bancos', b.bancos], ['Cuentas por cobrar', b.porCobrar], ['Total activo', b.activo, true],
+    ['Activo', null], ['Bancos', b.bancos], ['Cuentas por cobrar', b.porCobrar], ['Cuenta por cobrar al socio o administrador', b.porCobrarSocio], ['Total activo', b.activo, true],
     ['Pasivo', null], ['Deudas', b.deudas], ['ISR de dividendos por pagar', b.isrPorPagar], ['Dividendos por pagar', b.dividendosPorPagar], ['Total pasivo', b.pasivo, true],
     ['Patrimonio', null], ['Capital pagado', b.capitalPagado], ['Reserva legal', b.reserva], ['Utilidades acumuladas', b.acumuladas], ['Total patrimonio', b.patrimonio, true],
     ['Total pasivo y patrimonio', deCentavos(aCentavos(b.pasivo) + aCentavos(b.patrimonio)), true],

@@ -15,13 +15,14 @@ export const TABLAS = [
   'ctl_sa', 'ctl_sa_documentos', 'ctl_sa_socios', 'ctl_sa_acciones', 'ctl_sa_aportes', 'ctl_sa_transmisiones', 'ctl_sa_repartos', 'ctl_sa_reparto_socios',
   'ctl_bancos', 'ctl_banco_movimientos', 'ctl_banco_conciliaciones', 'ctl_sa_tramites', 'ctl_recordatorios',
   'ctl_marca', 'ctl_documentos', 'ctl_historial',
+  'ctl_cuentas', 'ctl_anticipos', 'ctl_traslados', 'ctl_links', 'fin_accounts', 'ctl_traspasos',
 ] as const
 
 export type Tabla = (typeof TABLAS)[number]
 export type Fila = { id: string; creado?: string } & Record<string, unknown>
 
 const NUMERICOS = new Set([
-  'amount', 'setup_fee', 'monthly_fee',
+  'amount', 'setup_fee', 'monthly_fee', 'devuelto_monto', 'saldo_inicial',
   'capital_autorizado', 'capital_suscrito', 'valor_nominal', 'pagado', 'utilidad', 'isr_sociedad', 'reserva', 'repartido', 'isr_dividendos_tasa', 'bruto', 'isr', 'neto', 'porcentaje', 'saldo_banco',
   'monto', 'inscripcion_total', 'mensualidad', 'costo', 'precio', 'envio', 'comision', 'otros', 'precio_venta', 'costo_producto',
   'bruto', 'descuentos', 'total', 'cuota', 'limite', 'saldo_inicial', 'inscripcion', 'cantidad', 'envio_estimado', 'monto_ajustado', 'costo',

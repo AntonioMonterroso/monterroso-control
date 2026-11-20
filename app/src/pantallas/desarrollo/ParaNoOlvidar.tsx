@@ -1,4 +1,4 @@
-import { Bell, BellRing, Building, CalendarClock, Database, Globe, KeyRound, Link2 } from 'lucide-react'
+import { ArrowRightLeft, Bell, BellRing, Building, CalendarClock, CheckCircle2, Database, Globe, KeyRound, Link2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { AvisoDev } from '../../lib/desarrollo'
@@ -6,11 +6,13 @@ import { useModelo } from '../../lib/modelo'
 import { pedirPermiso, permisoNotificaciones } from '../../lib/notificar'
 import { useAvisosDev } from '../../lib/usos'
 
-const ICONO: Record<AvisoDev['tipo'], typeof Database> = { supabase: Database, token: KeyRound, servicio: Globe, enlace: Link2, recordatorio: CalendarClock, sociedad: Building }
+const ICONO: Record<AvisoDev['tipo'], typeof Database> = { supabase: Database, token: KeyRound, servicio: Globe, enlace: Link2, recordatorio: CalendarClock, sociedad: Building, traslado: ArrowRightLeft, aceptado: CheckCircle2 }
 
 export function rutaAviso(a: AvisoDev): string {
   if (a.tipo === 'recordatorio') return '/sa/recordatorios'
   if (a.tipo === 'sociedad') return '/sa'
+  if (a.tipo === 'traslado') return '/cuentas'
+  if (a.tipo === 'aceptado') return '/documentos'
   return a.proyecto_id ? `/proyectos/${a.proyecto_id}?ver=desarrollo` : `/desarrollo?ver=${a.tipo}`
 }
 

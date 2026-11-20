@@ -9,10 +9,13 @@ import { nombreMes, partes } from '../lib/fechas'
 import { mesesEntre, movimientos, periodoDe, resultado, sumar } from '../lib/finanzas'
 import { esc, imprimir } from '../lib/imprimir'
 import { useModelo } from '../lib/modelo'
-import { useHoy } from '../lib/usos'
+import { useEntradas, useHoy } from '../lib/usos'
+import { entraDinero } from '../lib/entradas'
+import { FORMAS, nombreForma } from '../lib/pagosDestino'
+import { useNombres } from './pagos/TablaEntradas'
 import { costoYGanancia } from './gastos/PorCliente'
 
-type Vista = 'resultados' | 'clientes' | 'flujo'
+type Vista = 'resultados' | 'clientes' | 'flujo' | 'dinero'
 
 export default function Reportes() {
   const m = useModelo()
@@ -26,6 +29,15 @@ export default function Reportes() {
   const nomMes = (p: string) => { const [a, mm] = partes(`${p}-01`); return nombreMes(a, mm) }
   const nomNeg = negocio ? m.negocios.find((n) => n.id === negocio)?.nombre ?? '' : 'Todos los negocios'
   const r = resultado(movs)
+  const n = useNombres()
+  const todasEntradas = useEntradas()
+  const [fForma, setFForma] = useState('')
+  const [fDestino, setFDestino] = useState('')
+  const entradas = todasEntradas.filter((e) => e.fecha.slice(0, 4) === anio && entraDinero(e) && (!negocio || e.negocio_id === negocio) && (!fForma || (fForma === 'sin' ? !e.forma : e.forma === fForma)) && (!fDestino || (fDestino === 'sin' ? !e.destino : e.destino === fDestino)))
+  const agrupar = (k: (e: (typeof entradas)[number]) => string) => [...entradas.reduce((g, e) => g.set(k(e), (g.get(k(e)) ?? 0) + Math.round(e.monto * 100)), new Map<string, number>()).entries()].map(([c, v]) => ({ c, v: v / 100 })).sort((a, b) => b.v - a.v)
+  const porForma = agrupar((e) => e.forma ?? '')
+  const porDestino = agrupar((e) => e.destino ?? '')
+  const totalEntradas = entradas.reduce((t, e) => t + Math.round(e.monto * 100), 0) / 100
 
   const porCategoria = (tipo: 'ingreso' | 'gasto') => m.categorias.filter((c) => c.tipo === tipo).map((c) => ({ c, total: sumar(movs, (x) => x.tipo === tipo && x.categoria_id === c.id) })).filter((x) => x.total !== 0)
   const sinCat = (tipo: 'ingreso' | 'gasto') => sumar(movs, (x) => x.tipo === tipo && !x.categoria_id)
@@ -43,10 +55,11 @@ export default function Reportes() {
 
   const filasExport = (): (string | number)[][] => {
     if (vista === 'resultados') return [['Estado de resultados', nomNeg, anio], [], ['Ingresos'], ...ingresosCat.map((x) => [x.c.nombre, x.total]), ['Total ingresos', r.ingresos], [], ['Gastos'], ...gastosCat.map((x) => [x.c.nombre, x.total]), ...(sinCat('gasto') ? [['Sin categoría', sinCat('gasto')]] : []), ['Total gastos', r.gastos], [], ['Utilidad', r.utilidad]]
+    if (vista === 'dinero') return [['Dinero que entró por forma y cuenta', nomNeg, anio], ['Forma de pago', 'Monto'], ...porForma.map((x) => [x.c ? nombreForma(x.c) : 'Sin indicar', x.v]), [], ['Dónde cayó', 'Monto'], ...porDestino.map((x) => [x.c ? n.destino(x.c) : 'Sin indicar', x.v]), [], ['Total', totalEntradas]]
     if (vista === 'flujo') return [['Flujo de caja', nomNeg, anio], ['Mes', 'Entradas', 'Salidas', 'Neto', 'Acumulado'], ...flujo.map((x) => [nomMes(x.p), x.e, x.s, x.neto, x.acumulado])]
     return [['Costo y ganancia por cliente', anio], ['Cliente', 'Ingresos', 'Costo', 'Ganancia'], ...clientes.map((x) => [x.c.nombre, x.ingresos, x.costo, x.ganancia])]
   }
-  const nombreArchivo = `${vista === 'resultados' ? 'estado-de-resultados' : vista === 'flujo' ? 'flujo-de-caja' : 'ganancia-por-cliente'}-${anio}.csv`
+  const nombreArchivo = `${vista === 'resultados' ? 'estado-de-resultados' : vista === 'flujo' ? 'flujo-de-caja' : vista === 'dinero' ? 'dinero-por-forma-y-cuenta' : 'ganancia-por-cliente'}-${anio}.csv`
   const pdf = () => {
     const f = filasExport()
     const titulo = String(f[0][0])
@@ -63,7 +76,7 @@ export default function Reportes() {
           <button type="button" className="m-btn m-btn-salida" onClick={pdf} title="Abrir este reporte para guardarlo en PDF o imprimirlo"><FileDown size={16} aria-hidden /> PDF</button>
         </div>
       </div>
-      <Pestanas etiqueta="Reporte" valor={vista} onCambio={setVista} opciones={[{ valor: 'resultados', nombre: 'Estado de resultados' }, { valor: 'flujo', nombre: 'Flujo de caja' }, { valor: 'clientes', nombre: 'Ganancia por cliente' }]} />
+      <Pestanas etiqueta="Reporte" valor={vista} onCambio={setVista} opciones={[{ valor: 'resultados', nombre: 'Estado de resultados' }, { valor: 'flujo', nombre: 'Flujo de caja' }, { valor: 'dinero', nombre: 'Por forma y cuenta' }, { valor: 'clientes', nombre: 'Ganancia por cliente' }]} />
       <div className="c-herramientas">
         <div className="c-chips" role="group" aria-label="Año">
           {anios.map((a) => <button key={a} type="button" className="m-chip" aria-pressed={anio === a} onClick={() => setAnio(a)} title={`Ver ${a}`}>{a}</button>)}
@@ -75,6 +88,23 @@ export default function Reportes() {
           </div>
         )}
       </div>
+
+      {vista === 'dinero' && (
+        <>
+          <div className="c-filtros-dim">
+            <label className="c-dim"><span>Forma de pago</span><select className="m-entrada" value={fForma} onChange={(e) => setFForma(e.target.value)}><option value="">Todas</option>{FORMAS.map((f) => <option key={f.valor} value={f.valor}>{f.nombre}</option>)}<option value="sin">Sin indicar</option></select></label>
+            <label className="c-dim"><span>Dónde cayó</span><select className="m-entrada" value={fDestino} onChange={(e) => setFDestino(e.target.value)}><option value="">Todas</option>{[...new Set(todasEntradas.map((e) => e.destino).filter(Boolean))].map((d) => <option key={d!} value={d!}>{n.destino(d)}</option>)}<option value="sin">Sin indicar</option></select></label>
+          </div>
+          <div className="c-dos">
+            <Tabla titulo="Por forma de pago" filas={porForma} clave={(x) => x.c || 'sin'} vacio="No entró dinero con estos filtros."
+              columnas={[{ titulo: 'Forma', principal: true, valor: (x) => (x.c ? nombreForma(x.c) : 'Sin indicar') }, { titulo: 'Monto', num: true, valor: (x) => quetzales(x.v), orden: (x) => x.v }]}
+              pie={<tr><td>Total</td><td className="m-num">{quetzales(totalEntradas)}</td></tr>} />
+            <Tabla titulo="Por cuenta de destino" filas={porDestino} clave={(x) => x.c || 'sin'} vacio="No entró dinero con estos filtros."
+              columnas={[{ titulo: 'Cuenta', principal: true, valor: (x) => (x.c ? n.destino(x.c) : 'Sin indicar') }, { titulo: 'Monto', num: true, valor: (x) => quetzales(x.v), orden: (x) => x.v }]}
+              pie={<tr><td>Total</td><td className="m-num">{quetzales(totalEntradas)}</td></tr>} />
+          </div>
+        </>
+      )}
 
       {vista === 'resultados' && (
         <>

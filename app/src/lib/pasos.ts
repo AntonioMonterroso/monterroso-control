@@ -5,11 +5,11 @@ export const PASOS: GuiaPasos[] = [
   {
     ruta: '/',
     pasos: [
-      { texto: 'Arriba ves el mes en curso y cuánto entró, cuánto falta cobrar, los gastos y la utilidad del mes.', ir: '.erp-kpis' },
+      { texto: 'Arriba ves el mes en curso: lo que entró, lo que te deben («Me deben»), los gastos y la utilidad del mes.', ir: '.erp-kpis' },
       { texto: 'Toca «Todos» o el nombre de un negocio para ver solo los números de ese negocio.', ir: '.c-chips' },
-      { texto: 'La tabla «Por negocio» compara ingresos, gastos y utilidad de cada negocio; se ve cuando está elegido «Todos».' },
       { texto: 'En «Presupuesto del mes» cada barra muestra lo real contra lo planeado de cada categoría.', ir: '.c-dos' },
-      { texto: 'En «Cobros: vencidos y próximos 7 días» toca el nombre del cliente para abrir su ficha, o «Ver todos los cobros» para ir a Cobros.' },
+      { texto: 'En «Lo que me deben: vencido y esta semana» toca el nombre del cliente para abrir su ficha, o «Ver todo lo que me deben» para ver la lista completa.' },
+      { texto: 'En «Pagos que recibí» ves los últimos pagos; toca «Ver todos» para abrir todo el historial.', ir: 'a[title="Abre el historial completo de pagos recibidos"]' },
       { texto: 'Si aparece «Para no olvidar», toca «Ver» en cada aviso para ir a donde se arregla.' },
     ],
   },
@@ -28,13 +28,13 @@ export const PASOS: GuiaPasos[] = [
   {
     ruta: '/clientes/:id',
     pasos: [
-      { texto: 'Arriba ves lo pendiente, lo pagado, el costo y la ganancia de este cliente.', ir: '.erp-kpis' },
-      { texto: 'Toca el lápiz de «Datos» para corregir su negocio, rubro, WhatsApp, correo, NIT o dirección.', ir: '.c-ficha' },
-      { texto: 'Toca «Proyecto» para asignarle un proyecto nuevo, y «Contrato» para armar un contrato con sus datos.', ir: 'button[title="Asignarle un proyecto nuevo"]' },
-      { texto: 'En «Lo que debe» toca «Pago» para registrar lo que pagó, o «Cobro extra» para agregarle un cobro aparte.', ir: 'button[title="Agregar un cobro extra a este cliente"]' },
-      { texto: 'Toca «Estado de cuenta» para ver lo pendiente y mandarlo por WhatsApp o PDF.', ir: 'button[title="Abre lo pendiente del cliente para mandarlo por WhatsApp o en PDF"]' },
-      { texto: 'En «Documentos» toca «Documento» para armar una cotización, propuesta u hoja membretada para este cliente.', ir: 'button[title="Armar una cotización, propuesta u hoja membretada para este cliente"]' },
-      { texto: 'Toca «Borrar o archivar»: si no tiene movimientos se borra y si los tiene se archiva; un cliente archivado vuelve con «Reactivar».' },
+      { texto: 'Arriba ves lo que te debe, lo que te ha pagado, su saldo a favor y la ganancia.', ir: '.erp-kpis' },
+      { texto: 'Toca un chip del índice («Datos», «Lo que debe», «Pagos que hizo», «Saldo a favor», «Proyectos», «Documentos» o «Desarrollo») para bajar a esa parte.', ir: '.c-indice' },
+      { texto: 'Toca «Registrar pago»: el cliente ya viene elegido; marcas lo que pagó, «Siguiente», y pones fecha, «Usar saldo a favor», forma de pago, «Dónde cayó» y comprobante.', ir: 'button[title="Elige al cliente y lo que pagó; después pones la fecha, la forma, dónde cayó y el comprobante"]' },
+      { texto: 'En «Lo que debe» toca «Pago» en una fila, o marca varias y toca «Registrar pago de las marcadas».', ir: '#f-debe' },
+      { texto: 'En «Más» tienes «Agregar cobro», «Registrar anticipo», «Proyecto nuevo», «Contrato» y «Documento».', ir: 'button[aria-haspopup="menu"]' },
+      { texto: 'Toca «Estado de cuenta» para mandarlo por WhatsApp, en PDF o con «Versión web».', ir: 'button[title="Abre su estado de cuenta para mandarlo por WhatsApp, en PDF o como página web"]' },
+      { texto: 'Toca «Borrar o archivar»: si no tiene movimientos se borra y si los tiene se archiva; vuelve con «Reactivar».' },
     ],
   },
   {
@@ -51,10 +51,12 @@ export const PASOS: GuiaPasos[] = [
   {
     ruta: '/proyectos/:id',
     pasos: [
-      { texto: 'Toca «Editar» para cambiar el proyecto, su inscripción y su mensualidad.', ir: 'button[title="Editar el proyecto, su inscripción y su mensualidad"]' },
+      { texto: 'Toca «Editar» para cambiar el proyecto, su inscripción y su mensualidad.', ir: 'button[title="Abre el proyecto para corregir su inscripción, su mensualidad y sus fechas"]' },
+      { texto: 'Toca «Registrar pago»: solo salen los cobros de este proyecto; marcas lo que pagó, «Siguiente», y pones la fecha, la forma de pago y «Dónde cayó».', ir: 'button[title="Elige al cliente y lo que pagó; después pones la fecha, la forma, dónde cayó y el comprobante"]' },
       { texto: 'Usa las pestañas «Resumen» y «Desarrollo» para cambiar lo que ves del proyecto.', ir: '.c-pestanas' },
-      { texto: 'En «Resumen» ves la inscripción, la mensualidad, lo pagado y el costo del proyecto.', ir: '.erp-kpis' },
-      { texto: 'La tabla «Cobros del proyecto» lista cada cobro con su vencimiento, estado y lo pendiente.' },
+      { texto: 'En «Resumen» ves la inscripción, la mensualidad, lo que ha pagado y el costo del proyecto.', ir: '.erp-kpis' },
+      { texto: 'La tabla «Lo que debe de este proyecto» lista cada cobro con su vencimiento, su estado y lo que falta.' },
+      { texto: 'En «Pagos que hizo» ves lo pagado este año, desde siempre, el saldo a favor y cada pago.' },
       { texto: 'En «Desarrollo» anotas Supabase, enlaces, dominios y servicios, tokens y la «Bitácora de cambios» de este proyecto.' },
     ],
   },
@@ -77,8 +79,9 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'Toca «Acuerdo de servicios» para armar el contrato con la plantilla; se guarda en Contratos.', ir: 'button[title="Armar el acuerdo de servicios (contrato) con la plantilla"]' },
       { texto: 'Escribe un título, cliente o número en el buscador, o toca un chip de tipo para filtrar.', ir: '.c-herramientas' },
       { texto: 'Toca el ojito para ver el documento encima; el estado («Borrador», «Enviado», «Aceptado» o «Rechazado») se cambia con el lápiz.', ir: '.m-tabla-envoltura' },
-      { texto: 'En cada fila abre el PDF listo para enviar, edita con el lápiz o quita con el basurero; quitar se puede deshacer.' },
-      { texto: 'Marca varias casillas y toca «Quitar las marcadas» para quitarlas juntas.' },
+      { texto: 'En cotizaciones y propuestas toca el ícono de compartir: «Compartir en la web» tiene «Copiar link», «Enviar por WhatsApp», «Ver como el cliente», «Bajar PDF», «Retirar link» y «Crear link nuevo». Los contratos no van a la web.' },
+      { texto: 'Junto al ícono ves si el cliente lo abrió: «Sin abrir», «Visto 2 veces» o «Aceptado».' },
+      { texto: 'Marca varias casillas y toca «Quitar las marcadas» para quitarlas juntas; quitar se puede deshacer.' },
     ],
   },
   {
@@ -137,6 +140,7 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'Elige el mes con las flechas del selector de mes.', ir: '.c-selector-mes' },
       { texto: 'Usa las pestañas «Del mes» o «Del año» para cambiar el período.', ir: '.c-pestanas' },
       { texto: 'Revisa el «Estado de resultados» y el «Balance general».' },
+      { texto: 'La línea «Cuenta por cobrar al socio o administrador» es lo de la S.A. que cayó en tu cuenta personal; se quita con «Registrar traslado a la S.A.» en «Dónde está mi dinero».' },
       { texto: 'Toca «Excel» para bajarlos o «PDF» para abrirlos con el formato de la firma.', ir: 'button[title="Abrir los estados con el formato de la firma para guardarlos en PDF"]' },
     ],
   },
@@ -163,13 +167,45 @@ export const PASOS: GuiaPasos[] = [
   {
     ruta: '/cobros',
     pasos: [
-      { texto: 'Elige el mes con las flechas del selector de mes.', ir: '.c-selector-mes' },
-      { texto: 'Usa las pestañas «Lo que toca cobrar» y «Pagos recibidos».', ir: '.c-pestanas' },
-      { texto: 'Filtra con los chips «Pendientes», «Vencidos», «Pagados del mes», «Dados por saldado» o «Todos del mes».', ir: '.c-herramientas' },
-      { texto: 'Elige cliente, proyecto, rubro o negocio, y en «Ver por» agrupa la lista.', ir: '.c-filtros-dim' },
-      { texto: 'En cada fila toca «Pago» para registrar lo que pagó, o «Saldar» para dejar de contarlo como pendiente.' },
-      { texto: 'Marca varias filas y toca «Marcar como pagados» para registrarlas juntas con una fecha y una cuenta.' },
-      { texto: 'Toca «Recordatorios» para mandar el estado de cuenta por WhatsApp, o «Cobro extra» para agregar un cobro aparte.', ir: 'button[title="Mandar el estado de cuenta por WhatsApp a cada cliente que debe"]' },
+      { texto: 'Arriba ves «Me deben en total», lo «Vencido», lo que «Falta de este mes» y lo que «Entró este mes».', ir: '.erp-kpis' },
+      { texto: 'Si hay cobros vencidos sale una franja roja; toca «Ver solo vencidos» para ver solo esos.', ir: '.c-urgente' },
+      { texto: 'Usa los chips «Por cobrar», «Vencidos», «Pagados del mes», «Saldados» y «Todos del mes»; elige cliente, proyecto, rubro o negocio y «Ver por» agrupa.', ir: '.c-herramientas' },
+      { texto: 'Toca «Registrar pago»: eliges el cliente y marcas los cobros, tocas «Siguiente» y pones fecha, forma de pago, «Dónde cayó» y comprobante.', ir: 'button[title="Elige al cliente y lo que pagó; después pones la fecha, la forma, dónde cayó y el comprobante"]' },
+      { texto: 'En cada fila toca «Pago» para registrar lo que pagó, o «Saldar» para dejar de cobrarlo a propósito; marca varias y toca «Marcar como pagados».' },
+      { texto: 'En «Más» tienes «Agregar cobro», «Registrar anticipo» y «Recordatorios por WhatsApp».', ir: 'button[aria-haspopup="menu"]' },
+    ],
+  },
+  {
+    ruta: '/pagos',
+    pasos: [
+      { texto: 'Arriba ves lo que entró en el período, cuántos pagos tienen «Falta decir dónde cayó» y cuántos no tienen comprobante.', ir: '.erp-kpis' },
+      { texto: 'Elige el período con «Este mes», «Mes anterior», «Este año», «Rango» o «Desde el inicio»; «Lista», «Por mes» y «Por cliente» cambian cómo se ve.', ir: '.c-herramientas' },
+      { texto: 'Filtra por cliente, proyecto, negocio, forma de pago, «Dónde cayó» o comprobante.', ir: '.c-filtros-dim' },
+      { texto: 'Toca «Falta la forma» o «Falta decir dónde cayó» en una fila para abrir el pago y completarlo; «¿Repetido?» avisa que hay otro pago igual.', ir: '.m-tabla-envoltura' },
+      { texto: 'El lápiz abre «Editar pago»: en «A qué se aplicó (tipo y período)» cambias el cobro o tocas «Repartir en otro cobro»; «Eliminar pago» te dice qué cobros vuelven a «por cobrar» y si también se borra en Monterroso World.' },
+      { texto: 'Marca varios para «Completar forma y cuenta», «Eliminar los marcados» o «Bajar recibos».' },
+      { texto: 'Toca «Excel» o «PDF» para bajar lo filtrado; en «Más» está «Registrar anticipo».', ir: '.c-cabeza-acciones' },
+    ],
+  },
+  {
+    ruta: '/saldo-a-favor',
+    pasos: [
+      { texto: 'Arriba ves el «Saldo a favor hoy» de tus clientes y lo «Usado este mes» en sus cobros.', ir: '.erp-kpis' },
+      { texto: 'Toca «Registrar anticipo» cuando un cliente te pague antes de que exista el cobro: cliente, fecha, monto, forma de pago y «Dónde cayó».', ir: 'button[title="Registra un pago adelantado que queda como saldo a favor del cliente"]' },
+      { texto: 'Usa los chips «Con saldo» y «Todos», o busca por cliente, referencia o monto.', ir: '.c-herramientas' },
+      { texto: 'En cada fila toca «Aplicar anticipo» para usarlo en los cobros que debe, en parte o completo.', ir: '.m-tabla-envoltura' },
+      { texto: 'Toca «Sobrante» si sobra al cerrar el proyecto: devolverlo al cliente o dejarlo a favor para un trabajo futuro.' },
+    ],
+  },
+  {
+    ruta: '/cuentas',
+    pasos: [
+      { texto: 'Arriba ves cuánto tienes hoy entre cuentas y efectivo, lo que entró este mes y lo que «Falta pasar a la S.A.».', ir: '.erp-kpis' },
+      { texto: 'Toca «Registrar traspaso» cuando el dinero pase de una caja o cuenta a otra: eliges «Sale de», «Entra a», monto, fecha y nota.', ir: 'button[title="Registra dinero que pasa de una caja o cuenta a otra"]' },
+      { texto: 'En «Más» toca «Agregar cuenta personal» o «Agregar caja de efectivo»; ya vienen «Efectivo billetera» y «Efectivo Papá».', ir: 'button[aria-haspopup="menu"]' },
+      { texto: 'En «Falta pasar a la S.A.» marca los pagos y toca «Registrar traslado a la S.A.»; pones la fecha y la cuenta de la S.A.' },
+      { texto: '«Saldo de cada cuenta y caja» dice lo que entró, salió y el saldo de hoy; el lápiz renombra, pone el saldo inicial o apaga.' },
+      { texto: 'En «Traspasos entre cuentas y cajas» ves cada traspaso; el basurero lo quita y se puede deshacer.' },
     ],
   },
   {
@@ -208,8 +244,19 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'Elige el mes con las flechas del selector de mes.', ir: '.c-selector-mes' },
       { texto: 'Toca «Registrar pago» para anotar lo que entró y ligarlo a sus pedidos.', ir: 'button[title="Registrar lo que entró y ligarlo a sus pedidos"]' },
       { texto: 'En la ventana elige la fecha y el «Medio», y marca los pedidos que cubre el pago.' },
+      { texto: 'En «Dónde cayó» elige la cuenta; en «Comprobante» elige, arrastra o pega con Ctrl/⌘ + V la foto o el PDF.' },
       { texto: 'Edita un pago con su lápiz para corregir la fecha, el medio o la referencia.', ir: '.m-tabla-envoltura' },
       { texto: 'Si quitas un pago, pide confirmar y sus pedidos vuelven a quedar por cobrar.' },
+    ],
+  },
+  {
+    ruta: '/tienda/recibidos',
+    pasos: [
+      { texto: 'Arriba ves lo que entró en el período y cuántos pagos tienen «Falta decir dónde cayó» o no tienen comprobante.', ir: '.erp-kpis' },
+      { texto: 'Elige el período y cómo verlo: «Lista», «Por mes» o «Por cliente».', ir: '.c-herramientas' },
+      { texto: 'Filtra por forma de pago, «Dónde cayó» o comprobante.', ir: '.c-filtros-dim' },
+      { texto: 'Toca «Falta decir dónde cayó» o el lápiz para elegir la cuenta o caja y el comprobante; toca un pago para ver su detalle.', ir: '.m-tabla-envoltura' },
+      { texto: 'Toca «Excel» o «PDF» para bajar lo filtrado.', ir: '.c-cabeza-acciones' },
     ],
   },
   {
@@ -227,7 +274,7 @@ export const PASOS: GuiaPasos[] = [
     pasos: [
       { texto: 'Elige el mes con las flechas del selector de mes.', ir: '.c-selector-mes' },
       { texto: 'Usa las pestañas «Gastos del mes» y «Gastos fijos».', ir: '.c-pestanas' },
-      { texto: 'Toca «Nuevo gasto» para registrar un gasto de la tienda.', ir: 'button[title="Registrar un gasto de la empresa"]' },
+      { texto: 'Toca «Nuevo gasto» para registrar un gasto de la tienda; en «De dónde salió el dinero» eliges la cuenta o caja.', ir: 'button[title="Registrar un gasto de la empresa"]' },
       { texto: 'Si aparece «Gastos fijos por registrar este mes», toca «Registrar» en cada uno.' },
       { texto: 'Escribe descripción, proveedor, NIT o factura en el buscador; cada gasto se edita con su lápiz.', ir: '.c-herramientas' },
       { texto: 'En «Gastos fijos» toca «Gasto fijo» para agregar uno que se repite cada mes.' },
@@ -246,7 +293,7 @@ export const PASOS: GuiaPasos[] = [
     ruta: '/salario',
     pasos: [
       { texto: 'Toca «Poner salario» la primera vez; después el botón dice «Registrar aumento» para un aumento desde un mes.' },
-      { texto: 'El salario se repite solo cada mes y sale en Cobros como por recibir.' },
+      { texto: 'El salario se repite solo cada mes y sale en «Lo que me deben» como por recibir.' },
       { texto: 'En «Últimos 12 meses» toca «Recibido» cuando te paguen el mes.' },
       { texto: 'En «Historial de aumentos» corrige un monto con el lápiz o quítalo con el basurero.', ir: '.m-tabla-envoltura' },
     ],
@@ -256,7 +303,7 @@ export const PASOS: GuiaPasos[] = [
     pasos: [
       { texto: 'Elige el mes con las flechas del selector de mes.', ir: '.c-selector-mes' },
       { texto: 'Usa las pestañas «Gastos del mes» y «Gastos fijos».', ir: '.c-pestanas' },
-      { texto: 'Toca «Nuevo gasto» para registrar un gasto del salario, como transporte o internet.', ir: 'button[title="Registrar un gasto de la empresa"]' },
+      { texto: 'Toca «Nuevo gasto» para un gasto del salario, como transporte o internet; elige «De dónde salió el dinero».', ir: 'button[title="Registrar un gasto de la empresa"]' },
       { texto: 'Si aparece «Gastos fijos por registrar este mes», toca «Registrar» en cada uno.' },
       { texto: 'Cada gasto se edita con su lápiz; marca varios y toca «Quitar las marcadas» para quitarlos juntos.', ir: '.c-herramientas' },
     ],
@@ -271,11 +318,22 @@ export const PASOS: GuiaPasos[] = [
     ],
   },
   {
+    ruta: '/salario/recibidos',
+    pasos: [
+      { texto: 'Arriba ves lo que entró en el período y cuántos pagos tienen «Falta decir dónde cayó» o no tienen comprobante.', ir: '.erp-kpis' },
+      { texto: 'Elige el período y cómo verlo: «Lista», «Por mes» o «Por cliente».', ir: '.c-herramientas' },
+      { texto: 'Filtra por forma de pago, «Dónde cayó» o comprobante.', ir: '.c-filtros-dim' },
+      { texto: 'Toca «Falta decir dónde cayó» o el lápiz para abrir «Editar pago»; ahí está «A qué se aplicó (tipo y período)» y «Eliminar pago».', ir: '.m-tabla-envoltura' },
+      { texto: 'Marca varios para «Completar forma y cuenta» o «Eliminar los marcados».' },
+      { texto: 'Toca «Excel» o «PDF» para bajar lo filtrado.', ir: '.c-cabeza-acciones' },
+    ],
+  },
+  {
     ruta: '/gastos',
     pasos: [
       { texto: 'Elige el mes con las flechas del selector de mes.', ir: '.c-selector-mes' },
       { texto: 'Usa las pestañas «Gastos del mes», «Gastos fijos» y «Costo y ganancia por cliente».', ir: '.c-pestanas' },
-      { texto: 'Toca «Nuevo gasto» para registrar un gasto.', ir: 'button[title="Registrar un gasto de la empresa"]' },
+      { texto: 'Toca «Nuevo gasto» para registrar un gasto; en «De dónde salió el dinero» eliges la cuenta o caja.', ir: 'button[title="Registrar un gasto de la empresa"]' },
       { texto: 'Escribe en el buscador o toca «Todos» o un negocio para filtrar.', ir: '.c-herramientas' },
       { texto: 'Si aparece «Gastos fijos por registrar este mes», toca «Registrar» en cada uno.' },
       { texto: 'Cada gasto se edita con su lápiz; marca varios y toca «Quitar las marcadas» para quitarlos juntos.' },
@@ -325,9 +383,10 @@ export const PASOS: GuiaPasos[] = [
   {
     ruta: '/reportes',
     pasos: [
-      { texto: 'Usa las pestañas «Estado de resultados», «Flujo de caja» y «Ganancia por cliente».', ir: '.c-pestanas' },
+      { texto: 'Usa las pestañas «Estado de resultados», «Flujo de caja», «Por forma y cuenta» y «Ganancia por cliente».', ir: '.c-pestanas' },
       { texto: 'Toca el año que quieres ver y, si aplica, «Todos» o un negocio.', ir: '.c-herramientas' },
       { texto: 'En «Estado de resultados» ves ingresos y gastos por categoría y la tabla «Mes a mes».' },
+      { texto: 'En «Por forma y cuenta» ves lo que entró por forma de pago y por cuenta; filtra con «Forma de pago» y «Dónde cayó».' },
       { texto: 'Toca «Excel» para bajar el reporte o «PDF» para guardarlo o imprimirlo.', ir: 'button[title="Abrir este reporte para guardarlo en PDF o imprimirlo"]' },
     ],
   },

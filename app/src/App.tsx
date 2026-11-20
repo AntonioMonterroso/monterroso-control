@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { ProveedorAvisos } from './componentes/Avisos'
 import Marco from './componentes/Marco'
 import { ProveedorDatos, useDatos } from './lib/datos'
@@ -34,6 +34,11 @@ import Salario from './pantallas/Salario'
 import Tienda from './pantallas/tienda/Tienda'
 import ResumenTienda from './pantallas/tienda/Resumen'
 import PagosTienda from './pantallas/tienda/Pagos'
+import PagosRecibidos from './pantallas/pagos/PagosRecibidos'
+import Cuentas from './pantallas/pagos/Cuentas'
+import SaldoAFavor from './pantallas/pagos/SaldoAFavor'
+import DocumentoWeb from './pantallas/web/DocumentoWeb'
+import AplicarSolo from './pantallas/pagos/AplicarSolo'
 
 function Cargando() {
   return <div className="m-cargando"><img className="c-carga-iso" src="/marca/studio-isotipo.svg" alt="" /><div className="m-cargando-linea"><span /></div></div>
@@ -53,6 +58,7 @@ function Contenido() {
   )
   return (
     <Marco>
+      <AplicarSolo />
       <Routes>
         <Route path="/" element={<Inicio />} />
         <Route path="/clientes" element={<Clientes />} />
@@ -70,6 +76,11 @@ function Contenido() {
         <Route path="/sa/tramites" element={<TramitesSA />} />
         <Route path="/sa/recordatorios" element={<RecordatoriosSA />} />
         <Route path="/cobros" element={<Cobros />} />
+        <Route path="/pagos" element={<PagosRecibidos />} />
+        <Route path="/cuentas" element={<Cuentas />} />
+        <Route path="/saldo-a-favor" element={<SaldoAFavor />} />
+        <Route path="/tienda/recibidos" element={<PagosRecibidos key="r-canela" negocioClave="canela" />} />
+        <Route path="/salario/recibidos" element={<PagosRecibidos key="r-salario" negocioClave="salario" />} />
         <Route path="/contratos" element={<Contratos />} />
         <Route path="/tienda" element={<ResumenTienda />} />
         <Route path="/tienda/pedidos" element={<Tienda fija="pedidos" />} />
@@ -96,7 +107,9 @@ function Contenido() {
 }
 
 function Puerta() {
+  const lugar = useLocation()
   const { listo, correo, prueba } = useSesion()
+  if (lugar.pathname.startsWith('/d/')) return <Routes><Route path="/d/:codigo" element={<DocumentoWeb />} /><Route path="*" element={<DocumentoWeb />} /></Routes>
   if (!listo) return <Cargando />
   if (!correo) return <Acceso />
   return <ProveedorDatos key={prueba ? 'prueba' : correo} prueba={prueba}><Contenido /></ProveedorDatos>

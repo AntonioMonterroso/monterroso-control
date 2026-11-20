@@ -1,5 +1,5 @@
 import { Paperclip } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { useDatos } from '../lib/datos'
 import { leerMonto } from '../lib/dinero'
 import { useAvisar } from './Avisos'
@@ -55,6 +55,7 @@ export default function FormRegistro({ abierta, titulo, subtitulo, campos, inici
   debajo?: ReactNode
 }) {
   const { almacen } = useDatos()
+  const idForm = `form-registro-${useId().replace(/:/g, '')}`
   const avisar = useAvisar()
   const [v, setV] = useState<Valores>({})
   const [archivos, setArchivos] = useState<Record<string, File | null>>({})
@@ -103,11 +104,11 @@ export default function FormRegistro({ abierta, titulo, subtitulo, campos, inici
       pie={
         <>
           <button type="button" className="m-btn m-btn-fantasma" onClick={onCerrar} title="Cerrar sin guardar">Cancelar</button>
-          <button type="submit" form="form-registro" className="m-btn m-btn-primario" disabled={!!problema || ocupado} title={problema ?? 'Guardar los cambios'}>{ocupado ? 'Guardando…' : textoGuardar}</button>
+          <button type="submit" form={idForm} className="m-btn m-btn-primario c-btn-principal" disabled={!!problema || ocupado} title={problema ? `Apagado: ${problema}` : 'Guarda los cambios (Enter)'}>{ocupado ? 'Guardando…' : textoGuardar}</button>
         </>
       }
     >
-      <form id="form-registro" className="c-form" onSubmit={guardar}>
+      <form id={idForm} className="c-form" onSubmit={guardar}>
         {visibles.map((c, i) => {
           const val = v[c.k] ?? ''
           const set = (x: string) => {

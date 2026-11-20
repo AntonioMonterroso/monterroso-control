@@ -1,4 +1,4 @@
-import { BarChart3, FileText, Sparkles, Building, Building2, CalendarClock, ClipboardList, Landmark, Scale, UsersRound, ChevronRight, Code2, ChevronsLeft, CreditCard, FileSignature, FolderKanban, Globe, HandCoins, LayoutDashboard, LogOut, Menu, Moon, Package, Palette, PiggyBank, Receipt, ShoppingBag, Tags, Target, Sun, Users, Wallet, X } from 'lucide-react'
+import { Banknote, ReceiptText, BarChart3, FileText, Sparkles, Building, Building2, CalendarClock, ClipboardList, Landmark, Scale, UsersRound, ChevronRight, Code2, ChevronsLeft, CreditCard, FileSignature, FolderKanban, Globe, HandCoins, LayoutDashboard, LogOut, Menu, Moon, Package, Palette, PiggyBank, Receipt, ShoppingBag, Tags, Target, Sun, Users, Wallet, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useModelo } from '../lib/modelo'
@@ -15,10 +15,15 @@ const GRUPOS: { titulo: string; modo?: Modo; enlaces: { a: string; nombre: strin
     { a: '/', nombre: 'Inicio', icono: <LayoutDashboard aria-hidden />, fin: true },
     { a: '/reportes', nombre: 'Reportes', icono: <BarChart3 aria-hidden /> },
   ] },
+  { titulo: 'Dinero', enlaces: [
+    { a: '/cobros', nombre: 'Lo que me deben', icono: <HandCoins aria-hidden /> },
+    { a: '/pagos', nombre: 'Pagos que recibí', icono: <ReceiptText aria-hidden /> },
+    { a: '/saldo-a-favor', nombre: 'Saldo a favor', icono: <PiggyBank aria-hidden /> },
+    { a: '/cuentas', nombre: 'Dónde está mi dinero', icono: <Banknote aria-hidden /> },
+  ] },
   { titulo: 'Dev Studio', modo: 'dev', enlaces: [
     { a: '/clientes', nombre: 'Clientes', icono: <Users aria-hidden /> },
     { a: '/proyectos', nombre: 'Proyectos', icono: <FolderKanban aria-hidden /> },
-    { a: '/cobros', nombre: 'Cobros', icono: <HandCoins aria-hidden /> },
     { a: '/contratos', nombre: 'Contratos', icono: <FileSignature aria-hidden /> },
     { a: '/documentos', nombre: 'Documentos', icono: <FileText aria-hidden /> },
     { a: '/desarrollo', nombre: 'Desarrollo', icono: <Code2 aria-hidden /> },
@@ -27,6 +32,7 @@ const GRUPOS: { titulo: string; modo?: Modo; enlaces: { a: string; nombre: strin
     { a: '/tienda', nombre: 'Resumen', icono: <LayoutDashboard aria-hidden />, fin: true },
     { a: '/tienda/pedidos', nombre: 'Pedidos', icono: <ShoppingBag aria-hidden /> },
     { a: '/tienda/pagos', nombre: 'Pagos', icono: <HandCoins aria-hidden /> },
+    { a: '/tienda/recibidos', nombre: 'Pagos que recibí', icono: <ReceiptText aria-hidden /> },
     { a: '/tienda/productos', nombre: 'Productos', icono: <Package aria-hidden /> },
     { a: '/tienda/gastos', nombre: 'Gastos de la tienda', icono: <Receipt aria-hidden /> },
     { a: '/tienda/presupuesto', nombre: 'Presupuesto', icono: <Target aria-hidden /> },
@@ -42,6 +48,7 @@ const GRUPOS: { titulo: string; modo?: Modo; enlaces: { a: string; nombre: strin
   ] },
   { titulo: 'Salario', modo: 'salario', enlaces: [
     { a: '/salario', nombre: 'Mi salario', icono: <Wallet aria-hidden />, fin: true },
+    { a: '/salario/recibidos', nombre: 'Salario recibido', icono: <ReceiptText aria-hidden /> },
     { a: '/salario/gastos', nombre: 'Gastos del salario', icono: <Receipt aria-hidden /> },
     { a: '/salario/presupuesto', nombre: 'Presupuesto', icono: <Target aria-hidden /> },
   ] },

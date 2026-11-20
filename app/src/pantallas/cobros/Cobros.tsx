@@ -1,36 +1,36 @@
 import Pasos from '../../componentes/Pasos'
 import SelectBuscable from '../../componentes/SelectBuscable'
-import { CheckCheck, ChevronDown, Pencil, FolderKanban, HandCoins, MessageCircle, Plus, Printer, Trash2, Undo2, User, X } from 'lucide-react'
+import { CheckCheck, ChevronDown, Pencil, FolderKanban, HandCoins, Printer, Trash2, Undo2, User, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAvisar } from '../../componentes/Avisos'
 import Buscador, { coincide } from '../../componentes/Buscador'
-import Confirmar from '../../componentes/Confirmar'
-import Pestanas from '../../componentes/Pestanas'
 import SelectorMes from '../../componentes/SelectorMes'
 import Tabla, { type Columna } from '../../componentes/Tabla'
-import { conceptoDePago, pendientes, totalSaldo, type Cobro } from '../../lib/cobros'
+import { pendientes, totalSaldo, type Cobro } from '../../lib/cobros'
 import { useDatos } from '../../lib/datos'
 import { aCentavos, deCentavos, quetzales } from '../../lib/dinero'
 import { fechaCorta } from '../../lib/fechas'
 import { periodoDe } from '../../lib/finanzas'
 import { useModelo } from '../../lib/modelo'
 import { useCobros, useHoy, usePeriodo } from '../../lib/usos'
-import { CUENTAS, type Pago } from '../../lib/tipos'
-import { useEscribir } from '../../lib/escribir'
-import Ventana from '../../componentes/Ventana'
 import { imprimirRecibo } from './documentos'
-import { VentanaEditarExtra, VentanaEditarPago, VentanaExtra, VentanaPago, VentanaRecordatorios, VentanaSaldar } from './Ventanas'
+import { VentanaAnticipo } from '../pagos/Anticipos'
+import MenuMas from '../../componentes/MenuMas'
+import RegistrarPago from '../pagos/RegistrarPago'
+import { VentanaEditarExtra, VentanaExtra, VentanaPago, VentanaRecordatorios, VentanaSaldar } from './Ventanas'
 import { useQuitar } from '../../lib/quitar'
 
 type Filtro = 'pendientes' | 'vencidos' | 'pagados' | 'saldados' | 'todos'
 type VerPor = 'nada' | 'cliente' | 'proyecto' | 'rubro' | 'negocio'
 type Dim = 'cliente' | 'proyecto' | 'rubro' | 'negocio'
 
-const NOMBRE_ESTADO: Record<Cobro['estado'], [string, string]> = { pagado: ['Pagado', 'aprobado'], por_cobrar: ['Por cobrar', 'pendiente'], vencido: ['Vencido', 'error'], saldado: ['Dado por saldado', 'bloqueado'] }
+const NOMBRE_ESTADO: Record<Cobro['estado'], [string, string]> = { pagado: ['Pagado', 'aprobado'], por_cobrar: ['Por cobrar', 'pendiente'], vencido: ['Vencido', 'error'], saldado: ['Saldado', 'bloqueado'] }
 
 export function EstadoCobro({ c }: { c: Cobro }) {
   const [n, k] = NOMBRE_ESTADO[c.estado]
+  const parcial = c.pagado > 0 && c.saldo > 0 && (c.estado === 'por_cobrar' || c.estado === 'vencido')
+  if (parcial) return <span className={`m-estado ${c.estado === 'vencido' ? 'error' : 'en-proceso'}`} title={`Pagó ${quetzales(c.pagado)}; falta ${quetzales(c.saldo)}${c.estado === 'vencido' ? '. Ya venció' : ''}`}>{c.estado === 'vencido' ? 'Pago parcial · vencido' : 'Pago parcial'}</span>
   const t = c.tipo === 'salario' ? (c.estado === 'pagado' ? 'Recibido' : c.estado === 'por_cobrar' ? 'Por recibir' : n) : n
   return <span className={`m-estado ${k}`}>{t}</span>
 }
@@ -61,13 +61,12 @@ function Sub({ s }: { s: ReturnType<typeof subtotales> }) {
 export default function Cobros() {
   const m = useModelo()
   const { guardar } = useDatos()
-  const esc = useEscribir()
   const avisar = useAvisar()
   const ir = useNavigate()
   const hoy = useHoy()
   const [periodo, setPeriodo] = usePeriodo()
   const todos = useCobros(periodo)
-  const [vista, setVista] = useState<'cobros' | 'pagos'>('cobros')
+  const [anticipo, setAnticipo] = useState(false)
   const [filtro, setFiltro] = useState<Filtro>('pendientes')
   const [verPor, setVerPor] = useState<VerPor>('nada')
   const [dims, setDims] = useState<Partial<Record<Dim, string>>>({})
@@ -77,15 +76,10 @@ export default function Cobros() {
   const [saldar, setSaldar] = useState<Cobro | null>(null)
   const [extra, setExtra] = useState(false)
   const [avisos, setAvisos] = useState(false)
-  const [quitarPago, setQuitarPago] = useState<Pago[]>([])
-  const [editarPago, setEditarPago] = useState<Pago | null>(null)
   const [editarExtra, setEditarExtra] = useState<Cobro | null>(null)
   const quitarExtra = useQuitar()
   const [marcadas, setMarcadas] = useState<Set<string>>(new Set())
   const [masa, setMasa] = useState(false)
-  const [masaFecha, setMasaFecha] = useState(hoy)
-  const [masaCuenta, setMasaCuenta] = useState('Banco')
-  const [ocupado, setOcupado] = useState(false)
 
   const salario = m.negocios.find((n) => n.clave === 'salario')
   const cliente = (id: string | null) => m.clientes.find((c) => c.id === id)
@@ -114,7 +108,6 @@ export default function Cobros() {
   const cobrado = deCentavos(pagosMes.reduce((s, p) => s + aCentavos(p.monto), 0))
   const porCobrarMes = totalSaldo(delMes)
   const vencido = totalSaldo(todos.filter((c) => c.estado === 'vencido'))
-  const conceptoDe = (clave: string) => conceptoDePago(clave, todos)
   const pagosDe = (clave: string) => m.pagos.filter((p) => p.cobro_clave === clave)
   const grupos = useMemo(() => {
     if (verPor === 'nada') return []
@@ -142,7 +135,7 @@ export default function Cobros() {
     { titulo: 'Concepto', principal: verPor === 'cliente', valor: (c) => <>{c.concepto}{c.guardado?.saldado && c.guardado.nota && <small>{c.guardado.nota}</small>}</> },
     { titulo: 'Estado', valor: (c) => <EstadoCobro c={c} />, orden: (c) => ORDEN_ESTADO[c.estado] },
     { titulo: 'Monto', num: true, valor: (c) => quetzales(c.monto), orden: (c) => c.monto },
-    { titulo: 'Pendiente', num: true, valor: (c) => quetzales(c.saldo), orden: (c) => c.saldo },
+    { titulo: 'Falta', num: true, valor: (c) => quetzales(c.saldo), orden: (c) => c.saldo },
   ]
   const acciones = (c: Cobro) => (
     <>
@@ -159,57 +152,47 @@ export default function Cobros() {
   const elegidos = todos.filter((c) => marcadas.has(c.clave) && puedeMarcar(c))
   const totalMarcado = deCentavos(elegidos.reduce((t, c) => t + aCentavos(c.saldo), 0))
   const soloSalario = elegidos.length > 0 && elegidos.every((c) => c.tipo === 'salario')
-  const registrarVarios = async () => {
-    if (!elegidos.length || ocupado) return
-    setOcupado(true)
-    const deshacer: (() => Promise<void>)[] = []
-    let usados = 0
-    try {
-      for (const c of elegidos) {
-        const recibo = c.tipo === 'salario' ? null : esc.siguienteRecibo(usados++)
-        deshacer.push(await esc.registrarPago(c, { fecha: masaFecha, monto: c.saldo, cuenta: masaCuenta, referencia: null, nota: null }, recibo))
-      }
-      setMasa(false); setMarcadas(new Set())
-      avisar(`${deshacer.length} ${deshacer.length === 1 ? 'cobro marcado' : 'cobros marcados'} por ${quetzales(totalMarcado)}.`, 'bien', { texto: 'Deshacer', hacer: async () => { for (const f of [...deshacer].reverse()) await f(); avisar('Se deshizo: vuelven a quedar pendientes.') } })
-    } catch (e) {
-      for (const f of [...deshacer].reverse()) await f().catch(() => undefined)
-      avisar(e instanceof Error ? e.message : 'No se pudo: no se registró ninguno.', 'error')
-    }
-    setOcupado(false)
-  }
   const abrirFila = (c: Cobro) => ir(c.tipo === 'salario' ? '/salario' : c.proyecto_id ? `/proyectos/${c.proyecto_id}` : `/clientes/${encodeURIComponent(c.cliente_id ?? "")}`)
 
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Dev Studio y salario</span><h1 className="erp-titulo">Cobros</h1><Pasos /></div>
+        <div><span className="m-etiqueta">Dinero</span><h1 className="erp-titulo">Lo que me deben</h1><Pasos /><p className="c-subtitulo">Lo que cada cliente tiene que pagarte: lo vencido, lo de este mes y lo que viene.</p></div>
         <div className="c-cabeza-acciones">
           <SelectorMes periodo={periodo} onCambio={setPeriodo} />
-          <button type="button" className="m-btn m-btn-salida" onClick={() => setAvisos(true)} title="Mandar el estado de cuenta por WhatsApp a cada cliente que debe"><MessageCircle size={16} aria-hidden /> Recordatorios</button>
-          <button type="button" className="m-btn m-btn-primario" onClick={() => setExtra(true)} title="Agregar un cobro que no es inscripción ni mensualidad"><Plus size={16} aria-hidden /> Cobro extra</button>
+          <MenuMas items={[
+            { texto: 'Agregar cobro', titulo: 'Agrega un cobro: único, servicio, mensualidad adicional u otro', hacer: () => setExtra(true) },
+            { texto: 'Registrar anticipo', titulo: 'Registra un pago adelantado que queda como saldo a favor del cliente', hacer: () => setAnticipo(true) },
+            { texto: 'Recordatorios por WhatsApp', titulo: 'Manda el estado de cuenta por WhatsApp a cada cliente que debe', hacer: () => setAvisos(true) },
+          ]} />
+          <RegistrarPago />
         </div>
       </div>
 
       <div className="erp-kpis">
-        <div className="erp-kpi"><span className="m-etiqueta">Cobrado en el mes</span><b>{quetzales(cobrado)}</b><small>{pagosMes.length} {pagosMes.length === 1 ? 'pago' : 'pagos'}</small></div>
-        <div className="erp-kpi"><span className="m-etiqueta">Falta cobrar del mes</span><b>{quetzales(porCobrarMes)}</b><small>{pendientes(delMes).length} {pendientes(delMes).length === 1 ? 'cobro' : 'cobros'}</small></div>
-        <div className="erp-kpi"><span className="m-etiqueta">Vencido a hoy</span><b className={vencido > 0 ? 'm-negativo' : undefined}>{quetzales(vencido)}</b><small>{todos.filter((c) => c.estado === 'vencido').length} vencidos</small></div>
+        <div className="erp-kpi"><span className="m-etiqueta">Me deben en total</span><b>{quetzales(totalSaldo(todos))}</b><small>{pendientes(todos).length} {pendientes(todos).length === 1 ? 'cobro' : 'cobros'}</small></div>
+        <div className={`erp-kpi${vencido > 0 ? ' peligro' : ''}`}><span className="m-etiqueta">Vencido</span><b className={vencido > 0 ? 'm-negativo' : undefined}>{quetzales(vencido)}</b><small>{todos.filter((c) => c.estado === 'vencido').length} vencidos</small></div>
+        <div className="erp-kpi"><span className="m-etiqueta">Falta de este mes</span><b>{quetzales(porCobrarMes)}</b><small>{pendientes(delMes).length} {pendientes(delMes).length === 1 ? 'cobro' : 'cobros'}</small></div>
+        <div className="erp-kpi exito"><span className="m-etiqueta">Entró este mes</span><b>{quetzales(cobrado)}</b><small><Link to="/pagos" className="c-enlace">{pagosMes.length} {pagosMes.length === 1 ? 'pago' : 'pagos'} · ver</Link></small></div>
       </div>
 
-      <Pestanas etiqueta="Ver" valor={vista} onCambio={setVista} opciones={[{ valor: 'cobros', nombre: 'Lo que toca cobrar' }, { valor: 'pagos', nombre: 'Pagos recibidos', cuenta: pagosMes.length }]} />
+      {vencido > 0 && filtro !== 'vencidos' && (
+        <div className="c-urgente" role="region" aria-label="Vencido">
+          <span><b>{todos.filter((c) => c.estado === 'vencido').length} cobros vencidos</b> por {quetzales(vencido)}. Es lo primero por cobrar.</span>
+          <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => setFiltro('vencidos')} title="Muestra solo los cobros vencidos">Ver solo vencidos</button>
+        </div>
+      )}
 
       <div className="c-herramientas">
         <Buscador valor={q} onCambio={setQ} ayuda="Cliente, concepto o referencia" />
-        {vista === 'cobros' && (
-          <div className="c-chips" role="group" aria-label="Filtrar cobros por estado">
-            {([['pendientes', 'Pendientes'], ['vencidos', 'Vencidos'], ['pagados', 'Pagados del mes'], ['saldados', 'Dados por saldado'], ['todos', 'Todos del mes']] as [Filtro, string][]).map(([f, n]) => (
-              <button key={f} type="button" className="m-chip" aria-pressed={filtro === f} onClick={() => setFiltro(f)} title={`Ver ${n.toLowerCase()}`}>{n}</button>
-            ))}
-          </div>
-        )}
+        <div className="c-chips" role="group" aria-label="Filtrar cobros por estado">
+          {([['pendientes', 'Por cobrar'], ['vencidos', 'Vencidos'], ['pagados', 'Pagados del mes'], ['saldados', 'Saldados'], ['todos', 'Todos del mes']] as [Filtro, string][]).map(([f, n]) => (
+            <button key={f} type="button" className="m-chip" aria-pressed={filtro === f} onClick={() => setFiltro(f)} title={`Muestra ${n.toLowerCase()}`}>{n}</button>
+          ))}
+        </div>
       </div>
 
-      {vista === 'cobros' ? (
+      {(
         <>
           <div className="c-filtros-dim">
             {(['cliente', 'proyecto', 'rubro', 'negocio'] as Dim[]).map((d) => (
@@ -234,7 +217,7 @@ export default function Cobros() {
               <span><b>{elegidos.length}</b> {elegidos.length === 1 ? 'marcado' : 'marcados'} · {quetzales(totalMarcado)}</span>
               <span>
                 <button type="button" className="m-btn m-btn-fantasma m-btn-sm" onClick={() => setMarcadas(new Set())} title="Quitar todas las marcas">Quitar marcas</button>
-                <button type="button" className="m-btn m-btn-primario m-btn-sm" onClick={() => { setMasaFecha(hoy); setMasa(true) }} title="Registrar el pago completo de todos los marcados con una fecha y una cuenta"><CheckCheck size={14} aria-hidden /> {soloSalario ? 'Marcar como recibidos' : 'Marcar como pagados'}</button>
+                <button type="button" className="m-btn m-btn-primario m-btn-sm" onClick={() => setMasa(true)} title="Registrar el pago completo de todos los marcados con una fecha y una cuenta"><CheckCheck size={14} aria-hidden /> {soloSalario ? 'Marcar como recibidos' : 'Marcar como pagados'}</button>
               </span>
             </div>
           ) : (
@@ -286,59 +269,16 @@ export default function Cobros() {
             </div>
           )}
         </>
-      ) : (
-        <Tabla
-          buscador={false}
-          marcable={(p) => p.origen !== 'world'}
-          quitarVarias={(l) => setQuitarPago(l)}
-          titulo={`${pagosMes.length} ${pagosMes.length === 1 ? 'pago' : 'pagos'}`}
-          filas={pagosMes}
-          clave={(p) => p.id}
-          vacio="No hay pagos registrados en este mes."
-          columnas={[
-            { titulo: 'Fecha', valor: (p) => fechaCorta(p.fecha), orden: (p) => p.fecha },
-            { titulo: 'Recibo', valor: (p) => (p.recibo_numero ? String(p.recibo_numero).padStart(5, '0') : <span className="m-vacia">—</span>), orden: (p) => p.recibo_numero ?? 0 },
-            { titulo: 'Cliente', principal: true, valor: (p) => (p.cobro_clave.startsWith('s:') ? <Link to="/salario" className="c-enlace">Mi salario</Link> : <Link to={`/clientes/${encodeURIComponent(p.cliente_id ?? "")}`} className="c-enlace">{cliente(p.cliente_id)?.nombre}</Link>) },
-            { titulo: 'Concepto', valor: (p) => conceptoDe(p.cobro_clave) },
-            { titulo: 'Cuenta', valor: (p) => <>{p.cuenta}{p.referencia && <small>Ref. {p.referencia}</small>}</> },
-            { titulo: 'Monto', num: true, valor: (p) => quetzales(p.monto), orden: (p) => p.monto },
-          ]}
-          acciones={(p) => (
-            <>
-              {!p.cobro_clave.startsWith('s:') && <button type="button" className="m-icono-btn c-salida" onClick={() => imprimirRecibo(p, cliente(p.cliente_id), conceptoDe(p.cobro_clave))} aria-label="Recibo" title="Abrir el recibo para guardarlo en PDF o imprimirlo"><Printer aria-hidden /></button>}
-              <button type="button" className="m-icono-btn" onClick={() => setEditarPago(p)} aria-label="Editar pago" title="Corregir fecha, monto, cuenta o referencia"><Pencil aria-hidden /></button>
-              {p.origen !== 'world' && <button type="button" className="m-icono-btn" onClick={() => setQuitarPago([p])} aria-label="Quitar pago" title="Quitar este pago si se registró por error"><Trash2 aria-hidden /></button>}
-            </>
-          )}
-          pie={<tr><td colSpan={5}>Total del mes</td><td className="m-num">{quetzales(cobrado)}</td><td /></tr>}
-        />
       )}
 
       <VentanaPago cobro={pagar} onCerrar={() => setPagar(null)} />
-      <VentanaEditarPago pago={editarPago} onCerrar={() => setEditarPago(null)} />
       <VentanaEditarExtra cobro={editarExtra} onCerrar={() => setEditarExtra(null)} />
       {quitarExtra.ventana}
-      <Ventana abierta={masa} titulo={soloSalario ? 'Marcar como recibidos' : 'Marcar como pagados'} subtitulo={`${elegidos.length} ${elegidos.length === 1 ? 'cobro' : 'cobros'} · ${quetzales(totalMarcado)}. Cada uno se registra por lo que debe.`} onCerrar={() => setMasa(false)} pie={
-        <>
-          <button type="button" className="m-btn m-btn-fantasma" onClick={() => setMasa(false)} title="Cerrar sin registrar">Cancelar</button>
-          <button type="button" className="m-btn m-btn-primario" disabled={ocupado || !masaFecha} onClick={() => void registrarVarios()} title="Registrar todos los marcados">{ocupado ? 'Registrando…' : `Registrar ${elegidos.length}`}</button>
-        </>
-      }>
-        <div className="c-form">
-          <div className="m-campo"><label htmlFor="ms-f">Fecha</label><input id="ms-f" type="date" className="m-entrada" value={masaFecha} onChange={(e) => setMasaFecha(e.target.value)} /></div>
-          <div className="m-campo"><label htmlFor="ms-c">Dónde cayó</label><select id="ms-c" className="m-entrada" value={masaCuenta} onChange={(e) => setMasaCuenta(e.target.value)}>{CUENTAS.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
-        </div>
-        <ul className="c-lista-saldos c-lista-pagar">
-          {elegidos.map((c) => <li key={c.clave}><span><b>{c.tipo === 'salario' ? 'Mi salario' : cliente(c.cliente_id)?.nombre}</b><small> · {c.concepto}</small></span><b className="m-cifra">{quetzales(c.saldo)}</b></li>)}
-        </ul>
-      </Ventana>
+      <VentanaPago varios={masa ? elegidos : null} onCerrar={() => setMasa(false)} onHecho={() => setMarcadas(new Set())} />
       <VentanaSaldar cobro={saldar} onCerrar={() => setSaldar(null)} />
+      <VentanaAnticipo abierta={anticipo} anticipo={null} onCerrar={() => setAnticipo(false)} />
       <VentanaExtra abierta={extra} onCerrar={() => setExtra(false)} />
       <VentanaRecordatorios abierta={avisos} cobros={todos} onCerrar={() => setAvisos(false)} />
-      <Confirmar abierta={quitarPago.length > 0} titulo={quitarPago.length > 1 ? `Quitar ${quitarPago.length} pagos` : 'Quitar pago'} peligro boton={quitarPago.length > 1 ? 'Quitar los pagos' : 'Quitar el pago'}
-        texto={quitarPago.length === 1 ? `Se quita el pago de ${quetzales(quitarPago[0].monto)} del ${fechaCorta(quitarPago[0].fecha)} y el cobro vuelve a quedar pendiente. Úsalo solo si se registró por error.` : `Se quitan ${quitarPago.length} pagos por ${quetzales(quitarPago.reduce((t, x) => t + x.monto, 0))} y sus cobros vuelven a quedar pendientes. Úsalo solo si se registraron por error.`}
-        onNo={() => setQuitarPago([])}
-        onSi={async () => { const l = quitarPago; setQuitarPago([]); try { for (const p of l) await esc.quitarPago(p); avisar(l.length === 1 ? 'Pago quitado.' : `Se quitaron ${l.length} pagos.`) } catch (e) { avisar(e instanceof Error ? e.message : 'No se pudo quitar.', 'error') } }} />
     </>
   )
 }

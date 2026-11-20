@@ -14,6 +14,8 @@ import Armador from '../contratos/Armador'
 import EditorDocumento, { useHtmlDocumento, useImprimirDocumento } from './EditorDocumento'
 import Ventana from '../../componentes/Ventana'
 import { documentoHtml } from '../../lib/imprimir'
+import { BotonCompartir, useLinks } from '../web/BotonesWeb'
+import { useAvisar } from '../../componentes/Avisos'
 
 const ESTADOS: Record<Documento['estado'], [string, string]> = { borrador: ['Borrador', 'bloqueado'], enviado: ['Enviado', 'en-proceso'], aceptado: ['Aceptado', 'aprobado'], rechazado: ['Rechazado', 'error'] }
 
@@ -23,12 +25,17 @@ export function TablaDocumentos({ docs, conCliente = true }: { docs: Documento[]
   const imprimirDoc = useImprimirDocumento()
   const armar = useHtmlDocumento()
   const [ver, setVer] = useState<Documento | null>(null)
+  const { retirar } = useLinks()
+  const avisar = useAvisar()
+  const vence = (d: Documento) => (d.vigencia_dias ? new Date(new Date(`${d.fecha}T12:00:00`).getTime() + d.vigencia_dias * 86400000).toISOString().slice(0, 10) : null)
+  const linksDe = (l: Documento[]) => m.links.filter((x) => x.estado === 'activo' && l.some((d) => d.id === x.documento_id))
   const [editar, setEditar] = useState<Documento | null>(null)
   const nombre = (k: string | null) => m.clientes.find((c) => c.id === k)?.nombre ?? ''
   return (
     <>
       <Tabla filas={docs} clave={(d) => d.id} vacio="Sin documentos." buscador={conCliente ? false : true}
         quitarVarias={(l) => q.pedir('ctl_documentos', l, `Se quitan ${l.length} documentos.`)}
+        masa={[{ texto: 'Retirar links', titulo: (k) => `Retira los links web de los ${k} documentos marcados; dejan de abrirse`, hacer: (l) => { const ls = linksDe(l); void retirar(ls.map((x) => x.id)).then(() => avisar(ls.length ? `Se retiraron ${ls.length} links.` : 'Ninguno tenía link activo.')) } }]}
         columnas={[
           { titulo: 'Fecha', valor: (d) => fechaCorta(d.fecha), orden: (d) => d.fecha },
           { titulo: 'Documento', principal: true, valor: (d) => <>{d.titulo}<small>{TIPOS_DOC.find((t) => t.valor === d.tipo)?.nombre}{d.numero ? ` · No. ${numeroVisible(d)}` : ''} · {AREAS.find((a) => a.valor === d.area)?.nombre}</small></> },
@@ -38,6 +45,7 @@ export function TablaDocumentos({ docs, conCliente = true }: { docs: Documento[]
         ]}
         acciones={(d) => (
           <>
+            {(d.tipo === 'cotizacion' || d.tipo === 'propuesta') && <BotonCompartir nombre={d.titulo} origen={{ tipo: d.tipo, documento_id: d.id, cliente_id: d.cliente_id }} telefono={m.clientes.find((c) => c.id === d.cliente_id)?.whatsapp} armar={() => { const x = armar(d); return { titulo: x.titulo, cuerpo: x.cuerpo, area: d.area, vence: vence(d) } }} />}
             <button type="button" className="m-icono-btn c-ojito" onClick={() => setVer(d)} aria-label={`Ver ${d.titulo}`} title="Muestra el documento encima, sin salir de esta pantalla"><Eye aria-hidden /></button>
             <button type="button" className="m-icono-btn c-salida" onClick={() => imprimirDoc(d)} aria-label="PDF" title="Abre el PDF listo para enviar o guardar"><FileDown aria-hidden /></button>
             <button type="button" className="m-icono-btn" onClick={() => setEditar(d)} aria-label="Editar" title="Abre el documento para corregirlo, incluido su estado"><Pencil aria-hidden /></button>

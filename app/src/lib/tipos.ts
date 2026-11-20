@@ -119,6 +119,13 @@ export interface Pago {
   recibo_numero: number | null
   creado: string
   origen?: 'world' | 'ctl'
+  forma: string | null
+  destino: string | null
+  comprobantes: string[]
+  anticipo_id: string | null
+  registrado_por: string | null
+  proyecto_id: string | null
+  extra_id?: string | null
 }
 
 export type TipoCategoria = 'gasto' | 'ingreso'
@@ -134,6 +141,7 @@ export interface Categoria {
 
 export interface Gasto {
   id: string
+  destino?: string | null
   fecha: string
   negocio_id: string
   categoria_id: string

@@ -1,3 +1,5 @@
+import RegistrarPago from './pagos/RegistrarPago'
+import HistorialPagos from './pagos/HistorialPagos'
 import Pasos from '../componentes/Pasos'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { useState } from 'react'
@@ -41,7 +43,8 @@ export default function ProyectoFicha() {
       <div className="c-cabeza">
         <div><span className="m-etiqueta">Proyecto</span><h1 className="erp-titulo">{p.nombre}<Estado valor={p.estado} /></h1><Pasos /></div>
         <div className="c-cabeza-acciones">
-          <button type="button" className="m-btn m-btn-secundario" onClick={() => setEditar(true)} title="Editar el proyecto, su inscripción y su mensualidad"><Pencil size={16} aria-hidden /> Editar</button>
+          <button type="button" className="m-btn m-btn-secundario" onClick={() => setEditar(true)} title="Abre el proyecto para corregir su inscripción, su mensualidad y sus fechas"><Pencil size={16} aria-hidden /> Editar</button>
+          <RegistrarPago proyectoFijo={p.id} />
         </div>
       </div>
       <Pestanas etiqueta="Ver" valor={vista} onCambio={setVista} opciones={[{ valor: 'resumen', nombre: 'Resumen' }, { valor: 'desarrollo', nombre: 'Desarrollo', cuenta: nAv || undefined }]} />
@@ -50,21 +53,22 @@ export default function ProyectoFicha() {
           <div className="erp-kpis">
             <div className="erp-kpi"><span className="m-etiqueta">Inscripción</span><b>{quetzales(p.inscripcion_total)}</b><small>{p.partes.map((x) => textoMomento(x).toLowerCase()).join(' · ') || 'sin inscripción'}</small></div>
             <div className="erp-kpi"><span className="m-etiqueta">Mensualidad</span><b>{quetzales(p.mensualidad)}</b><small>{prox ? `próximo cobro ${fechaCorta(prox)}` : 'sin cobro próximo'}</small></div>
-            <div className="erp-kpi"><span className="m-etiqueta">Pagado</span><b>{quetzales(pagado)}</b><small>pendiente {quetzales(pendiente)}</small></div>
+            <div className="erp-kpi"><span className="m-etiqueta">Ha pagado</span><b>{quetzales(pagado)}</b><small>falta {quetzales(pendiente)}</small></div>
             <div className="erp-kpi"><span className="m-etiqueta">Costo</span><b>{quetzales(costo)}</b><small>gastos del proyecto</small></div>
           </div>
           {p.descripcion && <p className="c-notas">{p.descripcion}</p>}
           <section>
-            <h2 className="m-seccion-titulo">Cobros del proyecto</h2>
+            <h2 className="m-seccion-titulo">Lo que debe de este proyecto</h2>
             <Tabla filas={propios} clave={(x) => x.clave} vacio={p.estado === 'propuesta' ? 'Mientras sea propuesta no genera cobros.' : 'Sin cobros.'}
               columnas={[
                 { titulo: 'Vence', valor: (x) => (x.vence ? fechaCorta(x.vence) : 'Sin fecha'), orden: (x) => x.vence ?? '9999' },
                 { titulo: 'Concepto', principal: true, valor: (x) => x.concepto },
                 { titulo: 'Estado', valor: (x) => <EstadoCobro c={x} /> },
                 { titulo: 'Monto', num: true, valor: (x) => quetzales(x.monto), orden: (x) => x.monto },
-                { titulo: 'Pendiente', num: true, valor: (x) => quetzales(x.saldo), orden: (x) => x.saldo },
+                { titulo: 'Falta', num: true, valor: (x) => quetzales(x.saldo), orden: (x) => x.saldo },
               ]} />
           </section>
+          <HistorialPagos proyectoId={p.id} />
         </>
       ) : (
         <>

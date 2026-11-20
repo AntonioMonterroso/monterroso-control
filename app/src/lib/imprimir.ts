@@ -33,6 +33,7 @@ dd { margin: 0; font-weight: 600; }
 .nota-legal { margin-top: 18px; padding: 8px 12px; border-left: 3px solid #3b82c4; background: #f0f6fb; font-size: 8.5pt; color: #5b7f96; }
 .membrete-pie { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-size: 8pt; color: #5b7f96; }
 @media print { .hoja { padding: 0; } }
+@media screen and (max-width: 560px) { .hoja { padding: 12px; } header .marca { width: 160px; } table { font-size: 8.5pt; } th, td { padding: 5px 6px; } th { letter-spacing: 0.02em; } .firmas { gap: 16px; } dl { grid-template-columns: 1fr; gap: 2px; } dd { margin-bottom: 6px; } }
 `
 
 export function documentoHtml(titulo: string, cuerpo: string, dato = '', area: Area = 'corporativo', pie = '', conImprimir = true): string {

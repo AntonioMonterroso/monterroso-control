@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
-import { isValidElement, useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Children, cloneElement, isValidElement, useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import Buscador, { coincide } from './Buscador'
 import MenuFila, { type ItemMenu } from './MenuFila'
 
@@ -156,7 +156,7 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
           ))}
           {vistas.length === 0 && <tr className="c-fila-vacia"><td colSpan={cols.length + (acciones ? 1 : 0) + (marcar ? 1 : 0)} className="c-sin-resultados">{filas.length && q ? 'Nada coincide con la búsqueda.' : vacio}</td></tr>}
         </tbody>
-        {pie && filas.length > 0 && <tfoot>{pie}</tfoot>}
+        {pie && filas.length > 0 && <tfoot>{marcar && isValidElement(pie) && pie.type === 'tr' ? cloneElement(pie as React.ReactElement<{ children?: ReactNode }>, {}, [<td key="marca" className="c-marca" />, ...Children.toArray((pie.props as { children?: ReactNode }).children)]) : pie}</tfoot>}
       </table>
       {menu && <MenuFila pos={menuPos} items={menuPos ? menu(menuPos.f) : []} onCerrar={cerrarMenu} />}
     </div>

@@ -45,6 +45,7 @@ export function semillas(t: Record<Tabla, Fila[]>): [Tabla, Record<string, unkno
     const faltan = CATEGORIAS_BASE.filter((c) => c.clave && !t.ctl_categorias.some((x) => x.clave === c.clave)).map((c) => ({ ...c, activo: true }))
     if (faltan.length) r.push(['ctl_categorias', faltan])
   }
+  if (t.ctl_cuentas && !t.ctl_cuentas.some((c) => c.tipo === 'efectivo')) r.push(['ctl_cuentas', [{ banco: 'Efectivo', nombre: 'Efectivo billetera', tipo: 'efectivo', moneda: 'GTQ', activo: true, orden: 10, saldo_inicial: 0 }, { banco: 'Efectivo', nombre: 'Efectivo Papá', tipo: 'efectivo', moneda: 'GTQ', activo: true, orden: 11, saldo_inicial: 0 }]])
   if (t.ctl_plantillas_contrato.length === 0) r.push(['ctl_plantillas_contrato', [PLANTILLA_BASE]])
   return r
 }

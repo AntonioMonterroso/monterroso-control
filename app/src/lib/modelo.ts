@@ -2,6 +2,10 @@ import { useMemo } from 'react'
 import type { PagoTienda, PartePagoTienda } from './tiendaPagos'
 import type { Documento } from './documentos'
 import { cambiosDe, type Cambio } from './historial'
+import type { Anticipo } from './anticipos'
+import type { Traslado } from './traslados'
+import { cajaPorDefecto, formaDeTexto, type CuentaPersonal } from './pagosDestino'
+import type { LinkPublico } from './links'
 import type { Accion, Aporte, Conciliacion, CuentaBanco, MovBanco, Recordatorio, Reparto, RepartoSocio, Sociedad, Socio, Tramite, Transmision } from './sa'
 import type { DevBitacora, DevEnlace, DevServicio, DevSupabase, DevToken } from './desarrollo'
 import { useDatos } from './datos'
@@ -60,6 +64,12 @@ export interface Modelo {
   recordatorios: Recordatorio[]
   documentos: Documento[]
   historial: Cambio[]
+  cuentas: CuentaPersonal[]
+  anticipos: Anticipo[]
+  traslados: Traslado[]
+  links: LinkPublico[]
+  cuentasWorld: import('./pagosDestino').CuentaWorld[]
+  traspasos: import('./saldos').Traspaso[]
   marca: { id: string; nombre: string | null; cargo: string | null; correo: string | null; telefono: string | null; sitio: string | null; redes: Record<string, string>; color: string | null } | null
   partesTienda: PartePagoTienda[]
 }
@@ -73,6 +83,9 @@ export function useModelo(): Modelo {
     const extraClientes = t.ctl_cliente_extra as unknown as ExtraCliente[]
     const extraPagos = t.ctl_pago_extra as unknown as ExtraPago[]
     const historial = t.ctl_historial as unknown as Cambio[]
+    const cuentas = [...(t.ctl_cuentas as unknown as CuentaPersonal[])].map((c) => ({ ...c, tipo: c.tipo ?? 'banco', saldo_inicial: Number(c.saldo_inicial ?? 0) })).sort((a, b) => a.orden - b.orden || a.banco.localeCompare(b.banco, 'es'))
+    const caja = cajaPorDefecto(cuentas)
+    const fd = (d: string | null | undefined) => (d === 'efectivo' && caja ? `e:${caja.id}` : d ?? null)
     const proyectos = wProjects.map((w) => ({ ...proyectoDeWorld(w, extraProyectos.find((x) => x.project_id === w.id)), cambiosMensualidad: cambiosDe(historial, 'projects', w.id, 'mensualidad') })).sort((a, b) => b.creado.localeCompare(a.creado))
     const porId = new Map(wProjects.map((w) => [w.id, w]))
     const pagosWorld = wPayments.map((p) => pagoDeWorld(p, porId, extraPagos.find((x) => x.payment_id === p.id))).filter((p): p is Pago => p != null)
@@ -84,7 +97,7 @@ export function useModelo(): Modelo {
       clientes: clientesDeWorld(wProjects, ajustes.clientExtra, extraClientes, devId),
       proyectos,
       cobros: t.ctl_cobros as unknown as CobroGuardado[],
-      pagos: [...pagosWorld, ...(t.ctl_pagos as unknown as Pago[]).map((p) => ({ ...p, origen: 'ctl' as const }))].sort((a, b) => b.fecha.localeCompare(a.fecha)),
+      pagos: [...pagosWorld.map((p) => ({ ...p, destino: fd(p.destino ?? (p.forma === 'efectivo' ? 'efectivo' : null)) })), ...(t.ctl_pagos as unknown as Pago[]).map((p) => ({ ...p, origen: 'ctl' as const, forma: p.forma ?? formaDeTexto(p.cuenta), destino: fd(p.destino ?? (formaDeTexto(p.cuenta) === 'efectivo' ? 'efectivo' : null)), comprobantes: Array.isArray(p.comprobantes) ? p.comprobantes : [], anticipo_id: p.anticipo_id ?? null, registrado_por: p.registrado_por ?? null, proyecto_id: (t.ctl_cobros as unknown as CobroGuardado[]).find((c) => c.clave === p.cobro_clave)?.proyecto_id ?? null }))].sort((a, b) => b.fecha.localeCompare(a.fecha)),
       categorias: [...(t.ctl_categorias as unknown as Categoria[])].sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre, 'es')),
       gastos: [...(t.ctl_gastos as unknown as Gasto[])].sort((a, b) => b.fecha.localeCompare(a.fecha)),
       gastosFijos: porNombre(t.ctl_gastos_fijos as unknown as GastoFijo[]),
@@ -118,10 +131,16 @@ export function useModelo(): Modelo {
       tramites: [...(t.ctl_sa_tramites as unknown as Tramite[])].sort((a, b) => a.orden - b.orden),
       recordatorios: [...(t.ctl_recordatorios as unknown as Recordatorio[])].sort((a, b) => a.proxima.localeCompare(b.proxima)),
       historial,
+      cuentas,
+      anticipos: [...(t.ctl_anticipos as unknown as Anticipo[])].map((a) => ({ ...a, destino: fd(a.destino), comprobantes: Array.isArray(a.comprobantes) ? a.comprobantes : [] })).sort((a, b) => b.fecha.localeCompare(a.fecha)),
+      traslados: [...(t.ctl_traslados as unknown as Traslado[])].map((x) => ({ ...x, pagos: Array.isArray(x.pagos) ? x.pagos : [] })).sort((a, b) => b.fecha.localeCompare(a.fecha)),
+      links: t.ctl_links as unknown as LinkPublico[],
+      traspasos: [...(t.ctl_traspasos as unknown as import('./saldos').Traspaso[])].sort((a, b) => b.fecha.localeCompare(a.fecha)),
+      cuentasWorld: (t.fin_accounts as unknown as import('./pagosDestino').CuentaWorld[]) ?? [],
       documentos: [...(t.ctl_documentos as unknown as Documento[])].sort((a, b) => b.fecha.localeCompare(a.fecha) || (b.numero ?? 0) - (a.numero ?? 0)),
       marca: ((t.ctl_marca as unknown as Modelo['marca'][])[0] ?? null),
       wProjects, wPayments, extraProyectos, extraClientes, extraPagos, clientExtraRaw: ajustes.clientExtra,
-      pagosTienda: [...(t.ctl_tienda_pagos as unknown as PagoTienda[])].sort((a, b) => b.fecha.localeCompare(a.fecha)),
+      pagosTienda: [...(t.ctl_tienda_pagos as unknown as PagoTienda[])].map((x) => ({ ...x, destino: fd(x.destino) })).sort((a, b) => b.fecha.localeCompare(a.fecha)),
       partesTienda: t.ctl_tienda_pago_partes as unknown as PartePagoTienda[],
       devBitacora: [...(t.ctl_dev_bitacora as unknown as DevBitacora[])].sort((a, b) => b.fecha.localeCompare(a.fecha)),
     }

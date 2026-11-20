@@ -1,3 +1,6 @@
+import Comprobantes, { VerComprobantes, SIN_COMPROBANTES, subirComprobantes, type ValorComprobantes } from '../../componentes/Comprobantes'
+import SelectBuscable from '../../componentes/SelectBuscable'
+import { guardarUltimoDestino, leerUltimoDestino, useOpcionesDestino } from '../cobros/Ventanas'
 import Pasos from '../../componentes/Pasos'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import FormRegistro from '../../componentes/FormRegistro'
@@ -23,9 +26,12 @@ export function EstadoVentaCobro({ estado }: { estado: string }) {
 
 function NuevoPago({ abierta, onCerrar }: { abierta: boolean; onCerrar: () => void }) {
   const m = useModelo()
-  const { insertar } = useDatos()
+  const { insertar, borrar, almacen } = useDatos()
   const avisar = useAvisar()
   const hoy = useHoy()
+  const destinos = useOpcionesDestino()
+  const [destino, setDestino] = useState('')
+  const [comp, setComp] = useState<ValorComprobantes>(SIN_COMPROBANTES)
   const pendientes = useMemo(() => cobrosDeVentas(m.ventas, m.partesTienda).filter((c) => c.saldo > 0).sort((a, b) => a.venta.fecha.localeCompare(b.venta.fecha)), [m.ventas, m.partesTienda])
   const [fecha, setFecha] = useState(hoy)
   const [medio, setMedio] = useState<MedioPago>('shopify')
@@ -34,7 +40,7 @@ function NuevoPago({ abierta, onCerrar }: { abierta: boolean; onCerrar: () => vo
   const [montos, setMontos] = useState<Record<string, string>>({})
   const [total, setTotal] = useState('')
   const [ocupado, setOcupado] = useState(false)
-  useEffect(() => { if (abierta) { setFecha(hoy); setMedio('shopify'); setRef(''); setNota(''); setMontos({}); setTotal(''); setOcupado(false) } }, [abierta, hoy])
+  useEffect(() => { if (abierta) { setFecha(hoy); setMedio('shopify'); setRef(''); setNota(''); setMontos({}); setTotal(''); setOcupado(false); setDestino(leerUltimoDestino()); setComp(SIN_COMPROBANTES) } }, [abierta, hoy])
   const elegidos = Object.entries(montos).filter(([, v]) => (leerMonto(v) ?? 0) > 0)
   const suma = deCentavos(elegidos.reduce((s, [, v]) => s + aCentavos(leerMonto(v) ?? 0), 0))
   const malo = elegidos.find(([id, v]) => (leerMonto(v) ?? 0) > (pendientes.find((p) => p.venta.id === id)?.saldo ?? 0) + 0.001)
@@ -49,9 +55,11 @@ function NuevoPago({ abierta, onCerrar }: { abierta: boolean; onCerrar: () => vo
     if (problema || ocupado) return
     setOcupado(true)
     try {
-      const [p] = await insertar('ctl_tienda_pagos', [{ fecha, medio, monto: suma, referencia: ref.trim() || null, nota: nota.trim() || null }])
-      await insertar('ctl_tienda_pago_partes', elegidos.map(([venta_id, v]) => ({ pago_id: p.id, venta_id, monto: leerMonto(v) })))
-      avisar(`Pago de ${quetzales(suma)} registrado en ${elegidos.length} ${elegidos.length === 1 ? 'pedido' : 'pedidos'}.`)
+      const comprobantes = await subirComprobantes(almacen, 'tienda', comp)
+      const [p] = await insertar('ctl_tienda_pagos', [{ fecha, medio, monto: suma, referencia: ref.trim() || null, nota: nota.trim() || null, destino: destino || null, comprobantes }])
+      const partes = await insertar('ctl_tienda_pago_partes', elegidos.map(([venta_id, v]) => ({ pago_id: p.id, venta_id, monto: leerMonto(v) })))
+      if (destino) guardarUltimoDestino(destino)
+      avisar(`Pago de ${quetzales(suma)} registrado en ${elegidos.length} ${elegidos.length === 1 ? 'pedido' : 'pedidos'}.`, 'bien', { texto: 'Deshacer', hacer: async () => { await borrar('ctl_tienda_pago_partes', partes.map((x) => x.id)); await borrar('ctl_tienda_pagos', [p.id]); avisar('Se deshizo.') } })
       onCerrar()
     } catch (e) { avisar(e instanceof Error ? e.message : 'No se pudo guardar.', 'error'); setOcupado(false) }
   }
@@ -59,7 +67,7 @@ function NuevoPago({ abierta, onCerrar }: { abierta: boolean; onCerrar: () => vo
     <Ventana abierta={abierta} ancho="amplia" titulo="Registrar pago de la tienda" subtitulo="Un pago de Shopify, contra entrega o una liquidación de Dropi, ligado a sus pedidos." onCerrar={onCerrar} pie={
       <>
         <button type="button" className="m-btn m-btn-fantasma" onClick={onCerrar} title="Cerrar sin guardar">Cancelar</button>
-        <button type="button" className="m-btn m-btn-primario" disabled={!!problema || ocupado} onClick={() => void guardar()} title={problema ?? 'Guardar el pago'}>{ocupado ? 'Guardando…' : `Registrar ${quetzales(suma)}`}</button>
+        <button type="button" className="m-btn m-btn-primario c-btn-principal" disabled={!!problema || ocupado} onClick={() => void guardar()} title={problema ? `Apagado: ${problema}` : 'Registra el pago y lo liga a los pedidos marcados; se puede deshacer'}>{ocupado ? 'Guardando…' : `Registrar ${quetzales(suma)}`}</button>
       </>
     }>
       <div className="c-form">
@@ -67,6 +75,8 @@ function NuevoPago({ abierta, onCerrar }: { abierta: boolean; onCerrar: () => vo
         <div className="m-campo"><label htmlFor="tp-m">Medio</label><select id="tp-m" className="m-entrada" value={medio} onChange={(e) => setMedio(e.target.value as MedioPago)}>{MEDIOS.map((x) => <option key={x.valor} value={x.valor}>{x.nombre}</option>)}</select></div>
         <div className="m-campo"><label htmlFor="tp-r">Referencia <span className="c-opcional">(opcional)</span></label><input id="tp-r" className="m-entrada" value={ref} maxLength={120} onChange={(e) => setRef(e.target.value)} /></div>
         <div className="m-campo"><label htmlFor="tp-t">Repartir un total <span className="c-opcional">(opcional)</span></label><div className="c-fila-botones"><input id="tp-t" className="m-entrada m-num" inputMode="decimal" placeholder="Q 0.00" value={total} onChange={(e) => setTotal(e.target.value)} /><button type="button" className="m-btn m-btn-secundario" onClick={repartir} title="Repartir el total en los pedidos más viejos primero">Repartir</button></div></div>
+        <div className="m-campo"><label htmlFor="tp-d">Dónde cayó</label><SelectBuscable id="tp-d" valor={destino} onCambio={setDestino} vacio="Sin indicar" opciones={destinos} /></div>
+        <div className="m-campo c-ancho"><label htmlFor="tp-comp">Comprobante <span className="c-opcional">(opcional)</span></label><Comprobantes id="tp-comp" valor={comp} onCambio={setComp} /></div>
         <div className="m-campo c-ancho"><label htmlFor="tp-n">Nota <span className="c-opcional">(opcional)</span></label><input id="tp-n" className="m-entrada" value={nota} maxLength={500} onChange={(e) => setNota(e.target.value)} /></div>
       </div>
       {pendientes.length === 0 ? <p className="m-texto-suave">No hay pedidos por cobrar.</p> : (
@@ -121,6 +131,7 @@ export default function PagosTienda() {
         ]}
         acciones={(p) => (
           <>
+            <VerComprobantes rutas={Array.isArray(p.comprobantes) ? p.comprobantes : []} titulo={`Comprobante del pago del ${fechaCorta(p.fecha)}`} />
             <button type="button" className="m-icono-btn" onClick={() => setEditar(p)} aria-label="Editar" title="Corregir la fecha, el medio o la referencia"><Pencil aria-hidden /></button>
             <button type="button" className="m-icono-btn" onClick={() => setQuitar([p])} aria-label="Quitar" title="Quitar el pago (los pedidos vuelven a quedar por cobrar)"><Trash2 aria-hidden /></button>
           </>

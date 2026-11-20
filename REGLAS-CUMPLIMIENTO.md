@@ -38,7 +38,7 @@ Revisión de `Ecosistema Monterroso/REGLAS-ECOSISTEMA.md` §2.5b a §2.5q, panta
 | S.A. Estados `/sa/estados` | ✔ | ✔ | ✚ | ✔ | — | ✚ | — | ✚ | — | ✚ | ✔ | ✚ | — | ✚ | — |
 | S.A. Trámites `/sa/tramites` | ✔ | ✔ | ✚ | ✔ | ✚ | ✚ | ✔ | ✚ | — | ✚ | ✔ | ✚ | ✔ | ✚ | — |
 | S.A. Recordatorios `/sa/recordatorios` | ✔ | ✔ | ✚ | — | ✚ | ✚ | — | ✚ | — | ✚ | ✔ | ✚ | ✔ | ✚ | — |
-| Cobros `/cobros` | ✔ | ✔ | ✚ | ✔ | ✚ | ✚ | ✔ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | — |
+| Lo que me deben `/cobros` | ✔ | ✔ | ✚ | ✔ | ✚ | ✚ | ✔ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | — |
 | Contratos `/contratos` | ✔ | ✔ | ✚ | ✔ | ✚ | ✚ | ✔ | ✚ | — | ✚ | ✔ | ✚ | ✚ | ✚ | — |
 | Tienda resumen `/tienda` | ✔ | ✔ | ✚ | ✔ | ✚ | ✚ | — | ✚ | — | ✚ | ✔ | ✚ | — | ✚ | — |
 | Pedidos `/tienda/pedidos` | ✔ | ✔ | ✚ | ✔ | ✚ | ✚ | — | ✚ | — | ✚ | ✔ | ✚ | ✔ | ✚ | — |
@@ -54,6 +54,9 @@ Revisión de `Ecosistema Monterroso/REGLAS-ECOSISTEMA.md` §2.5b a §2.5q, panta
 | Negocios `/negocios` | ✔ | ✔ | ✚ | — | ✚ | ✚ | — | ✚ | — | ✚ | ✔ | ✚ | — | ✚ | — |
 | Categorías `/categorias` | ✔ | ✔ | ✚ | — | ✚ | ✚ | — | ✚ | — | ✚ | ✔ | ✚ | ✚ | ✚ | — |
 | Monterroso World `/mundo` | ✔ | ✔ | ✚ | ✔ | ✚ | ✚ | — | ✚ | — | ✚ | ✔ | ✚ | ✔ | ✚ | — |
+| Pagos que recibí `/pagos` (y `/tienda/recibidos`, `/salario/recibidos`) | ✚ | ✔ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | ✚ | — |
+| Saldo a favor `/saldo-a-favor` | ✚ | ✔ | ✚ | ✔ | ✚ | ✚ | ✚ | ✚ | — | ✚ | ✔ | ✚ | ✚ | ✚ | — |
+| Dónde está mi dinero `/cuentas` | ✚ | ✔ | ✚ | ✚ | ✚ | ✚ | — | ✚ | — | ✚ | ✔ | ✚ | ✚ | ✚ | — |
 
 §2.5m (cada impuesto solo en su período) no aplica a ninguna pantalla: Control no presenta impuestos, solo lleva el régimen y las facturas para control.
 
@@ -74,7 +77,7 @@ Revisión de `Ecosistema Monterroso/REGLAS-ECOSISTEMA.md` §2.5b a §2.5q, panta
     - Filtros de Cobros y Desarrollo.
     - Color de Mi marca (26 opciones).
     - Negocio y categoría de Monterroso World.
-- **§2.5g:** los pasos están hechos; **el video de cada pantalla queda pendiente**. Antes de publicar se comprobó que los selectores de «Ir a…» de cada pantalla existen. El de Monterroso World no se encuentra en modo de prueba porque esa parte no se muestra ahí.
+- **§2.5g:** video y pasos hechos en las 40 pantallas; cada cambio de pantalla debe actualizar su archivo en `video/guias/` y su entrada en `lib/pasos.ts` (la prueba lo vigila). Antes de publicar se comprobó que los selectores de «Ir a…» de cada pantalla existen. El de Monterroso World no se encuentra en modo de prueba porque esa parte no se muestra ahí.
 - **§2.5h el ojito**
   - Se agregó en Documentos (ve el documento encima, sin salir) y en los gastos de la ficha del cliente.
   - Ya estaba en Gastos, Impuestos, S.A. Ficha, Trámites y Contratos.
@@ -104,3 +107,7 @@ Revisión de `Ecosistema Monterroso/REGLAS-ECOSISTEMA.md` §2.5b a §2.5q, panta
 - `ficha`
 - `ventana-aviso-afuera`, `salir-sin-guardar`, `apiladas`
 - `combo`, `pasos`, `desarrollo-copiar`
+
+## Dinero: orden y nombres (2026-11-20)
+
+Menú «Dinero» con Lo que me deben, Pagos que recibí, Saldo a favor y Dónde está mi dinero. Cada pantalla: resumen arriba, lo urgente (vencido, falta pasar a la S.A.) después y el detalle al final, con un solo botón principal y lo demás en «Más». Palabras y estados según `GLOSARIO.md`.

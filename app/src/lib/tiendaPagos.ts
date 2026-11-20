@@ -10,6 +10,9 @@ export interface PagoTienda {
   monto: number
   referencia: string | null
   nota: string | null
+  destino?: string | null
+  comprobantes?: string[] | null
+  creado?: string
 }
 
 export interface PartePagoTienda {

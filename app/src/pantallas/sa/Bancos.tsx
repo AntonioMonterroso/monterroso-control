@@ -16,7 +16,7 @@ import { conciliar, saldoCuenta, type CuentaBanco, type MovBanco } from '../../l
 import { useSA } from '../../lib/saModelo'
 import { useCobros, useHoy, usePeriodo } from '../../lib/usos'
 
-interface Candidato { origen: 'pago' | 'gasto' | 'aporte' | 'deuda'; origen_id: string; fecha: string; tipo: 'ingreso' | 'egreso'; monto: number; descripcion: string }
+interface Candidato { origen: 'pago' | 'gasto' | 'aporte' | 'deuda' | 'anticipo'; origen_id: string; fecha: string; tipo: 'ingreso' | 'egreso'; monto: number; descripcion: string }
 
 export default function BancosSA() {
   const { m, ids, inicio } = useSA()
@@ -42,8 +42,9 @@ export default function BancosSA() {
   const ligados = new Set(m.movBancos.filter((x) => x.origen_id).map((x) => `${x.origen}:${x.origen_id}`))
   const clienteNeg = (k: string | null) => m.clientes.find((x) => x.id === k)?.negocio_id ?? ''
   const candidatos: Candidato[] = inicio ? [
-    ...m.pagos.filter((p) => p.fecha >= inicio && !p.cobro_clave.startsWith('s:') && ids.includes(clienteNeg(p.cliente_id))).map((p) => ({ origen: 'pago' as const, origen_id: p.id, fecha: p.fecha, tipo: 'ingreso' as const, monto: p.monto, descripcion: `${m.clientes.find((x) => x.id === p.cliente_id)?.nombre ?? 'Cliente'} · ${conceptoDePago(p.cobro_clave, cobros)}` })),
+    ...m.pagos.filter((p) => p.fecha >= inicio && !p.cobro_clave.startsWith('s:') && p.forma !== 'anticipo' && ids.includes(clienteNeg(p.cliente_id)) && (!p.destino || p.destino === `s:${c?.id}`)).map((p) => ({ origen: 'pago' as const, origen_id: p.id, fecha: p.fecha, tipo: 'ingreso' as const, monto: p.monto, descripcion: `${m.clientes.find((x) => x.id === p.cliente_id)?.nombre ?? 'Cliente'} · ${conceptoDePago(p.cobro_clave, cobros)}` })),
     ...m.gastos.filter((g) => g.fecha >= inicio && ids.includes(g.negocio_id)).map((g) => ({ origen: 'gasto' as const, origen_id: g.id, fecha: g.fecha, tipo: 'egreso' as const, monto: g.monto, descripcion: g.descripcion })),
+    ...m.anticipos.filter((a) => a.fecha >= inicio && ids.includes(clienteNeg(a.cliente_id)) && (!a.destino || a.destino === `s:${c?.id}`)).map((a) => ({ origen: 'anticipo' as const, origen_id: a.id, fecha: a.fecha, tipo: 'ingreso' as const, monto: a.monto, descripcion: `${m.clientes.find((x) => x.id === a.cliente_id)?.nombre ?? 'Cliente'} · anticipo` })),
     ...m.aportes.filter((a) => a.pagado > 0 && a.forma === 'efectivo').map((a) => ({ origen: 'aporte' as const, origen_id: a.id, fecha: a.fecha, tipo: 'ingreso' as const, monto: a.pagado, descripcion: `Aportación de ${m.socios.find((x) => x.id === a.socio_id)?.nombre ?? 'socio'}` })),
     ...m.movimientos.filter((x) => x.tipo === 'pago' && x.fecha >= inicio && ids.includes(m.deudas.find((d) => d.id === x.deuda_id)?.negocio_id ?? '')).map((x) => ({ origen: 'deuda' as const, origen_id: x.id, fecha: x.fecha, tipo: 'egreso' as const, monto: x.monto, descripcion: `Pago de ${m.deudas.find((d) => d.id === x.deuda_id)?.nombre ?? 'deuda'}` })),
   ].filter((x) => !ligados.has(`${x.origen}:${x.origen_id}`)).sort((a, b) => a.fecha.localeCompare(b.fecha)) : []
@@ -107,7 +108,7 @@ export default function BancosSA() {
               columnas={[
                 { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha), orden: (x) => x.fecha },
                 { titulo: 'Descripción', principal: true, valor: (x) => <>{x.descripcion}{x.referencia && <small>Ref. {x.referencia}</small>}</> },
-                { titulo: 'Origen', valor: (x) => ({ manual: 'A mano', pago: 'Cobro', gasto: 'Gasto', aporte: 'Aportación', dividendo: 'Dividendo', deuda: 'Deuda' } as Record<string, string>)[x.origen] ?? x.origen },
+                { titulo: 'Origen', valor: (x) => ({ manual: 'A mano', pago: 'Cobro', gasto: 'Gasto', aporte: 'Aportación', dividendo: 'Dividendo', deuda: 'Deuda', traslado: 'Traslado desde cuenta personal', anticipo: 'Anticipo' } as Record<string, string>)[x.origen] ?? x.origen },
                 { titulo: 'Entra', num: true, valor: (x) => (x.tipo === 'ingreso' ? quetzales(x.monto) : ''), orden: (x) => (x.tipo === 'ingreso' ? x.monto : 0) },
                 { titulo: 'Sale', num: true, valor: (x) => (x.tipo === 'egreso' ? quetzales(x.monto) : ''), orden: (x) => (x.tipo === 'egreso' ? x.monto : 0) },
                 { titulo: 'Conciliado', valor: (x) => <label className="c-casilla" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={x.conciliado} onChange={(e) => void guardar('ctl_banco_movimientos', x.id, { conciliado: e.target.checked })} title="Marca o quita si ya salió en el estado de cuenta" aria-label="Conciliado" /> {x.conciliado ? 'Sí' : 'No'}</label>, orden: (x) => (x.conciliado ? 1 : 0) },

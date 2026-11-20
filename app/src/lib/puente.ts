@@ -1,3 +1,4 @@
+import { formaDeTexto } from './pagosDestino'
 import { diasDelMes } from './fechas'
 import { partesDeForma } from './inscripcion'
 import type { Cliente, EstadoProyecto, FormaInscripcion, Pago, ParteInscripcion, Proyecto } from './tipos'
@@ -5,7 +6,7 @@ import { cleanAll, clientKey, clientName, type AllExtra, type WNewProject, type 
 
 export interface ExtraProyecto { id: string; project_id: string; inscripcion_forma: FormaInscripcion | null; partes: ParteInscripcion[]; fecha_firma: string | null; notas_tecnicas: string | null }
 export interface ExtraCliente { id: string; client_key: string; direccion: string | null; notas: string | null; activo: boolean; archivado?: boolean }
-export interface ExtraPago { id: string; payment_id: string; recibo_numero: number | null; referencia: string | null }
+export interface ExtraPago { id: string; payment_id: string; recibo_numero: number | null; referencia: string | null; forma?: string | null; destino?: string | null; comprobantes?: string[] | null; anticipo_id?: string | null; registrado_por?: string | null }
 
 const DE_WORLD: Record<WStatus, EstadoProyecto> = { idea: 'propuesta', active: 'en_curso', review: 'en_curso', delivered: 'entregado', closed: 'cerrado' }
 
@@ -104,6 +105,13 @@ export function pagoDeWorld(p: WPayment, proyectos: Map<string, WProject>, x?: E
     recibo_numero: x?.recibo_numero ?? null,
     creado: p.created_at ?? p.paid_at,
     origen: 'world',
+    forma: x?.forma ?? formaDeTexto(p.method),
+    destino: x?.destino ?? (p.account_id ? `w:${p.account_id}` : null),
+    comprobantes: Array.isArray(x?.comprobantes) ? x!.comprobantes! : [],
+    anticipo_id: x?.anticipo_id ?? null,
+    registrado_por: x?.registrado_por ?? null,
+    proyecto_id: p.project_id,
+    extra_id: x?.id ?? null,
   }
 }
 

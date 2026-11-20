@@ -7,9 +7,22 @@ import { generarCobros, pendientes } from './cobros'
 import { saldoDeuda } from './finanzas'
 import { capital, saldoCuenta } from './sa'
 import { NEGOCIOS_SA } from './tipos'
+import { pendienteAl, pendientesTrasladar, type Entrada } from './traslados'
 
 export function idsSA(m: Modelo): string[] {
   return m.negocios.filter((n) => NEGOCIOS_SA.includes(n.clave) || n.en_sa).map((n) => n.id)
+}
+
+export function entradasTraslado(m: Modelo): Entrada[] {
+  const neg = (id: string | null) => m.clientes.find((c) => c.id === id)?.negocio_id ?? null
+  return [
+    ...m.pagos.filter((p) => !p.cobro_clave.startsWith('s:')).map((p) => ({ id: p.id, fecha: p.fecha, monto: p.monto, destino: p.destino, forma: p.forma, negocio_id: neg(p.cliente_id), texto: `${m.clientes.find((c) => c.id === p.cliente_id)?.nombre ?? 'Pago'}${p.recibo_numero ? ` · recibo ${p.recibo_numero}` : ''}` })),
+    ...m.anticipos.map((a) => ({ id: `a:${a.id}`, fecha: a.fecha, monto: a.monto, destino: a.destino, forma: a.forma, negocio_id: neg(a.cliente_id), texto: `${m.clientes.find((c) => c.id === a.cliente_id)?.nombre ?? 'Cliente'} · anticipo` })),
+  ]
+}
+
+export function pendientesSA(m: Modelo): Entrada[] {
+  return pendientesTrasladar(entradasTraslado(m), idsSA(m), m.sociedad?.inicio_operaciones ?? null, m.traslados)
 }
 
 export function movimientosSA(m: Modelo, desde: string, hasta: string): Movimiento[] {
@@ -28,6 +41,7 @@ export function utilidadSA(m: Modelo, desde: string, hasta: string): number {
 export interface Balance {
   bancos: number
   porCobrar: number
+  porCobrarSocio: number
   activo: number
   deudas: number
   isrPorPagar: number
@@ -56,10 +70,11 @@ export function balanceSA(m: Modelo, corte: string, hoy: string): Balance {
   const declarados = deCentavos(lineas.reduce((s, l) => s + aCentavos(l.bruto), 0))
   const isrSoc = deCentavos(repartos.reduce((s, r) => s + aCentavos(r.isr_sociedad), 0))
   const acumuladas = deCentavos(aCentavos(utilidadSA(m, inicio, corte)) - aCentavos(isrSoc) - aCentavos(reserva) - aCentavos(declarados))
-  const activo = deCentavos(aCentavos(bancos) + aCentavos(porCobrar))
+  const porCobrarSocio = pendienteAl(entradasTraslado(m), [...ids], m.sociedad?.inicio_operaciones ?? null, m.traslados, corte)
+  const activo = deCentavos(aCentavos(bancos) + aCentavos(porCobrar) + aCentavos(porCobrarSocio))
   const pasivo = deCentavos(aCentavos(deudas) + aCentavos(isrPorPagar) + aCentavos(dividendosPorPagar))
   const patrimonio = deCentavos(aCentavos(capitalPagado) + aCentavos(reserva) + aCentavos(acumuladas))
-  return { bancos, porCobrar, activo, deudas, isrPorPagar, dividendosPorPagar, pasivo, capitalPagado, reserva, acumuladas, patrimonio, diferencia: deCentavos(aCentavos(activo) - aCentavos(pasivo) - aCentavos(patrimonio)) }
+  return { bancos, porCobrar, porCobrarSocio, activo, deudas, isrPorPagar, dividendosPorPagar, pasivo, capitalPagado, reserva, acumuladas, patrimonio, diferencia: deCentavos(aCentavos(activo) - aCentavos(pasivo) - aCentavos(patrimonio)) }
 }
 
 export function useSA() {

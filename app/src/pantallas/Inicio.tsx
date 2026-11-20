@@ -1,3 +1,5 @@
+import { useEntradas } from '../lib/usos'
+import { nombreForma } from '../lib/pagosDestino'
 import Pasos from '../componentes/Pasos'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -34,6 +36,8 @@ export default function Inicio() {
   const proximos = pendientes(cobrosNeg).filter((c) => c.estado === 'vencido' || (c.vence && diasEntre(hoy, c.vence) <= 7)).slice(0, 12)
   const lineas = lineasPresupuesto(m.categorias, m.presupuestos, movs, periodo, negocio || null).filter((l) => l.plan > 0 || l.real > 0)
   const cliente = (id: string) => m.clientes.find((c) => c.id === id)?.nombre ?? ''
+  const entradas = useEntradas()
+  const ultimos = entradas.filter((e) => !negocio || e.negocio_id === negocio).slice(0, 5)
   const activos = m.negocios.filter((n) => n.activo)
 
   return (
@@ -50,7 +54,7 @@ export default function Inicio() {
 
       <div className="erp-kpis">
         <div className="erp-kpi exito"><span className="m-etiqueta">Entró este mes</span><b>{quetzales(r.ingresos)}</b><small>cobros, ventas de la tienda y salario recibido</small></div>
-        <div className="erp-kpi aviso"><span className="m-etiqueta">Falta cobrar</span><b>{quetzales(falta)}</b><small>{tiendaDebe > 0 ? `incluye ${quetzales(tiendaDebe)} de pedidos de la tienda` : 'hasta fin de mes, con lo vencido'}</small></div>
+        <div className="erp-kpi aviso"><span className="m-etiqueta">Me deben</span><b>{quetzales(falta)}</b><small>{tiendaDebe > 0 ? `incluye ${quetzales(tiendaDebe)} de pedidos de la tienda` : 'hasta fin de mes, con lo vencido'}</small></div>
         <div className="erp-kpi peligro"><span className="m-etiqueta">Gastos del mes</span><b>{quetzales(r.gastos)}</b><small>empresa, clientes, deudas y pedidos</small></div>
         <div className="erp-kpi"><span className="m-etiqueta">Utilidad del mes</span><b className={`${r.utilidad < 0 ? ' m-negativo' : ''}`}>{quetzales(r.utilidad)}</b><small>lo que entró menos los gastos</small></div>
       </div>
@@ -88,7 +92,7 @@ export default function Inicio() {
           )}
         </section>
         <section>
-          <h2 className="m-seccion-titulo">Cobros: vencidos y próximos 7 días</h2>
+          <h2 className="m-seccion-titulo">Lo que me deben: vencido y esta semana</h2>
           {proximos.length === 0 ? (
             <div className="m-vacio c-vacio-chico"><b>Nada urgente</b><span>{dev && (!negocio || negocio === dev.id) ? 'No hay cobros vencidos ni por vencer esta semana.' : 'Este negocio no tiene cobros a clientes.'}</span></div>
           ) : (
@@ -99,11 +103,28 @@ export default function Inicio() {
                   <span className="c-fila-botones"><EstadoCobro c={c} /><b className="m-cifra">{quetzales(c.saldo)}</b></span>
                 </li>
               ))}
-              <li className="c-lista-pie"><Link to="/cobros" className="c-enlace">Ver todos los cobros</Link></li>
+              <li className="c-lista-pie"><Link to="/cobros" className="c-enlace">Ver todo lo que me deben</Link></li>
             </ul>
           )}
         </section>
       </div>
+
+      <section>
+        <div className="c-ficha-cabeza">
+          <h2 className="m-seccion-titulo">Pagos que recibí</h2>
+          <Link to="/pagos" className="m-btn m-btn-secundario m-btn-sm" title="Abre el historial completo de pagos recibidos">Ver todos</Link>
+        </div>
+        {ultimos.length === 0 ? <div className="m-vacio c-vacio-chico"><b>Todavía no hay pagos</b></div> : (
+          <ul className="c-lista-saldos">
+            {ultimos.map((e) => (
+              <li key={e.id}>
+                <span>{e.cliente_id ? <Link to={`/clientes/${encodeURIComponent(e.cliente_id)}`} className="c-enlace">{cliente(e.cliente_id)}</Link> : e.tipo === 'tienda' ? 'Hogar Canela' : 'Mi salario'}<small> · {e.concepto} · {fechaCorta(e.fecha)} · {e.forma === 'anticipo' ? 'del saldo a favor' : nombreForma(e.forma).toLowerCase()}</small></span>
+                <b className="m-cifra">{quetzales(e.monto)}</b>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {m.clientes.length === 0 && (
         <section className="m-tarjeta c-primeros">
