@@ -1,0 +1,14 @@
+{
+  "name": "Monterroso Control",
+  "short_name": "Control",
+  "description": "Control de negocios: Dev Studio, Hogar Canela y salario.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#170f12",
+  "theme_color": "#170f12",
+  "icons": [
+    { "src": "/marca/logo-am.png", "sizes": "1797x1449", "type": "image/png", "purpose": "any" }
+  ]
+}
