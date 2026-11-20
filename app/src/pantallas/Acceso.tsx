@@ -44,7 +44,6 @@ export default function Acceso() {
       </div>
       <div className="m-acceso-forma">
         <form className="m-tarjeta c-acceso-tarjeta" onSubmit={enviar} noValidate>
-          <img className="logo-completo" src="/marca/membrete/logo-firma-hd.png" alt="Monterroso" />
           <div><div className="m-etiqueta">Control de negocios</div><h1 className="m-titulo-3">Bienvenido de nuevo</h1></div>
           <div className="m-campo">
             <label htmlFor="aCorreo">Correo</label>
