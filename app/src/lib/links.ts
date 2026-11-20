@@ -78,4 +78,4 @@ export function estadoLink(l: LinkPublico, hoy: string): { texto: string; clase:
   return { texto: 'Sin abrir', clase: 'pendiente' }
 }
 
-export const urlPublica = (codigo: string) => `${window.location.origin}/d/${codigo}`
+export const urlPublica = (codigo: string) => `${window.location.origin}/d/#${codigo}`

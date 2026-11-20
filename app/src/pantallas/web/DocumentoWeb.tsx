@@ -9,7 +9,14 @@ import { svgLogo, type Area } from '../../lib/marca'
 const NOMBRES: Record<string, string> = { cotizacion: 'Cotización', propuesta: 'Propuesta comercial', estado_cuenta: 'Estado de cuenta', recibo: 'Recibo de pago' }
 
 export default function DocumentoWeb() {
-  const { codigo = '' } = useParams()
+  const { codigo: deRuta = '' } = useParams()
+  const [deHash, setDeHash] = useState(() => window.location.hash.slice(1))
+  useEffect(() => {
+    const f = () => setDeHash(window.location.hash.slice(1))
+    window.addEventListener('hashchange', f)
+    return () => window.removeEventListener('hashchange', f)
+  }, [])
+  const codigo = deRuta || deHash
   const [doc, setDoc] = useState<DocPublico | null>(null)
   const [nombre, setNombre] = useState('')
   const [aceptando, setAceptando] = useState(false)
