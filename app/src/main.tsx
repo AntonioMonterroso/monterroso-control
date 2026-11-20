@@ -4,6 +4,9 @@ import App from './App'
 import './marca.css'
 import './app.css'
 import './erp.css'
+import { instalarCopiarMonto } from './lib/copiarMonto'
+
+instalarCopiarMonto()
 
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
 

@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { Download, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
@@ -66,13 +67,15 @@ export default function BancosSA() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Bancos</h1></div>
+        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Bancos</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <SelectorMes periodo={periodo} onCambio={setPeriodo} />
           <button type="button" className="m-btn m-btn-primario" onClick={() => setCuenta('nueva')} title="Agregar una cuenta bancaria de la sociedad"><Plus size={16} aria-hidden /> Cuenta</button>
         </div>
       </div>
-      <Tabla filas={m.bancos} clave={(x) => x.id} vacio="Sin cuentas. Agrega la cuenta de la sociedad cuando la abras." onFila={(x) => setSel(x.id)}
+      <Tabla
+        marcable={(x) => !m.movBancos.some((y) => y.cuenta_id === x.id)}
+        quitarVarias={(l) => q.pedir('ctl_bancos', l, `Se quitan ${l.length} cuentas sin movimientos.`)} filas={m.bancos} clave={(x) => x.id} vacio="Sin cuentas. Agrega la cuenta de la sociedad cuando la abras." onFila={(x) => setSel(x.id)}
         columnas={[
           { titulo: 'Cuenta', principal: true, valor: (x) => <>{x.banco} {x.numero}{x.nombre && <small>{x.nombre}</small>}{c?.id === x.id && <span className="m-estado en-proceso">Viendo</span>}</> },
           { titulo: 'Moneda', valor: (x) => (x.moneda === 'GTQ' ? 'Quetzales' : 'Dólares') },
@@ -97,13 +100,17 @@ export default function BancosSA() {
             </div>
             <Tabla filas={movsMes} clave={(x) => x.id} vacio="Sin movimientos en este mes."
               quitarVarias={(l) => q.pedir('ctl_banco_movimientos', l, `Se quitan ${l.length} movimientos de la cuenta. Lo registrado en Cobros y Gastos no cambia.`)}
+              masa={[
+                { texto: 'Marcar conciliadas', titulo: (n) => `Marca los ${n} movimientos como ya salidos en el estado de cuenta`, hacer: (l) => void Promise.all(l.map((x) => guardar('ctl_banco_movimientos', x.id, { conciliado: true }))) },
+                { texto: 'Quitar conciliado', titulo: (n) => `Deja los ${n} movimientos como pendientes de salir en el banco`, hacer: (l) => void Promise.all(l.map((x) => guardar('ctl_banco_movimientos', x.id, { conciliado: false }))) },
+              ]}
               columnas={[
                 { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha), orden: (x) => x.fecha },
                 { titulo: 'Descripción', principal: true, valor: (x) => <>{x.descripcion}{x.referencia && <small>Ref. {x.referencia}</small>}</> },
                 { titulo: 'Origen', valor: (x) => ({ manual: 'A mano', pago: 'Cobro', gasto: 'Gasto', aporte: 'Aportación', dividendo: 'Dividendo', deuda: 'Deuda' } as Record<string, string>)[x.origen] ?? x.origen },
                 { titulo: 'Entra', num: true, valor: (x) => (x.tipo === 'ingreso' ? quetzales(x.monto) : ''), orden: (x) => (x.tipo === 'ingreso' ? x.monto : 0) },
                 { titulo: 'Sale', num: true, valor: (x) => (x.tipo === 'egreso' ? quetzales(x.monto) : ''), orden: (x) => (x.tipo === 'egreso' ? x.monto : 0) },
-                { titulo: 'Conciliado', valor: (x) => <label className="c-casilla" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={x.conciliado} onChange={(e) => void guardar('ctl_banco_movimientos', x.id, { conciliado: e.target.checked })} title="Marcar si ya salió en el estado de cuenta" /> {x.conciliado ? 'Sí' : 'No'}</label>, orden: (x) => (x.conciliado ? 1 : 0) },
+                { titulo: 'Conciliado', valor: (x) => <label className="c-casilla" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={x.conciliado} onChange={(e) => void guardar('ctl_banco_movimientos', x.id, { conciliado: e.target.checked })} title="Marca o quita si ya salió en el estado de cuenta" aria-label="Conciliado" /> {x.conciliado ? 'Sí' : 'No'}</label>, orden: (x) => (x.conciliado ? 1 : 0) },
               ]}
               acciones={(x) => (
                 <>

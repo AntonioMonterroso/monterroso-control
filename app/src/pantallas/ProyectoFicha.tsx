@@ -1,3 +1,4 @@
+import Pasos from '../componentes/Pasos'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
@@ -38,7 +39,7 @@ export default function ProyectoFicha() {
     <>
       <Link to={c ? `/clientes/${encodeURIComponent(c.id ?? "")}` : '/proyectos'} className="c-volver"><ArrowLeft size={16} aria-hidden /> {c?.nombre ?? 'Proyectos'}</Link>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Proyecto</span><h1 className="erp-titulo">{p.nombre}<Estado valor={p.estado} /></h1></div>
+        <div><span className="m-etiqueta">Proyecto</span><h1 className="erp-titulo">{p.nombre}<Estado valor={p.estado} /></h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <button type="button" className="m-btn m-btn-secundario" onClick={() => setEditar(true)} title="Editar el proyecto, su inscripción y su mensualidad"><Pencil size={16} aria-hidden /> Editar</button>
         </div>

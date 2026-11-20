@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import FormRegistro, { type Campo } from '../../componentes/FormRegistro'
@@ -49,7 +50,7 @@ export default function SociosSA() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Socios y capital</h1></div>
+        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Socios y capital</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           {vista === 'socios' && <button type="button" className="m-btn m-btn-primario" onClick={() => setSocio('nuevo')} title="Agregar un socio"><Plus size={16} aria-hidden /> Socio</button>}
           {vista === 'acciones' && <button type="button" className="m-btn m-btn-primario" disabled={!opcSocios.length} onClick={() => setAccion('nuevo')} title={opcSocios.length ? 'Registrar acciones emitidas a un socio' : 'Primero agrega un socio'}><Plus size={16} aria-hidden /> Acciones</button>}
@@ -66,7 +67,7 @@ export default function SociosSA() {
       {s && cap.suscrito > s.capital_autorizado && s.capital_autorizado > 0 && <p className="c-nota">El capital suscrito pasa el autorizado en la escritura.</p>}
       <Pestanas etiqueta="Ver" valor={vista} onCambio={setVista} opciones={[{ valor: 'socios', nombre: 'Socios', cuenta: m.socios.length }, { valor: 'acciones', nombre: 'Registro de accionistas', cuenta: m.acciones.length }, { valor: 'aportes', nombre: 'Aportaciones', cuenta: m.aportes.length }, { valor: 'transmisiones', nombre: 'Transmisiones', cuenta: m.transmisiones.length }]} />
       {vista === 'socios' && (
-        <Tabla filas={m.socios} clave={(x) => x.id} vacio="Todavía no hay socios."
+        <Tabla filas={m.socios} clave={(x) => x.id} vacio="Todavía no hay socios." marcable={(x) => !usado(x.id)} quitarVarias={(l) => q.pedir('ctl_sa_socios', l, `Se quitan ${l.length} socios sin acciones ni aportaciones.`)}
           columnas={[
             { titulo: 'Socio', principal: true, valor: (x) => <>{x.nombre}{(x.nit || x.dpi) && <small>{[x.nit && `NIT ${x.nit}`, x.dpi && `DPI ${x.dpi}`].filter(Boolean).join(' · ')}</small>}{!x.activo && <span className="m-estado bloqueado">Inactivo</span>}</> },
             { titulo: 'Acciones', num: true, valor: (x) => porSocio.get(x.id) ?? 0, orden: (x) => porSocio.get(x.id) ?? 0 },
@@ -116,7 +117,7 @@ export default function SociosSA() {
           )} />
       )}
       {vista === 'transmisiones' && (
-        <Tabla filas={m.transmisiones} clave={(x) => x.id} vacio="Sin transmisiones de acciones."
+        <Tabla filas={m.transmisiones} clave={(x) => x.id} vacio="Sin transmisiones de acciones." quitarVarias={(l) => q.pedir('ctl_sa_transmisiones', l, `Se quitan ${l.length} transmisiones.`)}
           columnas={[
             { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha), orden: (x) => x.fecha },
             { titulo: 'De', principal: true, valor: (x) => nombre(x.de_socio_id) },

@@ -1,3 +1,4 @@
+import Pasos from '../componentes/Pasos'
 import { Check, Copy, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useQuitar } from '../lib/quitar'
 import { useState } from 'react'
@@ -8,6 +9,10 @@ import { useDatos } from '../lib/datos'
 import { quetzales } from '../lib/dinero'
 import { useModelo } from '../lib/modelo'
 import type { Tarifa } from '../lib/tipos'
+import Historia from '../componentes/Historia'
+import { cambiosDe } from '../lib/historial'
+import { hoyISO } from '../lib/fechas'
+import { useSesion } from '../lib/sesion'
 
 export function preciosCompartibles(m: ReturnType<typeof useModelo>) {
   return {
@@ -21,7 +26,8 @@ export function preciosCompartibles(m: ReturnType<typeof useModelo>) {
 
 export default function Precios() {
   const m = useModelo()
-  const { guardar } = useDatos()
+  const { guardar, insertar } = useDatos()
+  const { correo } = useSesion()
   const [editar, setEditar] = useState<Tarifa | 'paquete' | 'extra' | null>(null)
   const [copiado, setCopiado] = useState(false)
   const q = useQuitar()
@@ -36,6 +42,7 @@ export default function Precios() {
     <Tabla
       titulo={titulo}
       filas={m.tarifas.filter((x) => x.tipo === k)}
+      quitarVarias={(l) => q.pedir('ctl_tarifas', l, `Se quitan ${l.length} tarifas. Los proyectos que ya las usaron no cambian.`)}
       clave={(x) => x.id}
       vacio={k === 'paquete' ? 'Todavía no hay paquetes. Agrega tus planes con su inscripción y mensualidad.' : 'Sin extras todavía (dominio, soporte por hora…).'}
       columnas={[
@@ -56,7 +63,7 @@ export default function Precios() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Dev Studio y Hogar Canela</span><h1 className="erp-titulo">Precios y tarifas</h1></div>
+        <div><span className="m-etiqueta">Dev Studio y Hogar Canela</span><h1 className="erp-titulo">Precios y tarifas</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <button type="button" className="m-btn m-btn-salida" disabled={cuantos === 0} onClick={() => void copiar()} title={cuantos ? 'Copiar los precios marcados para compartir, listos para la página' : 'Marca algún precio para compartir'}>{copiado ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />} {copiado ? 'Copiado' : `Copiar compartidos (${cuantos})`}</button>
           <button type="button" className="m-btn m-btn-secundario" onClick={() => setEditar('extra')} title="Agregar un extra con precio único"><Plus size={16} aria-hidden /> Extra</button>
@@ -79,7 +86,13 @@ export default function Precios() {
           { k: 'compartir', etiqueta: 'Compartir con la página', tipo: 'casilla' },
         ]}
         inicial={t ? (t as unknown as Record<string, unknown>) : { activo: true, orden: 50, inscripcion: '0', mensualidad: '0', precio: '0' }}
-        onGuardar={async (d) => { await guardar('ctl_tarifas', t?.id ?? null, { inscripcion: 0, mensualidad: 0, precio: 0, ...d, orden: d.orden ?? 50, ...(t ? {} : { tipo }) }) }}
+        debajo={t ? <Historia cambios={cambiosDe(m.historial, 'ctl_tarifas', t.id)} monto titulo="Precios anteriores" /> : null}
+        onGuardar={async (d) => {
+          await guardar('ctl_tarifas', t?.id ?? null, { inscripcion: 0, mensualidad: 0, precio: 0, ...d, orden: d.orden ?? 50, ...(t ? {} : { tipo }) })
+          if (!t) return
+          const cambios = (['inscripcion', 'mensualidad', 'precio'] as const).filter((k) => d[k] != null && Math.round(Number(d[k]) * 100) !== Math.round(Number(t[k] ?? 0) * 100))
+          if (cambios.length) await insertar('ctl_historial', cambios.map((k) => ({ tabla: 'ctl_tarifas', registro_id: t.id, campo: k, desde: hoyISO().slice(0, 7), antes: Number(t[k] ?? 0).toFixed(2), despues: Number(d[k]).toFixed(2), motivo: null, por: correo })))
+        }}
         onCerrar={() => setEditar(null)} />
       {q.ventana}
     </>

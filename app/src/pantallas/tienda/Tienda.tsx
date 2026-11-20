@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { FileUp, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
@@ -91,7 +92,7 @@ export default function Tienda({ fija }: { fija?: 'pedidos' | 'productos' } = {}
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Hogar Canela</span><h1 className="erp-titulo">{fija === 'productos' ? 'Productos' : fija === 'pedidos' ? 'Pedidos' : 'Tienda'}</h1></div>
+        <div><span className="m-etiqueta">Hogar Canela</span><h1 className="erp-titulo">{fija === 'productos' ? 'Productos' : fija === 'pedidos' ? 'Pedidos' : 'Tienda'}</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           {vista === 'pedidos' && <SelectorMes periodo={periodo} onCambio={setPeriodo} />}
           {vista === 'pedidos' && (

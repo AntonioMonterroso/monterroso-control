@@ -1,3 +1,4 @@
+import Copiable from '../../componentes/Copiable'
 import { Activity, Ban, Copy, Download, ExternalLink, FileCode2, Pencil, Plus, Receipt, Trash2, Wifi } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -43,7 +44,8 @@ function useBorrar(t: NombreTabla) {
   const { tablas } = useDatos()
   const q = useQuitar()
   const setQuitar = (x: { id: string; nombre: string }) => q.pedir(t, tablas[t].filter((f) => f.id === x.id), `Se quita «${x.nombre}».`)
-  return { setQuitar, ventana: q.ventana }
+  const varias = (l: { id: string }[]) => { const ids = new Set(l.map((x) => x.id)); q.pedir(t, tablas[t].filter((f) => ids.has(f.id)), `Se quitan ${l.length}.`) }
+  return { setQuitar, varias, ventana: q.ventana }
 }
 
 export function SeccionSupabase({ f }: { f: Filtro }) {
@@ -53,7 +55,7 @@ export function SeccionSupabase({ f }: { f: Filtro }) {
   const [editar, setEditar] = useState<DevSupabase | 'nuevo' | null>(null)
   const [yml, setYml] = useState<DevSupabase | null>(null)
   const [ocupado, setOcupado] = useState('')
-  const { setQuitar, ventana } = useBorrar('ctl_dev_supabase')
+  const { setQuitar, varias, ventana } = useBorrar('ctl_dev_supabase')
   const lista = m.devSupabase.filter((s) => pasa(s, s.nombre, s.ref))
   const s = editar && editar !== 'nuevo' ? editar : null
 
@@ -89,12 +91,14 @@ export function SeccionSupabase({ f }: { f: Filtro }) {
         <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => setEditar('nuevo')} title="Agregar un proyecto de Supabase"><Plus size={14} aria-hidden /> Supabase</button>
       </div>
       <Tabla
+        quitarVarias={varias}
         buscador={f.q === undefined}
         filas={lista}
         clave={(x) => x.id}
         vacio="Sin proyectos de Supabase."
         columnas={[
           { titulo: 'Supabase', principal: true, valor: (x) => <>{x.nombre}<small>{x.ref}</small></> },
+          { titulo: 'Para copiar', sinOrden: true, valor: (x) => <span className="c-copiar-fila"><Copiable valor={urlSupabase(x.ref)} etiqueta="Dirección" femenino />{x.anon_key ? <Copiable valor={x.anon_key} etiqueta="Llave pública" secreto femenino /> : <span className="m-vacia">Sin llave</span>}</span> },
           { titulo: 'Proyecto', valor: (x) => <ProyectoCol id={x.proyecto_id} nombre={nombreProyecto(x.proyecto_id)} /> },
           { titulo: 'Plan', valor: (x) => (x.plan === 'pro' ? 'Pro' : 'Gratis') },
           { titulo: 'Último uso', valor: (x) => (x.ultimo_uso ? `${fechaCorta(x.ultimo_uso)} · hace ${Math.max(0, diasEntre(x.ultimo_uso.slice(0, 10), hoyISO()))} d` : <span className="m-vacia">Sin anotar</span>) },
@@ -105,8 +109,8 @@ export function SeccionSupabase({ f }: { f: Filtro }) {
             <button type="button" className="m-btn m-btn-primario m-btn-sm" disabled={ocupado === x.id} onClick={() => void mantener(x)} title="Hacer una consulta liviana a su API y anotar la fecha"><Activity size={14} aria-hidden /> {ocupado === x.id ? 'Consultando…' : 'Mantener activo'}</button>
             <button type="button" className="m-icono-btn c-salida" onClick={() => setYml(x)} aria-label="Workflow" title="El archivo de GitHub Actions que lo mantiene activo solo"><FileCode2 aria-hidden /></button>
             <a className="m-icono-btn c-salida" href={panelSupabase(x.ref)} target="_blank" rel="noreferrer" aria-label="Panel" title="Abrir su panel en Supabase"><ExternalLink aria-hidden /></a>
-            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Editar"><Pencil aria-hidden /></button>
-            <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.nombre })} aria-label="Quitar" title="Quitar"><Trash2 aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Abre la fila para corregirla"><Pencil aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.nombre })} aria-label="Quitar" title="Quita la fila; pregunta antes y se puede deshacer"><Trash2 aria-hidden /></button>
           </>
         )}
       />
@@ -147,7 +151,7 @@ export function SeccionTokens({ f }: { f: Filtro }) {
   const avisar = useAvisar()
   const hoy = useHoy()
   const [editar, setEditar] = useState<DevToken | 'nuevo' | null>(null)
-  const { setQuitar, ventana } = useBorrar('ctl_dev_tokens')
+  const { setQuitar, varias, ventana } = useBorrar('ctl_dev_tokens')
   const lista = m.devTokens.filter((t) => pasa(t, t.nombre, t.donde, t.ultimos4, t.tipo))
   const t = editar && editar !== 'nuevo' ? editar : null
   const nombreTipo = (k: string) => TIPOS_TOKEN.find((x) => x.valor === k)?.nombre ?? k
@@ -172,6 +176,8 @@ export function SeccionTokens({ f }: { f: Filtro }) {
         <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => setEditar('nuevo')} title="Anotar un token (sin su valor)"><Plus size={14} aria-hidden /> Token</button>
       </div>
       <Tabla
+        masa={[{ texto: 'Marcar revocados', titulo: (n) => `Marca los ${n} tokens como ya revocados con la fecha de hoy`, hacer: (l) => { void Promise.all(l.filter((x) => !x.revocado).map((x) => guardar('ctl_dev_tokens', x.id, { revocado: true, revocado_el: hoy }))).then(() => avisar('Marcados como revocados.')) } }]}
+        quitarVarias={varias}
         buscador={f.q === undefined}
         filas={lista}
         clave={(x) => x.id}
@@ -187,8 +193,8 @@ export function SeccionTokens({ f }: { f: Filtro }) {
         acciones={(x) => (
           <>
             <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => void revocar(x)} title={x.revocado ? 'Quitar la marca de revocado' : 'Marcar que ya lo revocaste'}><Ban size={14} aria-hidden /> {x.revocado ? 'Deshacer' : 'Revocado'}</button>
-            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Editar"><Pencil aria-hidden /></button>
-            <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.nombre })} aria-label="Quitar" title="Quitar"><Trash2 aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Abre la fila para corregirla"><Pencil aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.nombre })} aria-label="Quitar" title="Quita la fila; pregunta antes y se puede deshacer"><Trash2 aria-hidden /></button>
           </>
         )}
       />
@@ -207,7 +213,7 @@ export function SeccionServicios({ f }: { f: Filtro }) {
   const { guardar, insertar } = useDatos()
   const avisar = useAvisar()
   const [editar, setEditar] = useState<DevServicio | 'nuevo' | null>(null)
-  const { setQuitar, ventana } = useBorrar('ctl_dev_servicios')
+  const { setQuitar, varias, ventana } = useBorrar('ctl_dev_servicios')
   const lista = m.devServicios.filter((s) => pasa(s, s.nombre, s.proveedor, s.tipo))
   const s = editar && editar !== 'nuevo' ? editar : null
   const nombreTipo = (k: string) => TIPOS_SERVICIO.find((x) => x.valor === k)?.nombre ?? k
@@ -253,6 +259,7 @@ export function SeccionServicios({ f }: { f: Filtro }) {
         <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => setEditar('nuevo')} title="Agregar un dominio, hosting o suscripción"><Plus size={14} aria-hidden /> Servicio</button>
       </div>
       <Tabla
+        quitarVarias={varias}
         buscador={f.q === undefined}
         filas={lista}
         clave={(x) => x.id}
@@ -268,8 +275,8 @@ export function SeccionServicios({ f }: { f: Filtro }) {
         acciones={(x) => (
           <>
             <button type="button" className="m-btn m-btn-primario m-btn-sm" disabled={!x.renovacion || yaRegistrado(x)} onClick={() => void registrar(x)} title={x.paga === 'yo' ? 'Registrarlo como gasto del cliente y pasar a la siguiente renovación' : 'Agregarlo como cobro extra al cliente'}><Receipt size={14} aria-hidden /> {x.paga === 'yo' ? 'Gasto' : 'Cobrar'}</button>
-            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Editar"><Pencil aria-hidden /></button>
-            <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.nombre })} aria-label="Quitar" title="Quitar"><Trash2 aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Abre la fila para corregirla"><Pencil aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.nombre })} aria-label="Quitar" title="Quita la fila; pregunta antes y se puede deshacer"><Trash2 aria-hidden /></button>
           </>
         )}
       />
@@ -288,7 +295,7 @@ export function SeccionEnlaces({ f }: { f: Filtro }) {
   const avisar = useAvisar()
   const [editar, setEditar] = useState<DevEnlace | 'nuevo' | null>(null)
   const [revisando, setRevisando] = useState('')
-  const { setQuitar, ventana } = useBorrar('ctl_dev_enlaces')
+  const { setQuitar, varias, ventana } = useBorrar('ctl_dev_enlaces')
   const lista = m.devEnlaces.filter((e) => pasa(e, e.nombre, e.url, e.tipo))
   const e = editar && editar !== 'nuevo' ? editar : null
   const nombreTipo = (k: string) => TIPOS_ENLACE.find((x) => x.valor === k)?.nombre ?? k
@@ -314,6 +321,7 @@ export function SeccionEnlaces({ f }: { f: Filtro }) {
         <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => setEditar('nuevo')} title="Agregar un enlace"><Plus size={14} aria-hidden /> Enlace</button>
       </div>
       <Tabla
+        quitarVarias={varias}
         buscador={f.q === undefined}
         filas={lista}
         clave={(x) => x.id}
@@ -328,8 +336,8 @@ export function SeccionEnlaces({ f }: { f: Filtro }) {
           <>
             <button type="button" className="m-btn m-btn-secundario m-btn-sm" disabled={revisando === x.id} onClick={() => void revisar(x)} title="Ver si la dirección responde (8 segundos como máximo)"><Wifi size={14} aria-hidden /> {revisando === x.id ? 'Revisando…' : 'Revisar'}</button>
             <a className="m-icono-btn c-salida" href={x.url} target="_blank" rel="noreferrer" aria-label="Abrir" title="Abrir en otra pestaña"><ExternalLink aria-hidden /></a>
-            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Editar"><Pencil aria-hidden /></button>
-            <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.nombre })} aria-label="Quitar" title="Quitar"><Trash2 aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Abre la fila para corregirla"><Pencil aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.nombre })} aria-label="Quitar" title="Quita la fila; pregunta antes y se puede deshacer"><Trash2 aria-hidden /></button>
           </>
         )}
       />
@@ -356,7 +364,7 @@ export function SeccionBitacora({ proyectoId }: { proyectoId: string }) {
   const hoy = useHoy()
   const [editar, setEditar] = useState<{ id?: string } | null>(null)
   const [notas, setNotas] = useState(false)
-  const { setQuitar, ventana } = useBorrar('ctl_dev_bitacora')
+  const { setQuitar, varias, ventana } = useBorrar('ctl_dev_bitacora')
   const p = m.proyectos.find((x) => x.id === proyectoId)
   const lista = m.devBitacora.filter((b) => b.proyecto_id === proyectoId)
   const b = editar?.id ? lista.find((x) => x.id === editar.id) : undefined
@@ -374,7 +382,8 @@ export function SeccionBitacora({ proyectoId }: { proyectoId: string }) {
           <h2 className="m-seccion-titulo">Bitácora de cambios</h2>
           <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => setEditar({})} title="Anotar un cambio"><Plus size={14} aria-hidden /> Cambio</button>
         </div>
-        <Tabla filas={lista} clave={(x) => x.id} vacio="Sin cambios anotados."
+        <Tabla
+        quitarVarias={varias} filas={lista} clave={(x) => x.id} vacio="Sin cambios anotados."
           columnas={[
             { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha) },
             { titulo: 'Qué cambió', principal: true, valor: (x) => <span className="c-texto-largo">{x.cambio}</span> },
@@ -382,8 +391,8 @@ export function SeccionBitacora({ proyectoId }: { proyectoId: string }) {
           ]}
           acciones={(x) => (
             <>
-              <button type="button" className="m-icono-btn" onClick={() => setEditar({ id: x.id })} aria-label="Editar" title="Editar"><Pencil aria-hidden /></button>
-              <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.cambio.slice(0, 40) })} aria-label="Quitar" title="Quitar"><Trash2 aria-hidden /></button>
+              <button type="button" className="m-icono-btn" onClick={() => setEditar({ id: x.id })} aria-label="Editar" title="Abre la fila para corregirla"><Pencil aria-hidden /></button>
+              <button type="button" className="m-icono-btn" onClick={() => setQuitar({ id: x.id, nombre: x.cambio.slice(0, 40) })} aria-label="Quitar" title="Quita la fila; pregunta antes y se puede deshacer"><Trash2 aria-hidden /></button>
             </>
           )} />
       </section>

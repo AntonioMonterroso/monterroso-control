@@ -1,7 +1,12 @@
 import { aISO, diasDelMes, partes } from './fechas'
+import { valorEn } from './historial'
 import type { Proyecto } from './tipos'
 
-export type DatosMensualidad = Pick<Proyecto, 'mensualidad' | 'dia_cobro' | 'mensualidad_inicio' | 'mensualidad_fin' | 'estado'>
+export type DatosMensualidad = Pick<Proyecto, 'mensualidad' | 'dia_cobro' | 'mensualidad_inicio' | 'mensualidad_fin' | 'estado' | 'cambiosMensualidad'>
+
+export function mensualidadEn(p: Pick<Proyecto, 'mensualidad' | 'cambiosMensualidad'>, mes: string): number {
+  return valorEn(p.cambiosMensualidad ?? [], mes, p.mensualidad)
+}
 
 export function cobraMensualidad(p: DatosMensualidad): boolean {
   return p.mensualidad > 0 && p.dia_cobro != null && p.mensualidad_inicio != null && p.estado !== 'cerrado' && p.estado !== 'propuesta'
@@ -38,7 +43,7 @@ export function proximoCobro(p: DatosMensualidad, hoy: string): string | null {
 export function mensualidadDelMes(proyectos: DatosMensualidad[], a: number, m: number): number {
   const desde = aISO(a, m, 1)
   const hasta = aISO(a, m, diasDelMes(a, m))
-  return proyectos.reduce((s, p) => (cobraMensualidad(p) && fechasDeCobro(p, desde, hasta).length > 0 ? s + Math.round(p.mensualidad * 100) : s), 0) / 100
+  return proyectos.reduce((s, p) => (cobraMensualidad(p) && fechasDeCobro(p, desde, hasta).length > 0 ? s + Math.round(mensualidadEn(p, desde.slice(0, 7)) * 100) : s), 0) / 100
 }
 
 export function problemasMensualidad(p: DatosMensualidad): string[] {

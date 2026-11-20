@@ -121,21 +121,26 @@ export function useEscribir() {
       await d.guardar('ctl_cliente_extra', fila?.id ?? null, fila ? { archivado: si } : { client_key: key, archivado: si, activo: true })
     },
 
-    async borrarCliente(key: string): Promise<() => Promise<void>> {
-      const plan = this.planBorrar(key)
-      if (plan.modo !== 'borrar') throw new Error('Este cliente tiene movimientos: se archiva, no se borra.')
+    async borrarClientes(keys: string[]): Promise<() => Promise<void>> {
+      const planes = keys.map((k) => ({ k, plan: this.planBorrar(k) }))
+      if (planes.some((x) => x.plan.modo !== 'borrar')) throw new Error('Uno de los clientes tiene movimientos: se archiva, no se borra.')
       const antesAjustes = d.ajustes.clientExtra
-      const quitadas: { t: Tabla; filas: Fila[] }[] = plan.borrar.map((b) => ({ t: b.t, filas: (d.tablas[b.t] as Fila[]).filter((f) => b.ids.includes(f.id)) }))
-      for (const b of plan.desligar) for (const id of b.ids) await d.guardar(b.t, id, { cliente_id: null })
-      for (const q of quitadas) await d.borrar(q.t, q.filas.map((f) => f.id))
+      const quitadas: { t: Tabla; filas: Fila[] }[] = planes.flatMap(({ plan }) => plan.borrar.map((b) => ({ t: b.t, filas: (d.tablas[b.t] as Fila[]).filter((f) => b.ids.includes(f.id)) })))
+      const desligadas = planes.flatMap(({ k, plan }) => plan.desligar.flatMap((b) => b.ids.map((id) => ({ t: b.t, id, k }))))
+      for (const x of desligadas) await d.guardar(x.t, x.id, { cliente_id: null })
+      for (const q of quitadas) if (q.filas.length) await d.borrar(q.t, q.filas.map((f) => f.id))
       const extra = cleanAll(d.ajustes.clientExtra)
-      delete extra[key]
+      for (const k of keys) delete extra[k]
       await d.guardarAjustes({ clientExtra: extra })
       return async () => {
         await d.guardarAjustes({ clientExtra: antesAjustes })
         for (const q of quitadas) if (q.filas.length) await d.insertar(q.t, q.filas.map((f) => ({ ...f })))
-        for (const b of plan.desligar) for (const id of b.ids) await d.guardar(b.t, id, { cliente_id: key })
+        for (const x of desligadas) await d.guardar(x.t, x.id, { cliente_id: x.k })
       }
+    },
+
+    async borrarCliente(key: string): Promise<() => Promise<void>> {
+      return this.borrarClientes([key])
     },
 
     async quitarPago(p: Pago) {

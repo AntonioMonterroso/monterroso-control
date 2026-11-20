@@ -14,7 +14,7 @@ export const TABLAS = [
   'ctl_tienda_pagos', 'ctl_tienda_pago_partes',
   'ctl_sa', 'ctl_sa_documentos', 'ctl_sa_socios', 'ctl_sa_acciones', 'ctl_sa_aportes', 'ctl_sa_transmisiones', 'ctl_sa_repartos', 'ctl_sa_reparto_socios',
   'ctl_bancos', 'ctl_banco_movimientos', 'ctl_banco_conciliaciones', 'ctl_sa_tramites', 'ctl_recordatorios',
-  'ctl_marca', 'ctl_documentos',
+  'ctl_marca', 'ctl_documentos', 'ctl_historial',
 ] as const
 
 export type Tabla = (typeof TABLAS)[number]

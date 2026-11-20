@@ -61,6 +61,7 @@ export interface Proyecto {
   mes?: string
   sitio?: string | null
   world_status?: string
+  cambiosMensualidad?: import('./historial').Cambio[]
 }
 
 export type NuevoCliente = Omit<Cliente, 'id' | 'creado'>

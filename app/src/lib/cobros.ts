@@ -1,6 +1,6 @@
 import { aCentavos, deCentavos, quetzales } from './dinero'
 import { fechaCorta, nombreMes, partes } from './fechas'
-import { fechasDeCobro } from './mensualidad'
+import { fechasDeCobro, mensualidadEn } from './mensualidad'
 import { textoMomento } from './inscripcion'
 import { aumentoVigente, fechaPagoSalario, mesesEntre, netoSalario, periodoDe } from './finanzas'
 import type { AumentoSalario, CobroGuardado, EstadoCobro, Pago, Proyecto, TipoCobro } from './tipos'
@@ -49,7 +49,7 @@ export function generarCobros(proyectos: Proyecto[], guardados: CobroGuardado[],
     if (p.mensualidad > 0 && p.mensualidad_inicio) {
       for (const f of fechasDeCobro(p, p.mensualidad_inicio, hasta)) {
         const [a, m] = partes(f)
-        base.push({ clave: `m:${p.id}:${f.slice(0, 7)}`, cliente_id: p.cliente_id, proyecto_id: p.id, tipo: 'mensualidad', concepto: `Mensualidad de ${nombreMes(a, m).toLowerCase()}`, vence: f, monto: p.mensualidad })
+        base.push({ clave: `m:${p.id}:${f.slice(0, 7)}`, cliente_id: p.cliente_id, proyecto_id: p.id, tipo: 'mensualidad', concepto: `Mensualidad de ${nombreMes(a, m).toLowerCase()}`, vence: f, monto: mensualidadEn(p, f.slice(0, 7)) })
       }
     }
   }

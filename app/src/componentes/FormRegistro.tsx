@@ -1,5 +1,5 @@
 import { Paperclip } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useDatos } from '../lib/datos'
 import { leerMonto } from '../lib/dinero'
 import { useAvisar } from './Avisos'
@@ -41,7 +41,7 @@ export function convertir(campos: Campo[], v: Valores): Record<string, unknown> 
   return r
 }
 
-export default function FormRegistro({ abierta, titulo, subtitulo, campos, inicial, textoGuardar = 'Guardar', validar, onGuardar, onCerrar, carpeta = 'archivos' }: {
+export default function FormRegistro({ abierta, titulo, subtitulo, campos, inicial, textoGuardar = 'Guardar', validar, onGuardar, onCerrar, carpeta = 'archivos', debajo }: {
   abierta: boolean
   titulo: string
   subtitulo?: string
@@ -52,6 +52,7 @@ export default function FormRegistro({ abierta, titulo, subtitulo, campos, inici
   onGuardar: (datos: Record<string, unknown>, v: Valores) => Promise<void>
   onCerrar: () => void
   carpeta?: string
+  debajo?: ReactNode
 }) {
   const { almacen } = useDatos()
   const avisar = useAvisar()
@@ -64,7 +65,7 @@ export default function FormRegistro({ abierta, titulo, subtitulo, campos, inici
   useEffect(() => {
     if (!abierta) return
     setAvisosCampo({})
-    setV(Object.fromEntries(campos.map((c) => [c.k, aTexto(inicial[c.k])])))
+    setV(Object.fromEntries(campos.map((c) => [c.k, c.tipo === 'monto' && inicial[c.k] != null && inicial[c.k] !== '' && Number.isFinite(Number(inicial[c.k])) ? Number(inicial[c.k]).toFixed(2) : aTexto(inicial[c.k])])))
     setArchivos({}); setError(''); setOcupado(false)
   }, [abierta])
 
@@ -157,6 +158,7 @@ export default function FormRegistro({ abierta, titulo, subtitulo, campos, inici
         })}
         {problema && <p className="c-nota c-ancho">{problema}</p>}
         {error && <p className="c-error c-ancho" role="alert">{error}</p>}
+        {debajo && <div className="c-ancho">{debajo}</div>}
       </form>
     </Ventana>
   )

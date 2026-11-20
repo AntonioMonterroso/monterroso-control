@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import FormRegistro, { type Campo } from '../../componentes/FormRegistro'
@@ -56,7 +57,7 @@ export default function FichaSA() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">{s?.denominacion || 'Ficha de la sociedad'}</h1></div>
+        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">{s?.denominacion || 'Ficha de la sociedad'}</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <button type="button" className="m-btn m-btn-primario" onClick={() => setEditar(true)} title="Editar los datos de la sociedad"><Pencil size={16} aria-hidden /> {s ? 'Editar' : 'Llenar la ficha'}</button>
         </div>

@@ -98,7 +98,7 @@ export function VentanaEstadoCuenta({ cliente, cobros, onCerrar }: { cliente: Cl
     <Ventana abierta={cliente != null} titulo="Estado de cuenta" subtitulo={cliente?.nombre} onCerrar={onCerrar} pie={cliente && (
       <>
         <button type="button" className="m-btn m-btn-salida" onClick={() => imprimirEstadoCuenta(cliente, propios, hoy, nombreProyecto)} title="Abrir el estado de cuenta listo para guardar en PDF o imprimir"><FileDown size={16} aria-hidden /> PDF</button>
-        <button type="button" className="m-btn m-btn-secundario" onClick={async () => { try { await navigator.clipboard.writeText(texto); setCopiado(true); setTimeout(() => setCopiado(false), 1800) } catch { setCopiado(false) } }} title="Copiar el mensaje">{copiado ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />} {copiado ? 'Copiado' : 'Copiar'}</button>
+        <button type="button" className="m-btn m-btn-salida" onClick={async () => { try { await navigator.clipboard.writeText(texto); setCopiado(true); setTimeout(() => setCopiado(false), 1800) } catch { setCopiado(false) } }} title="Copiar el mensaje">{copiado ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />} {copiado ? 'Copiado' : 'Copiar'}</button>
         <a className="m-btn m-btn-primario" href={url} target="_blank" rel="noreferrer" title="Abrir WhatsApp con el mensaje listo"><MessageCircle size={16} aria-hidden /> Enviar por WhatsApp</a>
       </>
     )}>

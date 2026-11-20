@@ -112,7 +112,20 @@ export default function Marco({ children }: { children: ReactNode }) {
     try { localStorage.setItem('mc_modo', m.id) } catch { void 0 }
     ir(m.a)
   }
-  useEffect(() => { setAbierto(false) }, [lugar.pathname])
+  useEffect(() => {
+    setAbierto(false)
+    const m = document.getElementById('contenido')
+    if (m) m.style.minHeight = ''
+    window.scrollTo({ top: 0 })
+  }, [lugar.pathname])
+  useEffect(() => {
+    const m = document.getElementById('contenido')
+    if (!m) return
+    const sostener = () => { m.style.minHeight = `${m.offsetHeight}px` }
+    m.addEventListener('pointerdown', sostener, true)
+    m.addEventListener('keydown', sostener, true)
+    return () => { m.removeEventListener('pointerdown', sostener, true); m.removeEventListener('keydown', sostener, true) }
+  }, [])
   useEffect(() => {
     if (!abierto) return
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setAbierto(false) }
@@ -144,17 +157,17 @@ export default function Marco({ children }: { children: ReactNode }) {
   return (
     <div className="m-app c-app" data-lateral={compacto || angosta ? 'compacto' : 'normal'} data-menu={abierto ? 'abierto' : 'cerrado'}>
       <header className="c-barra-movil">
-        <button type="button" className="m-icono-btn" onClick={() => setAbierto(true)} aria-label="Abrir el menú" title="Abrir el menú"><Menu aria-hidden /></button>
+        <button type="button" className="m-icono-btn" onClick={() => setAbierto(true)} aria-label="Abrir el menú" title="Abre el menú de pantallas"><Menu aria-hidden /></button>
         <LogoStudio className="c-acceso-logo c-barra-logo" />
       </header>
       <div className="c-velo" onClick={() => setAbierto(false)} aria-hidden />
       <nav className="m-lateral" aria-label="Menú principal">
         <div className="c-cerrar-fila">
-          <button type="button" className="m-icono-btn c-cerrar-menu" onClick={() => setAbierto(false)} aria-label="Cerrar el menú" title="Cerrar el menú"><X aria-hidden /></button>
+          <button type="button" className="m-icono-btn c-cerrar-menu" onClick={() => setAbierto(false)} aria-label="Cerrar el menú" title="Cierra el menú (Esc)"><X aria-hidden /></button>
         </div>
         <div className="c-modos" role="tablist" aria-label="Qué negocio trabajar">
           {MODOS.map((m) => (
-            <button key={m.id} type="button" role="tab" aria-selected={modo === m.id} title={m.nombre} onClick={() => elegirModo(m)}>
+            <button key={m.id} type="button" role="tab" aria-selected={modo === m.id} title={`Muestra el menú de ${m.nombre}`} onClick={() => elegirModo(m)}>
               {m.icono}<span className="m-txt">{m.nombre}</span>
             </button>
           ))}
@@ -163,7 +176,7 @@ export default function Marco({ children }: { children: ReactNode }) {
           <div key={g.titulo} className="c-grupo">
             <div className="m-grupo"><span className="m-txt">{g.titulo}</span></div>
             {g.enlaces.map((e) => (
-              <NavLink key={e.a} to={e.a} end={e.fin} title={e.nombre}>
+              <NavLink key={e.a} to={e.a} end={e.fin} title={`Abre ${e.nombre}`}>
                 {e.icono}
                 <span className="m-txt">{e.nombre}</span>
                 {cuentas[e.a] ? <span className="m-cuenta">{cuentas[e.a]}</span> : null}
@@ -175,8 +188,8 @@ export default function Marco({ children }: { children: ReactNode }) {
         <div className="m-lateral-pie">
           <span className="m-avatar">{inicial}</span>
           <span className="m-txt"><b>{prueba ? 'Modo de prueba' : 'Antonio'}</b><span>{prueba ? 'datos solo en este equipo' : correo}</span></span>
-          <button type="button" id="bTema" onClick={alternarModo} aria-label="Cambiar entre claro y oscuro" title="Claro / oscuro"><Moon className="ico-luna" aria-hidden /><Sun className="ico-sol" aria-hidden /></button>
-          <button type="button" onClick={() => setTemas(true)} aria-label="Elegir color" title="Elegir el color"><Palette aria-hidden /></button>
+          <button type="button" id="bTema" onClick={alternarModo} aria-label="Cambiar entre claro y oscuro" title="Cambia entre modo claro y oscuro; se guarda en tu usuario"><Moon className="ico-luna" aria-hidden /><Sun className="ico-sol" aria-hidden /></button>
+          <button type="button" onClick={() => setTemas(true)} aria-label="Elegir color" title="Abre la ventana para elegir el color del sistema"><Palette aria-hidden /></button>
           <button type="button" onClick={() => void salir()} aria-label="Cerrar sesión" title={prueba ? 'Salir del modo de prueba' : 'Cerrar la sesión en este equipo'}><LogOut aria-hidden /></button>
           <button type="button" className="c-compactar" disabled={angosta} onClick={alternar} aria-label={compacto ? 'Mostrar el menú completo' : 'Dejar solo los íconos'} title={compacto ? 'Mostrar el menú completo' : 'Dejar solo los íconos'}><ChevronsLeft aria-hidden /></button>
         </div>

@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useQuitar } from '../../lib/quitar'
 import { useState } from 'react'
@@ -18,6 +19,8 @@ export default function Categorias() {
   const repetida = (nombre: string, tipo: string) => categorias.some((x) => x.id !== c?.id && x.tipo === tipo && x.nombre.trim().toLowerCase() === nombre.trim().toLowerCase())
   const tabla = (tipo: 'gasto' | 'ingreso', titulo: string, nota: string) => (
     <Tabla
+      marcable={(x) => !x.clave && !enUso(x.id)}
+      quitarVarias={(l) => q.pedir('ctl_categorias', l, `Se quitan ${l.length} categorías sin nada registrado.`)}
       titulo={titulo}
       nota={nota}
       filas={categorias.filter((x) => x.tipo === tipo)}
@@ -38,7 +41,7 @@ export default function Categorias() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Ajustes</span><h1 className="erp-titulo">Categorías</h1></div>
+        <div><span className="m-etiqueta">Ajustes</span><h1 className="erp-titulo">Categorías</h1><Pasos /></div>
         <button type="button" className="m-btn m-btn-primario" onClick={() => setEditar('nuevo')} title="Agregar una categoría de gasto"><Plus size={16} aria-hidden /> Nueva categoría</button>
       </div>
       <p className="m-texto-suave c-intro">Este catálogo es solo de tus negocios y no depende de Monterroso World. Una categoría apagada deja de salir en los formularios, pero lo ya registrado se conserva.</p>

@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { FileDown, FileSpreadsheet } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import Pestanas from '../../componentes/Pestanas'
@@ -54,7 +55,7 @@ export default function EstadosSA() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Estados financieros</h1></div>
+        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Estados financieros</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <SelectorMes periodo={periodo} onCambio={setPeriodo} />
           <button type="button" className="m-btn m-btn-salida" onClick={excel} title="Bajar los estados para abrirlos en Excel"><FileSpreadsheet size={16} aria-hidden /> Excel</button>

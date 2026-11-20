@@ -1,9 +1,9 @@
-import { FileDown, FileSignature, Pencil, Plus, Trash2 } from 'lucide-react'
+import Pasos from '../../componentes/Pasos'
+import { Eye, FileDown, FileSignature, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Buscador, { coincide } from '../../componentes/Buscador'
 import Tabla from '../../componentes/Tabla'
-import { useDatos } from '../../lib/datos'
 import { numeroVisible, TIPOS_DOC, totalRenglones, type Documento, type TipoDocumento } from '../../lib/documentos'
 import { quetzales } from '../../lib/dinero'
 import { fechaCorta } from '../../lib/fechas'
@@ -11,15 +11,18 @@ import { AREAS } from '../../lib/marca'
 import { useModelo } from '../../lib/modelo'
 import { useQuitar } from '../../lib/quitar'
 import Armador from '../contratos/Armador'
-import EditorDocumento, { useImprimirDocumento } from './EditorDocumento'
+import EditorDocumento, { useHtmlDocumento, useImprimirDocumento } from './EditorDocumento'
+import Ventana from '../../componentes/Ventana'
+import { documentoHtml } from '../../lib/imprimir'
 
 const ESTADOS: Record<Documento['estado'], [string, string]> = { borrador: ['Borrador', 'bloqueado'], enviado: ['Enviado', 'en-proceso'], aceptado: ['Aceptado', 'aprobado'], rechazado: ['Rechazado', 'error'] }
 
 export function TablaDocumentos({ docs, conCliente = true }: { docs: Documento[]; conCliente?: boolean }) {
   const m = useModelo()
-  const { guardar } = useDatos()
   const q = useQuitar()
   const imprimirDoc = useImprimirDocumento()
+  const armar = useHtmlDocumento()
+  const [ver, setVer] = useState<Documento | null>(null)
   const [editar, setEditar] = useState<Documento | null>(null)
   const nombre = (k: string | null) => m.clientes.find((c) => c.id === k)?.nombre ?? ''
   return (
@@ -31,16 +34,20 @@ export function TablaDocumentos({ docs, conCliente = true }: { docs: Documento[]
           { titulo: 'Documento', principal: true, valor: (d) => <>{d.titulo}<small>{TIPOS_DOC.find((t) => t.valor === d.tipo)?.nombre}{d.numero ? ` · No. ${numeroVisible(d)}` : ''} · {AREAS.find((a) => a.valor === d.area)?.nombre}</small></> },
           { titulo: 'Cliente', oculto: !conCliente, valor: (d) => (d.cliente_id ? <Link to={`/clientes/${encodeURIComponent(d.cliente_id)}`} className="c-enlace" onClick={(e) => e.stopPropagation()}>{nombre(d.cliente_id)}</Link> : <span className="m-vacia">—</span>) },
           { titulo: 'Total', num: true, valor: (d) => (d.tipo === 'cotizacion' ? quetzales(totalRenglones(d.datos.renglones ?? [])) : d.tipo === 'propuesta' && (d.datos.inscripcion || d.datos.mensualidad) ? quetzales(d.datos.inscripcion ?? 0) : <span className="m-vacia">—</span>) },
-          { titulo: 'Estado', valor: (d) => <select className="m-entrada c-select-chico" value={d.estado} onClick={(e) => e.stopPropagation()} onChange={(e) => void guardar('ctl_documentos', d.id, { estado: e.target.value })} aria-label="Estado del documento" title="Cambiar el estado">{Object.entries(ESTADOS).map(([k, [n]]) => <option key={k} value={k}>{n}</option>)}</select>, orden: (d) => d.estado },
+          { titulo: 'Estado', valor: (d) => <span className={`m-estado ${ESTADOS[d.estado][1]}`}>{ESTADOS[d.estado][0]}</span>, orden: (d) => d.estado },
         ]}
         acciones={(d) => (
           <>
-            <button type="button" className="m-icono-btn c-salida" onClick={() => imprimirDoc(d)} aria-label="PDF" title="Abrir el PDF listo para enviar"><FileDown aria-hidden /></button>
-            <button type="button" className="m-icono-btn" onClick={() => setEditar(d)} aria-label="Editar" title="Editar el documento"><Pencil aria-hidden /></button>
+            <button type="button" className="m-icono-btn c-ojito" onClick={() => setVer(d)} aria-label={`Ver ${d.titulo}`} title="Muestra el documento encima, sin salir de esta pantalla"><Eye aria-hidden /></button>
+            <button type="button" className="m-icono-btn c-salida" onClick={() => imprimirDoc(d)} aria-label="PDF" title="Abre el PDF listo para enviar o guardar"><FileDown aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setEditar(d)} aria-label="Editar" title="Abre el documento para corregirlo, incluido su estado"><Pencil aria-hidden /></button>
             <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_documentos', [d], `Se quita «${d.titulo}».`)} aria-label="Quitar" title="Quitar el documento (se puede deshacer)"><Trash2 aria-hidden /></button>
           </>
         )} />
       <EditorDocumento abierto={editar != null} documento={editar} onCerrar={() => setEditar(null)} />
+      <Ventana abierta={ver != null} ancho="amplia" titulo={ver?.titulo ?? ''} subtitulo={ver ? `${TIPOS_DOC.find((t) => t.valor === ver.tipo)?.nombre ?? ''}${ver.numero ? ` · No. ${numeroVisible(ver)}` : ''}` : ''} onCerrar={() => setVer(null)}>
+        {ver && <iframe className="c-visor" title={ver.titulo} srcDoc={(() => { const x = armar(ver); return documentoHtml(x.titulo, x.cuerpo, '', ver.area, '', false) })()} />}
+      </Ventana>
       {q.ventana}
     </>
   )
@@ -56,7 +63,7 @@ export default function Documentos() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Dev Studio, Música y Diseño</span><h1 className="erp-titulo">Documentos</h1></div>
+        <div><span className="m-etiqueta">Dev Studio, Música y Diseño</span><h1 className="erp-titulo">Documentos</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <button type="button" className="m-btn m-btn-secundario" onClick={() => setArmar(true)} title="Armar el acuerdo de servicios (contrato) con la plantilla"><FileSignature size={16} aria-hidden /> Acuerdo de servicios</button>
           <button type="button" className="m-btn m-btn-secundario" onClick={() => setNuevo('propuesta')} title="Armar una propuesta comercial"><Plus size={16} aria-hidden /> Propuesta</button>

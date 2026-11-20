@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { planBorrarCliente } from './clientesBorrar'
+import { planBorrarCliente, textoPlan } from './clientesBorrar'
 
 const vacio = { trabajos: 0, pagos: 0, contratos: [], facturas: [], cobros: [], modos: [], gastos: [], gastosFijos: [], extra: [] }
 
@@ -20,5 +20,10 @@ describe('borrar o archivar un cliente', () => {
     expect(p.modo).toBe('borrar')
     expect(p.borrar).toEqual([{ t: 'ctl_cobros', ids: ['x'] }, { t: 'ctl_cliente_extra', ids: ['e'] }])
     expect(p.desligar).toEqual([{ t: 'ctl_gastos', ids: ['g'] }])
+  })
+  it('dice qué pasará con el cliente', () => {
+    expect(textoPlan({ modo: 'borrar', motivos: [], borrar: [], desligar: [] })).toBe('Lo borra; no tiene movimientos')
+    expect(textoPlan({ modo: 'archivar', motivos: ['3 trabajos', '5 pagos'], borrar: [], desligar: [] })).toBe('Lo archiva porque tiene 3 trabajos y 5 pagos')
+    expect(textoPlan({ modo: 'archivar', motivos: ['1 trabajo', '2 pagos', '1 contrato'], borrar: [], desligar: [] })).toBe('Lo archiva porque tiene 1 trabajo, 2 pagos y 1 contrato')
   })
 })

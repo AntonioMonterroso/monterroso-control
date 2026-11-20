@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { Copy, Pencil } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
@@ -62,7 +63,7 @@ export default function Presupuestos({ negocioClave }: { negocioClave?: 'canela'
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Planeado contra real'}</span><h1 className="erp-titulo">{fijo ? 'Presupuesto' : 'Presupuestos'}</h1></div>
+        <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Planeado contra real'}</span><h1 className="erp-titulo">{fijo ? 'Presupuesto' : 'Presupuestos'}</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <SelectorMes periodo={periodo} onCambio={setPeriodo} />
           <button type="button" className="m-btn m-btn-secundario" disabled={porCopiar.length === 0} onClick={() => void copiar()} title={porCopiar.length ? `Copiar ${porCopiar.length} montos del mes anterior sin tocar los que ya pusiste` : 'No hay nada que copiar del mes anterior'}><Copy size={16} aria-hidden /> Copiar mes anterior</button>

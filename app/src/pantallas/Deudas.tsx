@@ -1,3 +1,4 @@
+import Pasos from '../componentes/Pasos'
 import { CreditCard, HandCoins, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useQuitar } from '../lib/quitar'
@@ -45,7 +46,7 @@ export default function Deudas() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Empresa</span><h1 className="erp-titulo">Deudas y tarjeta</h1></div>
+        <div><span className="m-etiqueta">Empresa</span><h1 className="erp-titulo">Deudas y tarjeta</h1><Pasos /></div>
         <button type="button" className="m-btn m-btn-primario" onClick={() => setEditar('nuevo')} title="Agregar una compra a cuotas o una tarjeta"><Plus size={16} aria-hidden /> Nueva deuda</button>
       </div>
       <p className="m-texto-suave c-intro">Cada pago entra como gasto del negocio y de la categoría que elijas, así cuenta en el presupuesto del mes.</p>
@@ -56,6 +57,8 @@ export default function Deudas() {
       <Tabla
         titulo={`${m.deudas.length} deudas`}
         filas={m.deudas}
+        marcable={(x) => movsDe(x.id).length === 0}
+        quitarVarias={(l) => q.pedir('ctl_deudas', l, `Se quitan ${l.length} deudas sin movimientos.`)}
         clave={(x) => x.id}
         vacio="No tienes deudas registradas."
         onFila={(x) => setVer(x.id)}

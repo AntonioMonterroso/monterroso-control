@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { ListPlus, Pencil, Plus, Receipt, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
@@ -35,7 +36,7 @@ export default function TramitesSA() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Trámites de constitución</h1></div>
+        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Trámites de constitución</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           {m.tramites.length === 0 && <button type="button" className="m-btn m-btn-secundario" onClick={() => void insertar('ctl_sa_tramites', TRAMITES_BASE.map((x) => ({ ...x, estado: 'pendiente', costo: 0 })))} title="Agregar la lista de pasos para constituir una sociedad anónima en Guatemala"><ListPlus size={16} aria-hidden /> Agregar los pasos de Guatemala</button>}
           <button type="button" className="m-btn m-btn-primario" onClick={() => setEditar('nuevo')} title="Agregar un paso propio"><Plus size={16} aria-hidden /> Paso</button>

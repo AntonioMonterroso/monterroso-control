@@ -10,7 +10,7 @@ interface Datos {
   remoto: boolean
   tablas: Tablas
   almacen: Almacen
-  recargar: () => Promise<void>
+  recargar: (silencioso?: boolean) => Promise<void>
   guardar: (t: Tabla, id: string | null, d: Record<string, unknown>) => Promise<Fila>
   insertar: (t: Tabla, d: Record<string, unknown>[]) => Promise<Fila[]>
   borrar: (t: Tabla, ids: string[]) => Promise<void>
@@ -19,6 +19,12 @@ interface Datos {
 }
 
 const Ctx = createContext<Datos | null>(null)
+
+function puedePintar(): boolean {
+  if (document.querySelector('dialog[open]')) return false
+  const a = document.activeElement
+  return !(a instanceof HTMLElement && a.matches('input:not([type=search]):not([type=checkbox]):not([type=radio]), textarea, select, [contenteditable=true]'))
+}
 
 const vacias = (): Tablas => Object.fromEntries(TABLAS.map((t) => [t, []])) as unknown as Tablas
 
@@ -30,10 +36,10 @@ export function ProveedorDatos({ prueba, children }: { prueba: boolean; children
   const [ajustes, setAjustes] = useState<Record<string, unknown>>({})
   const sembrando = useRef(false)
 
-  const recargar = useCallback(async () => {
+  const ultimo = useRef('')
+  const recargar = useCallback(async (silencioso = false) => {
     try {
       const [listas, aj] = await Promise.all([Promise.all(TABLAS.map((t) => almacen.lista(t).catch((e: Error) => { if (t === 'ctl_negocios' || t === 'projects') throw e; return [] as Fila[] }))), almacen.ajustes().catch(() => ({}))])
-      setAjustes(aj)
       let nuevo = Object.fromEntries(TABLAS.map((t, i) => [t, listas[i]])) as unknown as Tablas
       if (!sembrando.current) {
         sembrando.current = true
@@ -43,9 +49,14 @@ export function ProveedorDatos({ prueba, children }: { prueba: boolean; children
           nuevo = { ...nuevo, [t]: [...nuevo[t], ...hechas] }
         }
       }
+      if (silencioso && !puedePintar()) return
+      const firma = JSON.stringify([nuevo, aj])
+      if (firma === ultimo.current) return
+      ultimo.current = firma
+      setAjustes(aj)
       setTablas(nuevo); setError(null)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo leer la base.')
+      if (!silencioso) setError(e instanceof Error ? e.message : 'No se pudo leer la base.')
     } finally {
       setCargando(false)
     }
@@ -54,9 +65,18 @@ export function ProveedorDatos({ prueba, children }: { prueba: boolean; children
   useEffect(() => { void recargar() }, [recargar])
 
   useEffect(() => {
-    const alVolver = () => { if (document.visibilityState === 'visible') void recargar() }
-    document.addEventListener('visibilitychange', alVolver)
-    return () => document.removeEventListener('visibilitychange', alVolver)
+    const revisar = () => { if (document.visibilityState === 'visible') void recargar(true) }
+    const alAlmacen = (e: StorageEvent) => { if (e.key === 'mc_datos_prueba' || e.key === 'mc_ajustes_prueba') revisar() }
+    document.addEventListener('visibilitychange', revisar)
+    window.addEventListener('focus', revisar)
+    window.addEventListener('storage', alAlmacen)
+    const t = setInterval(revisar, 20000)
+    return () => {
+      document.removeEventListener('visibilitychange', revisar)
+      window.removeEventListener('focus', revisar)
+      window.removeEventListener('storage', alAlmacen)
+      clearInterval(t)
+    }
   }, [recargar])
 
   const valor = useMemo<Datos>(() => ({

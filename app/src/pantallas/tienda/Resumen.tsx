@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { Link } from 'react-router-dom'
 import Tabla from '../../componentes/Tabla'
 import { aCentavos, deCentavos, quetzales } from '../../lib/dinero'
@@ -26,7 +27,7 @@ export default function ResumenTienda() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">{nombreMes(a, mes)}</span><h1 className="erp-titulo">Hogar Canela</h1></div>
+        <div><span className="m-etiqueta">{nombreMes(a, mes)}</span><h1 className="erp-titulo">Hogar Canela</h1><Pasos /></div>
       </div>
       <div className="erp-kpis">
         <div className="erp-kpi"><span className="m-etiqueta">Ventas del mes</span><b>{quetzales(ventas)}</b><small>{delMes.length} {delMes.length === 1 ? 'pedido' : 'pedidos'}</small></div>

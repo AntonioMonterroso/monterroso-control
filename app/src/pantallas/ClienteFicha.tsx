@@ -1,8 +1,9 @@
+import Ojito from '../componentes/Ojito'
+import Pasos from '../componentes/Pasos'
 import { ArrowLeft, FileSignature, MessageCircle, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Tabla from '../componentes/Tabla'
-import Ventana from '../componentes/Ventana'
 import { useAvisar } from '../componentes/Avisos'
 import { useEscribir } from '../lib/escribir'
 import { conceptoDePago, pendientes, totalSaldo, type Cobro } from '../lib/cobros'
@@ -22,6 +23,7 @@ import { TablaDocumentos } from './documentos/Documentos'
 import FormProyecto from './FormProyecto'
 import { costoYGanancia } from './gastos/PorCliente'
 import { TablaProyectos } from './Proyectos'
+import { useBorrarOArchivar } from './clientes/BorrarOArchivar'
 
 export default function ClienteFicha() {
   const { id } = useParams()
@@ -34,35 +36,16 @@ export default function ClienteFicha() {
   const [pagar, setPagar] = useState<Cobro | null>(null)
   const [extra, setExtra] = useState(false)
   const [armar, setArmar] = useState(false)
-  const [quitar, setQuitar] = useState(false)
   const [nuevoDoc, setNuevoDoc] = useState(false)
-  const [ocupado, setOcupado] = useState(false)
   const esc = useEscribir()
   const avisar = useAvisar()
   const ir = useNavigate()
   const c = m.clientes.find((x) => x.id === id) ?? m.clientes.find((x) => id && x.aka?.includes(id))
   useEffect(() => { if (c && c.id !== id) ir(`/clientes/${encodeURIComponent(c.id)}`, { replace: true }) }, [c, id, ir])
-  const plan = c ? esc.planBorrar(c.id) : null
-  if (!c || !plan) return <div className="m-vacio m-tarjeta"><b>No se encontró el cliente</b><Link to="/clientes" className="c-enlace">Volver a Clientes</Link></div>
+  const bo = useBorrarOArchivar((borrados) => { if (c && borrados.includes(c.id)) ir('/clientes') })
+  if (!c) return <div className="m-vacio m-tarjeta"><b>No se encontró el cliente</b><Link to="/clientes" className="c-enlace">Volver a Clientes</Link></div>
 
-  const reactivar = async () => { await esc.archivarCliente(c.id, false); avisar(`${c.nombre} vuelve a estar activo.`) }
-  const confirmarQuitar = async () => {
-    setOcupado(true)
-    try {
-      if (plan.modo === 'borrar') {
-        const deshacer = await esc.borrarCliente(c.id)
-        const nombre = c.nombre
-        setQuitar(false)
-        ir('/clientes')
-        avisar(`Se borró a ${nombre}.`, 'bien', { texto: 'Deshacer', hacer: async () => { await deshacer(); avisar('Se deshizo.') } })
-      } else {
-        await esc.archivarCliente(c.id, true)
-        setQuitar(false)
-        avisar(`${c.nombre} quedó archivado.`, 'bien', { texto: 'Deshacer', hacer: async () => { await esc.archivarCliente(c.id, false) } })
-      }
-    } catch (e) { avisar(e instanceof Error ? e.message : 'No se pudo.', 'error') }
-    setOcupado(false)
-  }
+  const reactivar = async () => { await esc.archivarCliente(c.id, false); avisar(`${c.nombre} vuelve a estar activo.`, 'bien', { texto: 'Deshacer', hacer: async () => { await esc.archivarCliente(c.id, true) } }) }
   const propios = m.proyectos.filter((p) => p.cliente_id === c.id)
   const misCobros = cobros.filter((x) => x.cliente_id === c.id)
   const lista = pendientes(misCobros)
@@ -80,14 +63,14 @@ export default function ClienteFicha() {
       <div className="c-cabeza">
         <div>
           <span className="m-etiqueta">{c.rubro || 'Cliente'}</span>
-          <h1 className="erp-titulo">{c.nombre}{!c.activo && <span className="m-estado bloqueado">Inactivo</span>}{c.archivado && <span className="m-estado bloqueado">Archivado</span>}</h1>
+          <h1 className="erp-titulo">{c.nombre}{!c.activo && <span className="m-estado bloqueado">Inactivo</span>}{c.archivado && <span className="m-estado bloqueado">Archivado</span>}</h1><Pasos />
         </div>
         <div className="c-cabeza-acciones">
-          <button type="button" className="m-btn m-btn-secundario" onClick={() => setEstado(true)} title="Ver lo pendiente y mandarlo por WhatsApp o PDF"><MessageCircle size={16} aria-hidden /> Estado de cuenta</button>
+          <button type="button" className="m-btn m-btn-salida" onClick={() => setEstado(true)} title="Abre lo pendiente del cliente para mandarlo por WhatsApp o en PDF"><MessageCircle size={16} aria-hidden /> Estado de cuenta</button>
           <button type="button" className="m-btn m-btn-secundario" onClick={() => setArmar(true)} title="Armar un contrato con los datos de este cliente"><FileSignature size={16} aria-hidden /> Contrato</button>
           {c.archivado
             ? <button type="button" className="m-btn m-btn-secundario" onClick={() => void reactivar()} title="Volver a mostrarlo en las listas y selectores"><RotateCcw size={16} aria-hidden /> Reactivar</button>
-            : <button type="button" className="m-btn m-btn-fantasma" onClick={() => setQuitar(true)} title="Borrarlo si no tiene movimientos, o archivarlo si los tiene"><Trash2 size={16} aria-hidden /> Quitar</button>}
+            : <button type="button" className="m-btn m-btn-secundario c-btn-aparte" onClick={() => bo.pedir([c])} title={`${bo.titulo(c)}; pregunta antes y se puede deshacer`}><Trash2 size={16} aria-hidden /> Borrar o archivar</button>}
           <button type="button" className="m-btn m-btn-primario" onClick={() => setProyecto('nuevo')} title="Asignarle un proyecto nuevo"><Plus size={16} aria-hidden /> Proyecto</button>
         </div>
       </div>
@@ -149,7 +132,8 @@ export default function ClienteFicha() {
             { titulo: 'Descripción', principal: true, valor: (g) => g.descripcion },
             { titulo: 'Categoría', valor: (g) => m.categorias.find((x) => x.id === g.categoria_id)?.nombre ?? '' },
             { titulo: 'Monto', num: true, valor: (g) => quetzales(g.monto) },
-          ]} />
+          ]}
+          acciones={(g) => (g.archivo ? <Ojito ruta={g.archivo} titulo={`Comprobante: ${g.descripcion}`} /> : null)} />
       </section>
 
       <section>
@@ -167,18 +151,7 @@ export default function ClienteFicha() {
 
       <FormCliente abierta={editar} cliente={c} onCerrar={() => setEditar(false)} />
       <EditorDocumento abierto={nuevoDoc} documento={null} clienteFijo={c.id} onCerrar={() => setNuevoDoc(false)} />
-      <Ventana abierta={quitar} titulo={plan.modo === 'borrar' ? 'Borrar cliente' : 'Archivar cliente'} subtitulo={c.nombre} onCerrar={() => setQuitar(false)} pie={
-        <>
-          <button type="button" className="m-btn m-btn-fantasma" onClick={() => setQuitar(false)} title="No hacer nada">Cancelar</button>
-          <button type="button" className={`m-btn ${plan.modo === 'borrar' ? 'm-btn-peligro' : 'm-btn-primario'}`} disabled={ocupado} onClick={() => void confirmarQuitar()} title={plan.modo === 'borrar' ? 'Borrar el cliente (se puede deshacer)' : 'Archivar el cliente (se puede reactivar)'}>{plan.modo === 'borrar' ? 'Borrar' : 'Archivar'}</button>
-        </>
-      }>
-        {plan.modo === 'borrar' ? (
-          <p>No tiene trabajos, pagos, contratos ni facturas. Se borra su ficha aquí y en Monterroso World, y sus cobros extra.{plan.desligar.length ? ' Sus gastos se conservan, solo dejan de estar ligados a él.' : ''}</p>
-        ) : (
-          <p>Tiene {plan.motivos.join(', ')}. Para no perder esa historia no se borra: se archiva. Deja de salir en listas y selectores, pero sigue en reportes. Lo ves en Clientes › Archivados y se puede reactivar.</p>
-        )}
-      </Ventana>
+      {bo.ventana}
       <FormProyecto abierta={proyecto != null} proyecto={proyecto && proyecto !== 'nuevo' ? proyecto : null} clienteFijo={c.id} onCerrar={() => setProyecto(null)} />
       <VentanaEstadoCuenta cliente={estado ? c : null} cobros={misCobros} onCerrar={() => setEstado(false)} />
       <VentanaPago cobro={pagar} onCerrar={() => setPagar(null)} />

@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
-import { isValidElement, useMemo, useState, type ReactNode } from 'react'
+import { isValidElement, useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import Buscador, { coincide } from './Buscador'
+import MenuFila, { type ItemMenu } from './MenuFila'
 
 export interface Columna<T> {
   titulo: string
@@ -48,7 +49,9 @@ export function comparar(a: string | number, b: string | number): number {
 
 export interface Marcar<T> { puede: (f: T) => boolean; marcadas: Set<string>; cambiar: (ids: string[], si: boolean) => void }
 
-export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, onFila, acciones, pie, buscador = true, marcar: marcarExterno, quitarVarias }: {
+export interface AccionMasa<T> { texto: string; titulo: (n: number) => string; hacer: (filas: T[]) => void; peligro?: boolean }
+
+export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, onFila, acciones, pie, buscador = true, marcar: marcarExterno, quitarVarias, masa, menu, marcable }: {
   titulo?: ReactNode
   nota?: ReactNode
   columnas: Columna<T>[]
@@ -61,10 +64,17 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
   buscador?: boolean
   marcar?: Marcar<T>
   quitarVarias?: (filas: T[]) => void
+  masa?: AccionMasa<T>[]
+  menu?: (f: T) => ItemMenu[]
+  marcable?: (f: T) => boolean
 }) {
+  const acciones_masa: AccionMasa<T>[] = [...(masa ?? []), ...(quitarVarias ? [{ texto: 'Quitar las marcadas', titulo: (n: number) => `Quita las ${n} filas marcadas; pregunta antes y se puede deshacer`, hacer: quitarVarias, peligro: true }] : [])]
   const [propias, setPropias] = useState<Set<string>>(new Set())
-  const marcar: Marcar<T> | undefined = marcarExterno ?? (quitarVarias && filas.length > 1 ? { puede: () => true, marcadas: propias, cambiar: (ids, si) => setPropias((x) => { const n = new Set(x); ids.forEach((k) => (si ? n.add(k) : n.delete(k))); return n }) } : undefined)
-  const elegidasPropias = quitarVarias ? filas.filter((f) => propias.has(clave(f))) : []
+  const marcar: Marcar<T> | undefined = marcarExterno ?? (acciones_masa.length && filas.length > 1 ? { puede: marcable ?? (() => true), marcadas: propias, cambiar: (ids, si) => setPropias((x) => { const n = new Set(x); ids.forEach((k) => (si ? n.add(k) : n.delete(k))); return n }) } : undefined)
+  const elegidasPropias = !marcarExterno && acciones_masa.length ? filas.filter((f) => propias.has(clave(f)) && (marcable ? marcable(f) : true)) : []
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number; f: T } | null>(null)
+  const presion = useRef<{ t: number; usado: boolean }>({ t: 0, usado: false })
+  const cerrarMenu = useCallback(() => setMenuPos(null), [])
   const cols = columnas.filter((c) => !c.oculto)
   const [orden, setOrden] = useState<{ i: number; dir: 1 | -1 } | null>(null)
   const [q, setQ] = useState('')
@@ -82,22 +92,31 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
   }, [filas, orden, q, conBuscador, cols])
   const marcables = marcar ? vistas.filter(marcar.puede).map(clave) : []
   const todasMarcadas = marcables.length > 0 && marcables.every((k) => marcar!.marcadas.has(k))
+  const filtrando = conBuscador && q.trim() !== ''
   const tocar = (i: number) => setOrden((o) => (o && o.i === i ? (o.dir === 1 ? { i, dir: -1 } : null) : { i, dir: 1 }))
 
   return (
     <div className="m-tabla-envoltura c-tabla-adapta c-tabla-erp">
-      {(titulo || nota || conBuscador || elegidasPropias.length > 0) && (
+      {(titulo || nota || conBuscador || (marcar && !marcarExterno)) && (
         <div className="m-tabla-titulo">
           {titulo && <b>{titulo}</b>}
           {nota && <span>{nota}</span>}
-          {elegidasPropias.length > 0 && (
+          {marcar && !marcarExterno && marcables.length > 1 && (
             <span className="c-tabla-masa">
-              <b>{elegidasPropias.length} {elegidasPropias.length === 1 ? 'marcada' : 'marcadas'}</b>
-              <button type="button" className="m-btn m-btn-fantasma m-btn-sm" onClick={() => setPropias(new Set())} title="Quitar todas las marcas">Desmarcar</button>
-              <button type="button" className="m-btn m-btn-peligro m-btn-sm" onClick={() => { quitarVarias!(elegidasPropias); setPropias(new Set()) }} title="Quitar todas las filas marcadas (se puede deshacer)">Quitar las marcadas</button>
+              <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => marcar.cambiar(marcables, !todasMarcadas)} title={todasMarcadas ? 'Quita la marca de todas las filas que se ven' : filtrando ? 'Marca solo las filas que quedan con la búsqueda' : 'Marca todas las filas de la tabla'}>
+                {todasMarcadas ? 'Desmarcar todas' : filtrando ? `Marcar todas las que se ven · ${marcables.length}` : `Marcar todas · ${marcables.length}`}
+              </button>
+              {elegidasPropias.length > 0 && acciones_masa.map((a) => (
+                <button key={a.texto} type="button" className={`m-btn m-btn-sm ${a.peligro ? 'm-btn-peligro' : 'm-btn-secundario'}`} onClick={() => { a.hacer(elegidasPropias); setPropias(new Set()) }} title={a.titulo(elegidasPropias.length)}>{a.texto} · {elegidasPropias.length}</button>
+              ))}
             </span>
           )}
-          {conBuscador && <div className="c-tabla-buscar"><Buscador valor={q} onCambio={setQ} ayuda={`Buscar en ${filas.length}`} /></div>}
+          {conBuscador && (
+            <div className="c-tabla-buscar">
+              <Buscador valor={q} onCambio={setQ} ayuda="Buscar en esta tabla…" />
+              <span className="c-tabla-cuenta" aria-live="polite">{vistas.length} de {filas.length}</span>
+            </div>
+          )}
         </div>
       )}
       <table className="m-tabla">
@@ -122,7 +141,14 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
         </thead>
         <tbody>
           {vistas.map((f) => (
-            <tr key={clave(f)} className={onFila ? 'c-fila-ir' : undefined} onClick={onFila ? () => onFila(f) : undefined} tabIndex={onFila ? 0 : undefined} onKeyDown={onFila ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onFila(f) } : undefined}>
+            <tr
+              key={clave(f)}
+              className={onFila ? 'c-fila-ir' : undefined}
+              onClick={onFila ? () => { if (presion.current.usado) { presion.current.usado = false; return } onFila(f) } : undefined}
+              onContextMenu={menu ? (e) => { e.preventDefault(); setMenuPos({ x: e.clientX, y: e.clientY, f }) } : undefined}
+              onTouchStart={menu ? (e) => { const t = e.touches[0]; const x = t.clientX, y = t.clientY; presion.current.usado = false; window.clearTimeout(presion.current.t); presion.current.t = window.setTimeout(() => { presion.current.usado = true; setMenuPos({ x, y, f }) }, 550) } : undefined}
+              onTouchMove={menu ? () => window.clearTimeout(presion.current.t) : undefined}
+              onTouchEnd={menu ? () => window.clearTimeout(presion.current.t) : undefined} tabIndex={onFila ? 0 : undefined} onKeyDown={onFila ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onFila(f) } : undefined}>
               {marcar && <td className="c-marca" data-campo="Marcar" onClick={(e) => e.stopPropagation()}>{marcar.puede(f) && <input type="checkbox" aria-label="Marcar" title="Marcar para hacerlo junto con otros" checked={marcar.marcadas.has(clave(f))} onChange={(e) => marcar.cambiar([clave(f)], e.target.checked)} />}</td>}
               {cols.map((c) => <td key={c.titulo} data-campo={c.titulo} className={[c.num ? 'm-num' : '', c.principal ? 'c-principal' : ''].join(' ').trim() || undefined}>{c.valor(f)}</td>)}
               {acciones && <td className="c-acciones" onClick={(e) => e.stopPropagation()}><div className="c-acc">{acciones(f)}</div></td>}
@@ -130,8 +156,9 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
           ))}
           {vistas.length === 0 && <tr className="c-fila-vacia"><td colSpan={cols.length + (acciones ? 1 : 0) + (marcar ? 1 : 0)} className="c-sin-resultados">{filas.length && q ? 'Nada coincide con la búsqueda.' : vacio}</td></tr>}
         </tbody>
-        {pie && vistas.length > 0 && <tfoot>{pie}</tfoot>}
+        {pie && filas.length > 0 && <tfoot>{pie}</tfoot>}
       </table>
+      {menu && <MenuFila pos={menuPos} items={menuPos ? menu(menuPos.f) : []} onCerrar={cerrarMenu} />}
     </div>
   )
 }

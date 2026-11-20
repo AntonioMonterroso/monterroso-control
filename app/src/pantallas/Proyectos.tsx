@@ -1,3 +1,4 @@
+import Pasos from '../componentes/Pasos'
 import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -47,7 +48,7 @@ export default function Proyectos() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Dev Studio</span><h1 className="erp-titulo">Proyectos</h1></div>
+        <div><span className="m-etiqueta">Dev Studio</span><h1 className="erp-titulo">Proyectos</h1><Pasos /></div>
         <button type="button" className="m-btn m-btn-primario" disabled={clientes.length === 0} onClick={() => setEditar('nuevo')} title={clientes.length ? 'Crear un proyecto para un cliente' : 'Primero crea un cliente'}><Plus size={16} aria-hidden /> Nuevo proyecto</button>
       </div>
       <div className="c-herramientas">

@@ -1,4 +1,5 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, UserPlus } from 'lucide-react'
+import FormCliente from './FormCliente'
 import { useEffect, useState } from 'react'
 import { useAvisar } from '../componentes/Avisos'
 import SelectBuscable from '../componentes/SelectBuscable'
@@ -7,7 +8,10 @@ import { useEscribir } from '../lib/escribir'
 import { leerMonto, quetzales } from '../lib/dinero'
 import { hoyISO } from '../lib/fechas'
 import { FORMAS, partesDeForma, problemasInscripcion, sumaPartes } from '../lib/inscripcion'
-import { problemasMensualidad } from '../lib/mensualidad'
+import { mensualidadEn, problemasMensualidad } from '../lib/mensualidad'
+import { useDatos } from '../lib/datos'
+import { useSesion } from '../lib/sesion'
+import Historia from '../componentes/Historia'
 import { useModelo } from '../lib/modelo'
 import { ESTADOS, type EstadoProyecto, type FormaInscripcion, type Momento, type ParteInscripcion, type Proyecto } from '../lib/tipos'
 
@@ -19,15 +23,22 @@ export default function FormProyecto({ abierta, proyecto, clienteFijo, onCerrar 
   const esc = useEscribir()
   const { clientes, tarifas } = useModelo()
   const avisar = useAvisar()
+  const { insertar } = useDatos()
+  const { correo } = useSesion()
+  const [desde, setDesde] = useState(hoyISO().slice(0, 7))
+  const [motivo, setMotivo] = useState('')
+  const [nuevoCliente, setNuevoCliente] = useState(false)
   const [v, setV] = useState({ cliente_id: '', nombre: '', descripcion: '', estado: '' as EstadoProyecto | '', fecha_firma: '', fecha_entrega: '', inscripcion: '', mensualidad: '', dia_cobro: '', inicio: '', fin: '', unico: '' })
   const [forma, setForma] = useState<FormaInscripcion | null>(null)
   const [partes, setPartes] = useState<ParteForm[]>([])
+  const [tarifaUsada, setTarifaUsada] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!abierta) return
     setError(''); setOcupado(false)
+    setDesde(hoyISO().slice(0, 7)); setMotivo('')
     if (proyecto) {
       setV({ cliente_id: proyecto.cliente_id, nombre: proyecto.nombre, descripcion: proyecto.descripcion ?? '', estado: proyecto.estado, fecha_firma: proyecto.fecha_firma ?? '', fecha_entrega: proyecto.fecha_entrega ?? '', inscripcion: proyecto.inscripcion_total ? proyecto.inscripcion_total.toFixed(2) : '', mensualidad: proyecto.mensualidad ? proyecto.mensualidad.toFixed(2) : '', dia_cobro: proyecto.dia_cobro ? String(proyecto.dia_cobro) : '', inicio: proyecto.mensualidad_inicio ?? '', fin: proyecto.mensualidad_fin ?? '', unico: proyecto.monto_unico ? proyecto.monto_unico.toFixed(2) : '' })
       setForma(proyecto.inscripcion_forma)
@@ -41,6 +52,7 @@ export default function FormProyecto({ abierta, proyecto, clienteFijo, onCerrar 
 
   const total = leerMonto(v.inscripcion)
   const mensual = leerMonto(v.mensualidad)
+  const cambiaMensual = !!proyecto && proyecto.mensualidad > 0 && mensual != null && Math.round(mensual * 100) !== Math.round(proyecto.mensualidad * 100)
   const partesNum: ParteInscripcion[] = partes.map((p, i) => ({ id: p.id, orden: i + 1, concepto: p.concepto, momento: p.momento, fecha: p.fecha || null, monto: leerMonto(p.monto) ?? 0 }))
   const datosMensual = { mensualidad: mensual ?? 0, dia_cobro: v.dia_cobro ? Number(v.dia_cobro) : null, mensualidad_inicio: v.inicio || null, mensualidad_fin: v.fin || null, estado: (v.estado || 'propuesta') as EstadoProyecto }
   const problemas = [
@@ -86,7 +98,9 @@ export default function FormProyecto({ abierta, proyecto, clienteFijo, onCerrar 
       monto_unico: leerMonto(v.unico) ?? 0,
     }
     try {
+      const antes = proyecto ? mensualidadEn(proyecto, desde) : 0
       await esc.guardarProyecto(proyecto?.id ?? null, datos, { inscripcion_forma: forma, partes: partesNum.map((x) => ({ ...x, concepto: x.concepto.trim() })), fecha_firma: v.fecha_firma || null })
+      if (proyecto && cambiaMensual) await insertar('ctl_historial', [{ tabla: 'projects', registro_id: proyecto.id, campo: 'mensualidad', desde, antes: antes.toFixed(2), despues: (mensual ?? 0).toFixed(2), motivo: motivo.trim() || null, por: correo }])
       avisar(proyecto ? 'Proyecto guardado.' : 'Proyecto creado.')
       onCerrar()
     } catch (err) {
@@ -107,6 +121,7 @@ export default function FormProyecto({ abierta, proyecto, clienteFijo, onCerrar 
         <div className="m-campo">
           <label htmlFor="pr-cliente">Cliente</label>
           <SelectBuscable id="pr-cliente" valor={v.cliente_id} disabled={!!clienteFijo} vacio="Elige…" onCambio={(x) => setV((y) => ({ ...y, cliente_id: x }))} opciones={clientes.filter((c) => (c.activo && !c.archivado) || c.id === v.cliente_id).map((c) => ({ valor: c.id, nombre: c.nombre }))} />
+          {!clienteFijo && <button type="button" className="m-btn m-btn-secundario m-btn-sm c-btn-junto" onClick={() => setNuevoCliente(true)} title="Abre encima la ventana para crear el cliente; al guardarlo queda elegido aquí"><UserPlus size={14} aria-hidden /> Cliente nuevo</button>}
         </div>
         <div className="m-campo">
           <label htmlFor="pr-estado">Estado</label>
@@ -122,10 +137,7 @@ export default function FormProyecto({ abierta, proyecto, clienteFijo, onCerrar 
         {!proyecto && tarifas.some((t) => t.activo && t.tipo === 'paquete') && (
           <div className="m-campo c-ancho">
             <label htmlFor="pr-tarifa">Tomar los precios de una tarifa <span className="c-opcional">(opcional)</span></label>
-            <select id="pr-tarifa" className="m-entrada" defaultValue="" onChange={(e) => usarTarifa(e.target.value)}>
-              <option value="">Ninguna</option>
-              {tarifas.filter((t) => t.activo && t.tipo === 'paquete').map((t) => <option key={t.id} value={t.id}>{t.nombre}: {quetzales(t.inscripcion)} + {quetzales(t.mensualidad)} al mes</option>)}
-            </select>
+            <SelectBuscable id="pr-tarifa" valor={tarifaUsada} onCambio={(v) => { setTarifaUsada(v); usarTarifa(v) }} vacio="Ninguna" opciones={tarifas.filter((t) => t.activo && t.tipo === 'paquete').map((t) => ({ valor: t.id, nombre: `${t.nombre}: ${quetzales(t.inscripcion)} + ${quetzales(t.mensualidad)} al mes` }))} />
           </div>
         )}
         <div className="m-campo c-ancho">
@@ -212,6 +224,20 @@ export default function FormProyecto({ abierta, proyecto, clienteFijo, onCerrar 
               <label htmlFor="pr-mens">Monto mensual</label>
               <input id="pr-mens" className="m-entrada m-num" inputMode="decimal" placeholder="Q 0.00" value={v.mensualidad} onChange={(e) => setV((x) => ({ ...x, mensualidad: e.target.value }))} />
             </div>
+            {cambiaMensual && (
+              <>
+                <div className="m-campo">
+                  <label htmlFor="pr-desde">Rige desde (mes)</label>
+                  <input id="pr-desde" type="month" className="m-entrada" value={desde} onChange={(e) => setDesde(e.target.value)} />
+                  <span className="m-ayuda">Los meses antes siguen con {quetzales(proyecto ? mensualidadEn(proyecto, desde) : 0)}.</span>
+                </div>
+                <div className="m-campo">
+                  <label htmlFor="pr-motivo">Por qué cambia <span className="c-opcional">(opcional)</span></label>
+                  <input id="pr-motivo" className="m-entrada" maxLength={500} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+                </div>
+              </>
+            )}
+            {proyecto && (proyecto.cambiosMensualidad?.length ?? 0) > 0 && <div className="c-ancho"><Historia cambios={proyecto.cambiosMensualidad!} monto /></div>}
             {(mensual ?? 0) > 0 && (
               <>
                 <div className="m-campo">
@@ -235,6 +261,7 @@ export default function FormProyecto({ abierta, proyecto, clienteFijo, onCerrar 
         {problemas.length > 0 && <p className="c-nota c-ancho">{problemas[0]}</p>}
         {error && <p className="c-error c-ancho" role="alert">{error}</p>}
       </form>
+      <FormCliente abierta={nuevoCliente} cliente={null} onCerrar={() => setNuevoCliente(false)} onGuardado={(c) => { setV((y) => ({ ...y, cliente_id: c.id })); setNuevoCliente(false) }} />
     </Ventana>
   )
 }

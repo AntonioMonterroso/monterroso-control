@@ -1,3 +1,4 @@
+import Pasos from '../componentes/Pasos'
 import { FileDown, FileSpreadsheet } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import Pestanas from '../componentes/Pestanas'
@@ -56,7 +57,7 @@ export default function Reportes() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Todos los negocios</span><h1 className="erp-titulo">Reportes</h1></div>
+        <div><span className="m-etiqueta">Todos los negocios</span><h1 className="erp-titulo">Reportes</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <button type="button" className="m-btn m-btn-salida" onClick={() => descargar(nombreArchivo, aCSV(filasExport()))} title="Descargar este reporte para abrirlo en Excel"><FileSpreadsheet size={16} aria-hidden /> Excel</button>
           <button type="button" className="m-btn m-btn-salida" onClick={pdf} title="Abrir este reporte para guardarlo en PDF o imprimirlo"><FileDown size={16} aria-hidden /> PDF</button>

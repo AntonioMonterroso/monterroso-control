@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { HandCoins, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
@@ -47,7 +48,7 @@ export default function UtilidadesSA() {
 
   return (
     <>
-      <div className="c-cabeza"><div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Utilidades por acciones</h1></div></div>
+      <div className="c-cabeza"><div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Utilidades por acciones</h1><Pasos /></div></div>
       <p className="m-texto-suave c-intro">Utilidad de Dev Studio, Música, Diseño y generales de la sociedad, desde su inicio de operaciones. La reserva legal es el {TASA_RESERVA} % de la utilidad neta de cada ejercicio (artículo 36 del Código de Comercio). A cada socio se le retiene el {TASA_ISR_DIVIDENDOS} % de ISR sobre los dividendos.</p>
       <section className="m-tarjeta c-ficha">
         <h2 className="m-seccion-titulo">Calcular el reparto</h2>

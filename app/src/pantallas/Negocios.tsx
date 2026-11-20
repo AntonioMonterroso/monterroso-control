@@ -1,3 +1,4 @@
+import Pasos from '../componentes/Pasos'
 import { Pencil } from 'lucide-react'
 import { useState } from 'react'
 import FormRegistro from '../componentes/FormRegistro'
@@ -12,7 +13,7 @@ export default function Negocios() {
   const [editar, setEditar] = useState<Negocio | null>(null)
   return (
     <>
-      <div className="c-cabeza"><div><span className="m-etiqueta">Ajustes</span><h1 className="erp-titulo">Negocios</h1></div></div>
+      <div className="c-cabeza"><div><span className="m-etiqueta">Ajustes</span><h1 className="erp-titulo">Negocios</h1><Pasos /></div></div>
       <p className="m-texto-suave c-intro">Los tres negocios vienen listos. Puedes cambiarles el nombre o apagar uno que no uses; lo registrado se conserva.</p>
       <Tabla
         filas={negocios}

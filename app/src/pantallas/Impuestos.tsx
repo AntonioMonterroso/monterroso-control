@@ -1,3 +1,4 @@
+import Pasos from '../componentes/Pasos'
 import { FileInput, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useQuitar } from '../lib/quitar'
 import { useState } from 'react'
@@ -67,7 +68,7 @@ export default function Impuestos() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Para tu control, no se presenta nada</span><h1 className="erp-titulo">Impuestos y facturas</h1></div>
+        <div><span className="m-etiqueta">Para tu control, no se presenta nada</span><h1 className="erp-titulo">Impuestos y facturas</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           {vista !== 'regimen' && <SelectorMes periodo={periodo} onCambio={setPeriodo} />}
           {vista === 'facturas' && <button type="button" className="m-btn m-btn-secundario" onClick={() => setFactura('recibida')} title="Agregar una factura que te dio un proveedor"><Plus size={16} aria-hidden /> Recibida</button>}
@@ -152,12 +153,15 @@ export default function Impuestos() {
             buscador={false}
             titulo="Historial de cambios"
             filas={[...m.modos].reverse()}
+            quitarVarias={(l) => qi.pedir('ctl_impuesto_modo', l, `Se quitan ${l.length} cambios de régimen. Desde esos meses vale el anterior.`)}
             clave={(x) => x.id}
             vacio="Todavía no hay cambios de régimen."
             columnas={[
               { titulo: 'Desde', valor: (x) => { const [a, mm] = partes(x.desde); return nombreMes(a, mm) } },
               { titulo: 'Para', principal: true, valor: (x) => (x.ambito === 'negocio' ? nom(m.negocios, x.negocio_id) : <>{nom(m.clientes, x.cliente_id)}<small>Cliente</small></>) },
               { titulo: 'Régimen', valor: (x) => nombreRegimen(x.regimen) },
+              { titulo: 'Antes', valor: (x) => { const antes = m.modos.filter((y) => y.ambito === x.ambito && y.negocio_id === x.negocio_id && y.cliente_id === x.cliente_id && y.desde < x.desde).pop(); return antes ? nombreRegimen(antes.regimen) : <span className="m-vacia">Sin IVA</span> } },
+              { titulo: 'Anotado', valor: (x) => { const c = (x as unknown as { creado?: string }).creado; return c ? fechaCorta(c.slice(0, 10)) : <span className="m-vacia">—</span> } },
             ]}
             acciones={(x) => (
               <>

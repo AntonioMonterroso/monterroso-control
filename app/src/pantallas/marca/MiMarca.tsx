@@ -1,3 +1,5 @@
+import Pasos from '../../componentes/Pasos'
+import SelectBuscable from '../../componentes/SelectBuscable'
 import { Download, FileDown, Pencil } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
@@ -50,7 +52,7 @@ export default function MiMarca() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Ajustes</span><h1 className="erp-titulo">Mi marca</h1></div>
+        <div><span className="m-etiqueta">Ajustes</span><h1 className="erp-titulo">Mi marca</h1><Pasos /></div>
         <button type="button" className="m-btn m-btn-primario" onClick={() => setEditar(true)} title="Editar tus datos de contacto para tarjetas y documentos"><Pencil size={16} aria-hidden /> Editar datos</button>
       </div>
       <section className="m-tarjeta c-ficha">
@@ -63,7 +65,7 @@ export default function MiMarca() {
       </section>
       <div className="c-herramientas">
         <div className="c-chips" role="group" aria-label="Área">{AREAS.map((a) => <button key={a.valor} type="button" className="m-chip" aria-pressed={area === a.valor} onClick={() => setArea(a.valor)} title={`Ver ${a.nombre}`}>{a.nombre}</button>)}</div>
-        <div className="m-campo"><label htmlFor="mm-color">Color</label><select id="mm-color" className="m-entrada" value={color} onChange={(e) => setColor(e.target.value)}>{COLORES_MARCA.map((x) => <option key={x.nombre} value={x.nombre}>{x.nombre}</option>)}</select></div>
+        <div className="m-campo"><label htmlFor="mm-color">Color</label><SelectBuscable id="mm-color" valor={color} onCambio={setColor} opciones={COLORES_MARCA.map((x) => ({ valor: x.nombre, nombre: x.nombre }))} /></div>
       </div>
       <section className="c-seccion-dev">
         <div className="c-ficha-cabeza">

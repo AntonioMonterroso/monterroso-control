@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { CalendarCheck, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -57,7 +58,7 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'sa
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Empresa'}</span><h1 className="erp-titulo">{negocioClave === 'canela' ? 'Gastos de la tienda' : negocioClave === 'salario' ? 'Gastos del salario' : 'Gastos'}</h1></div>
+        <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Empresa'}</span><h1 className="erp-titulo">{negocioClave === 'canela' ? 'Gastos de la tienda' : negocioClave === 'salario' ? 'Gastos del salario' : 'Gastos'}</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           {vista !== 'fijos' && <SelectorMes periodo={periodo} onCambio={setPeriodo} />}
           {vista === 'fijos'

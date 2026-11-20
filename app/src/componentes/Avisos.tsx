@@ -25,6 +25,16 @@ export function ProveedorAvisos({ children }: { children: ReactNode }) {
     } catch { return }
   }, [lista])
 
+  useEffect(() => {
+    const subir = () => {
+      const el = ref.current
+      if (!el || !('showPopover' in el)) return
+      try { if (el.matches(':popover-open')) { el.hidePopover(); el.showPopover() } } catch { return }
+    }
+    window.addEventListener('c-ventana-abierta', subir)
+    return () => window.removeEventListener('c-ventana-abierta', subir)
+  }, [])
+
   return (
     <Ctx.Provider value={avisar}>
       {children}

@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import FormRegistro from '../../componentes/FormRegistro'
 import { useEffect, useMemo, useState } from 'react'
@@ -91,7 +92,7 @@ export default function PagosTienda() {
   const avisar = useAvisar()
   const [periodo, setPeriodo] = usePeriodo()
   const [nuevo, setNuevo] = useState(false)
-  const [quitar, setQuitar] = useState<PagoTienda | null>(null)
+  const [quitar, setQuitar] = useState<PagoTienda[]>([])
   const [editar, setEditar] = useState<PagoTienda | null>(null)
   const delMes = m.pagosTienda.filter((p) => periodoDe(p.fecha) === periodo)
   const total = deCentavos(delMes.reduce((s, p) => s + aCentavos(p.monto), 0))
@@ -100,13 +101,14 @@ export default function PagosTienda() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Hogar Canela</span><h1 className="erp-titulo">Pagos de la tienda</h1></div>
+        <div><span className="m-etiqueta">Hogar Canela</span><h1 className="erp-titulo">Pagos de la tienda</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <SelectorMes periodo={periodo} onCambio={setPeriodo} />
           <button type="button" className="m-btn m-btn-primario" onClick={() => setNuevo(true)} title="Registrar lo que entró y ligarlo a sus pedidos"><Plus size={16} aria-hidden /> Registrar pago</button>
         </div>
       </div>
       <Tabla
+        quitarVarias={(l) => setQuitar(l)}
         titulo={`${delMes.length} ${delMes.length === 1 ? 'pago' : 'pagos'}`}
         filas={delMes}
         clave={(p) => p.id}
@@ -120,22 +122,22 @@ export default function PagosTienda() {
         acciones={(p) => (
           <>
             <button type="button" className="m-icono-btn" onClick={() => setEditar(p)} aria-label="Editar" title="Corregir la fecha, el medio o la referencia"><Pencil aria-hidden /></button>
-            <button type="button" className="m-icono-btn" onClick={() => setQuitar(p)} aria-label="Quitar" title="Quitar el pago (los pedidos vuelven a quedar por cobrar)"><Trash2 aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setQuitar([p])} aria-label="Quitar" title="Quitar el pago (los pedidos vuelven a quedar por cobrar)"><Trash2 aria-hidden /></button>
           </>
         )}
         pie={<tr><td colSpan={3}>Total del mes</td><td className="m-num">{quetzales(total)}</td><td /></tr>}
       />
       <NuevoPago abierta={nuevo} onCerrar={() => setNuevo(false)} />
-      <Confirmar abierta={quitar != null} titulo="Quitar pago" peligro boton="Quitar el pago" texto={quitar ? `Se quita el pago de ${quetzales(quitar.monto)} del ${fechaCorta(quitar.fecha)} y sus pedidos vuelven a quedar por cobrar.` : ''}
-        onNo={() => setQuitar(null)}
+      <Confirmar abierta={quitar.length > 0} titulo={quitar.length > 1 ? `Quitar ${quitar.length} pagos` : 'Quitar pago'} peligro boton={quitar.length > 1 ? 'Quitar los pagos' : 'Quitar el pago'} texto={quitar.length === 1 ? `Se quita el pago de ${quetzales(quitar[0].monto)} del ${fechaCorta(quitar[0].fecha)} y sus pedidos vuelven a quedar por cobrar.` : `Se quitan ${quitar.length} pagos por ${quetzales(quitar.reduce((t, x) => t + x.monto, 0))} y sus pedidos vuelven a quedar por cobrar.`}
+        onNo={() => setQuitar([])}
         onSi={async () => {
-          if (quitar) {
-            const pago = tablas.ctl_tienda_pagos.find((x) => x.id === quitar.id)
-            const partesP = tablas.ctl_tienda_pago_partes.filter((x) => x.pago_id === quitar.id)
-            await borrar('ctl_tienda_pago_partes', partesP.map((x) => x.id)); await borrar('ctl_tienda_pagos', [quitar.id])
-            avisar('Pago quitado.', 'bien', { texto: 'Deshacer', hacer: async () => { if (pago) await insertar('ctl_tienda_pagos', [{ ...pago }]); if (partesP.length) await insertar('ctl_tienda_pago_partes', partesP.map((x) => ({ ...x }))); avisar('Se deshizo.') } })
-          }
-          setQuitar(null)
+          const ids = new Set(quitar.map((x) => x.id))
+          const pagos = tablas.ctl_tienda_pagos.filter((x) => ids.has(x.id))
+          const partesP = tablas.ctl_tienda_pago_partes.filter((x) => ids.has(String(x.pago_id)))
+          setQuitar([])
+          if (partesP.length) await borrar('ctl_tienda_pago_partes', partesP.map((x) => x.id))
+          await borrar('ctl_tienda_pagos', [...ids])
+          avisar(ids.size === 1 ? 'Pago quitado.' : `Se quitaron ${ids.size} pagos.`, 'bien', { texto: 'Deshacer', hacer: async () => { if (pagos.length) await insertar('ctl_tienda_pagos', pagos.map((x) => ({ ...x }))); if (partesP.length) await insertar('ctl_tienda_pago_partes', partesP.map((x) => ({ ...x }))); avisar('Se deshizo.') } })
         }} />
       <FormRegistro abierta={editar != null} titulo="Editar pago de la tienda" subtitulo={editar ? `${quetzales(editar.monto)} · el monto sale de sus pedidos` : ''}
         campos={[

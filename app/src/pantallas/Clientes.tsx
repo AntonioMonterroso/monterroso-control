@@ -1,4 +1,4 @@
-import { Pencil, Plus, RotateCcw } from 'lucide-react'
+import { ExternalLink, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { useAvisar } from '../componentes/Avisos'
 import { useEscribir } from '../lib/escribir'
 import { useState } from 'react'
@@ -10,6 +10,8 @@ import { quetzales } from '../lib/dinero'
 import { cobraMensualidad } from '../lib/mensualidad'
 import type { Cliente } from '../lib/tipos'
 import FormCliente from './FormCliente'
+import Pasos from '../componentes/Pasos'
+import { useBorrarOArchivar } from './clientes/BorrarOArchivar'
 
 type Filtro = 'activos' | 'todos' | 'inactivos' | 'archivados'
 
@@ -18,7 +20,11 @@ export default function Clientes() {
   const ir = useNavigate()
   const esc = useEscribir()
   const avisar = useAvisar()
-  const reactivar = async (c: Cliente) => { await esc.archivarCliente(c.id, false); avisar(`${c.nombre} vuelve a estar activo.`, 'bien', { texto: 'Deshacer', hacer: async () => { await esc.archivarCliente(c.id, true) } }) }
+  const reactivar = async (l: Cliente[]) => {
+    for (const c of l) await esc.archivarCliente(c.id, false)
+    avisar(l.length === 1 ? `${l[0].nombre} vuelve a estar activo.` : `${l.length} clientes vuelven a estar activos.`, 'bien', { texto: 'Deshacer', hacer: async () => { for (const c of l) await esc.archivarCliente(c.id, true) } })
+  }
+  const bo = useBorrarOArchivar()
   const [q, setQ] = useState('')
   const [filtro, setFiltro] = useState<Filtro>('activos')
   const [editar, setEditar] = useState<Cliente | null>(null)
@@ -36,16 +42,16 @@ export default function Clientes() {
       <div className="c-cabeza">
         <div>
           <span className="m-etiqueta">Dev Studio</span>
-          <h1 className="erp-titulo">Clientes</h1>
+          <h1 className="erp-titulo">Clientes</h1><Pasos />
         </div>
-        <button type="button" className="m-btn m-btn-primario" onClick={() => setNuevo(true)} title="Crear un cliente nuevo"><Plus size={16} aria-hidden /> Nuevo cliente</button>
+        <button type="button" className="m-btn m-btn-primario" onClick={() => setNuevo(true)} title="Abre la ventana para crear un cliente nuevo"><Plus size={16} aria-hidden /> Nuevo cliente</button>
       </div>
 
       <div className="c-herramientas">
         <Buscador valor={q} onCambio={setQ} ayuda="Nombre, NIT, teléfono o correo" />
         <div className="c-chips" role="group" aria-label="Filtrar clientes">
           {(['activos', 'todos', 'inactivos', 'archivados'] as Filtro[]).map((f) => (
-            <button key={f} type="button" className="m-chip" aria-pressed={filtro === f} onClick={() => setFiltro(f)} title={`Ver ${f === 'todos' ? 'todos los clientes' : `los clientes ${f}`}`}>{f[0].toUpperCase() + f.slice(1)}</button>
+            <button key={f} type="button" className="m-chip" aria-pressed={filtro === f} onClick={() => setFiltro(f)} title={`Muestra ${f === 'todos' ? 'todos los clientes menos los archivados' : `solo los clientes ${f}`}`}>{f[0].toUpperCase() + f.slice(1)}</button>
           ))}
         </div>
       </div>
@@ -59,7 +65,7 @@ export default function Clientes() {
         <Tabla
           buscador={false}
           titulo={`${lista.length} ${lista.length === 1 ? 'cliente' : 'clientes'}`}
-          nota="Toca un cliente para ver su ficha"
+          nota="Toca un cliente para ver su ficha; clic derecho o mantener presionado para más"
           filas={lista}
           clave={(c) => c.id}
           vacio="Ningún cliente coincide con la búsqueda."
@@ -72,14 +78,30 @@ export default function Clientes() {
             { titulo: 'Proyectos', num: true, valor: (c) => deCliente(c.id).length, orden: (c) => deCliente(c.id).length },
             { titulo: 'Mensualidad', num: true, valor: (c) => quetzales(mensual(c.id)), orden: (c) => mensual(c.id) },
           ]}
-          acciones={(c) => (c.archivado
-            ? <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => void reactivar(c)} title="Volver a mostrarlo en las listas y selectores"><RotateCcw size={14} aria-hidden /> Reactivar</button>
-            : <button type="button" className="m-icono-btn" onClick={() => setEditar(c)} aria-label={`Editar ${c.nombre}`} title="Editar los datos del cliente"><Pencil aria-hidden /></button>)}
+          masa={filtro === 'archivados'
+            ? [{ texto: 'Reactivar las marcadas', titulo: (n) => `Vuelve a mostrar los ${n} clientes marcados en listas y selectores`, hacer: (l) => void reactivar(l) }]
+            : [{ texto: 'Borrar o archivar las marcadas', titulo: (n) => `Muestra cuáles de los ${n} se borran y cuáles se archivan antes de hacerlo`, hacer: (l) => bo.pedir(l), peligro: true }]}
+          menu={(c) => [
+            { texto: 'Abrir', titulo: 'Abre la ficha del cliente', icono: <ExternalLink size={16} aria-hidden />, hacer: () => ir(`/clientes/${encodeURIComponent(c.id)}`) },
+            { texto: 'Editar', titulo: 'Abre sus datos para corregirlos', icono: <Pencil size={16} aria-hidden />, hacer: () => setEditar(c) },
+            c.archivado
+              ? { texto: 'Reactivar', titulo: 'Vuelve a mostrarlo en listas y selectores', icono: <RotateCcw size={16} aria-hidden />, hacer: () => void reactivar([c]) }
+              : { texto: 'Borrar o archivar', titulo: bo.titulo(c), icono: <Trash2 size={16} aria-hidden />, hacer: () => bo.pedir([c]), peligro: true },
+          ]}
+          acciones={(c) => (
+            <>
+              <button type="button" className="m-icono-btn" onClick={() => setEditar(c)} aria-label={`Editar ${c.nombre}`} title="Abre sus datos para corregirlos"><Pencil aria-hidden /></button>
+              {c.archivado
+                ? <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => void reactivar([c])} title="Vuelve a mostrarlo en listas y selectores"><RotateCcw size={14} aria-hidden /> Reactivar</button>
+                : <button type="button" className="m-icono-btn c-icono-peligro" onClick={() => bo.pedir([c])} aria-label={`Borrar o archivar ${c.nombre}`} title={bo.titulo(c)}><Trash2 aria-hidden /></button>}
+            </>
+          )}
         />
       )}
 
       <FormCliente abierta={nuevo} cliente={null} onCerrar={() => setNuevo(false)} onGuardado={(c) => ir(`/clientes/${encodeURIComponent(c.id ?? "")}`)} />
       <FormCliente abierta={editar != null} cliente={editar} onCerrar={() => setEditar(null)} />
+      {bo.ventana}
     </>
   )
 }

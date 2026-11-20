@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { PagoTienda, PartePagoTienda } from './tiendaPagos'
 import type { Documento } from './documentos'
+import { cambiosDe, type Cambio } from './historial'
 import type { Accion, Aporte, Conciliacion, CuentaBanco, MovBanco, Recordatorio, Reparto, RepartoSocio, Sociedad, Socio, Tramite, Transmision } from './sa'
 import type { DevBitacora, DevEnlace, DevServicio, DevSupabase, DevToken } from './desarrollo'
 import { useDatos } from './datos'
@@ -58,6 +59,7 @@ export interface Modelo {
   tramites: Tramite[]
   recordatorios: Recordatorio[]
   documentos: Documento[]
+  historial: Cambio[]
   marca: { id: string; nombre: string | null; cargo: string | null; correo: string | null; telefono: string | null; sitio: string | null; redes: Record<string, string>; color: string | null } | null
   partesTienda: PartePagoTienda[]
 }
@@ -70,7 +72,8 @@ export function useModelo(): Modelo {
     const extraProyectos = t.ctl_proyecto_extra as unknown as ExtraProyecto[]
     const extraClientes = t.ctl_cliente_extra as unknown as ExtraCliente[]
     const extraPagos = t.ctl_pago_extra as unknown as ExtraPago[]
-    const proyectos = wProjects.map((w) => proyectoDeWorld(w, extraProyectos.find((x) => x.project_id === w.id))).sort((a, b) => b.creado.localeCompare(a.creado))
+    const historial = t.ctl_historial as unknown as Cambio[]
+    const proyectos = wProjects.map((w) => ({ ...proyectoDeWorld(w, extraProyectos.find((x) => x.project_id === w.id)), cambiosMensualidad: cambiosDe(historial, 'projects', w.id, 'mensualidad') })).sort((a, b) => b.creado.localeCompare(a.creado))
     const porId = new Map(wProjects.map((w) => [w.id, w]))
     const pagosWorld = wPayments.map((p) => pagoDeWorld(p, porId, extraPagos.find((x) => x.payment_id === p.id))).filter((p): p is Pago => p != null)
     const negocios = [...(t.ctl_negocios as unknown as Negocio[])].sort((a, b) => a.orden - b.orden)
@@ -114,6 +117,7 @@ export function useModelo(): Modelo {
       conciliaciones: t.ctl_banco_conciliaciones as unknown as Conciliacion[],
       tramites: [...(t.ctl_sa_tramites as unknown as Tramite[])].sort((a, b) => a.orden - b.orden),
       recordatorios: [...(t.ctl_recordatorios as unknown as Recordatorio[])].sort((a, b) => a.proxima.localeCompare(b.proxima)),
+      historial,
       documentos: [...(t.ctl_documentos as unknown as Documento[])].sort((a, b) => b.fecha.localeCompare(a.fecha) || (b.numero ?? 0) - (a.numero ?? 0)),
       marca: ((t.ctl_marca as unknown as Modelo['marca'][])[0] ?? null),
       wProjects, wPayments, extraProyectos, extraClientes, extraPagos, clientExtraRaw: ajustes.clientExtra,

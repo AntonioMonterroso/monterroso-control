@@ -1,3 +1,5 @@
+import Pasos from '../../componentes/Pasos'
+import SelectBuscable from '../../componentes/SelectBuscable'
 import { CheckCheck, ChevronDown, Pencil, FolderKanban, HandCoins, MessageCircle, Plus, Printer, Trash2, Undo2, User, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -75,7 +77,7 @@ export default function Cobros() {
   const [saldar, setSaldar] = useState<Cobro | null>(null)
   const [extra, setExtra] = useState(false)
   const [avisos, setAvisos] = useState(false)
-  const [quitarPago, setQuitarPago] = useState<Pago | null>(null)
+  const [quitarPago, setQuitarPago] = useState<Pago[]>([])
   const [editarPago, setEditarPago] = useState<Pago | null>(null)
   const [editarExtra, setEditarExtra] = useState<Cobro | null>(null)
   const quitarExtra = useQuitar()
@@ -180,10 +182,10 @@ export default function Cobros() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Dev Studio y salario</span><h1 className="erp-titulo">Cobros</h1></div>
+        <div><span className="m-etiqueta">Dev Studio y salario</span><h1 className="erp-titulo">Cobros</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <SelectorMes periodo={periodo} onCambio={setPeriodo} />
-          <button type="button" className="m-btn m-btn-secundario" onClick={() => setAvisos(true)} title="Mandar el estado de cuenta por WhatsApp a cada cliente que debe"><MessageCircle size={16} aria-hidden /> Recordatorios</button>
+          <button type="button" className="m-btn m-btn-salida" onClick={() => setAvisos(true)} title="Mandar el estado de cuenta por WhatsApp a cada cliente que debe"><MessageCircle size={16} aria-hidden /> Recordatorios</button>
           <button type="button" className="m-btn m-btn-primario" onClick={() => setExtra(true)} title="Agregar un cobro que no es inscripción ni mensualidad"><Plus size={16} aria-hidden /> Cobro extra</button>
         </div>
       </div>
@@ -213,10 +215,7 @@ export default function Cobros() {
             {(['cliente', 'proyecto', 'rubro', 'negocio'] as Dim[]).map((d) => (
               <label key={d} className="c-dim">
                 <span>{nombreDim[d]}</span>
-                <select className="m-entrada" value={dims[d] ?? ''} onChange={(e) => ponerDim(d, e.target.value)}>
-                  <option value="">Todos</option>
-                  {opciones(d).map(([k, n]) => <option key={k} value={k}>{n}</option>)}
-                </select>
+                <SelectBuscable id={`dim-${d}`} valor={dims[d] ?? ''} onCambio={(v) => ponerDim(d, v)} vacio="Todos" opciones={opciones(d).map(([k, n]) => ({ valor: k, nombre: n }))} />
               </label>
             ))}
             <label className="c-dim c-dim-ver">
@@ -290,6 +289,8 @@ export default function Cobros() {
       ) : (
         <Tabla
           buscador={false}
+          marcable={(p) => p.origen !== 'world'}
+          quitarVarias={(l) => setQuitarPago(l)}
           titulo={`${pagosMes.length} ${pagosMes.length === 1 ? 'pago' : 'pagos'}`}
           filas={pagosMes}
           clave={(p) => p.id}
@@ -306,7 +307,7 @@ export default function Cobros() {
             <>
               {!p.cobro_clave.startsWith('s:') && <button type="button" className="m-icono-btn c-salida" onClick={() => imprimirRecibo(p, cliente(p.cliente_id), conceptoDe(p.cobro_clave))} aria-label="Recibo" title="Abrir el recibo para guardarlo en PDF o imprimirlo"><Printer aria-hidden /></button>}
               <button type="button" className="m-icono-btn" onClick={() => setEditarPago(p)} aria-label="Editar pago" title="Corregir fecha, monto, cuenta o referencia"><Pencil aria-hidden /></button>
-              {p.origen !== 'world' && <button type="button" className="m-icono-btn" onClick={() => setQuitarPago(p)} aria-label="Quitar pago" title="Quitar este pago si se registró por error"><Trash2 aria-hidden /></button>}
+              {p.origen !== 'world' && <button type="button" className="m-icono-btn" onClick={() => setQuitarPago([p])} aria-label="Quitar pago" title="Quitar este pago si se registró por error"><Trash2 aria-hidden /></button>}
             </>
           )}
           pie={<tr><td colSpan={5}>Total del mes</td><td className="m-num">{quetzales(cobrado)}</td><td /></tr>}
@@ -334,10 +335,10 @@ export default function Cobros() {
       <VentanaSaldar cobro={saldar} onCerrar={() => setSaldar(null)} />
       <VentanaExtra abierta={extra} onCerrar={() => setExtra(false)} />
       <VentanaRecordatorios abierta={avisos} cobros={todos} onCerrar={() => setAvisos(false)} />
-      <Confirmar abierta={quitarPago != null} titulo="Quitar pago" peligro boton="Quitar el pago"
-        texto={quitarPago ? `Se quita el pago de ${quetzales(quitarPago.monto)} del ${fechaCorta(quitarPago.fecha)} y el cobro vuelve a quedar pendiente. Úsalo solo si se registró por error.` : ''}
-        onNo={() => setQuitarPago(null)}
-        onSi={async () => { if (quitarPago) { try { await esc.quitarPago(quitarPago); avisar('Pago quitado.') } catch (e) { avisar(e instanceof Error ? e.message : 'No se pudo quitar.', 'error') } } setQuitarPago(null) }} />
+      <Confirmar abierta={quitarPago.length > 0} titulo={quitarPago.length > 1 ? `Quitar ${quitarPago.length} pagos` : 'Quitar pago'} peligro boton={quitarPago.length > 1 ? 'Quitar los pagos' : 'Quitar el pago'}
+        texto={quitarPago.length === 1 ? `Se quita el pago de ${quetzales(quitarPago[0].monto)} del ${fechaCorta(quitarPago[0].fecha)} y el cobro vuelve a quedar pendiente. Úsalo solo si se registró por error.` : `Se quitan ${quitarPago.length} pagos por ${quetzales(quitarPago.reduce((t, x) => t + x.monto, 0))} y sus cobros vuelven a quedar pendientes. Úsalo solo si se registraron por error.`}
+        onNo={() => setQuitarPago([])}
+        onSi={async () => { const l = quitarPago; setQuitarPago([]); try { for (const p of l) await esc.quitarPago(p); avisar(l.length === 1 ? 'Pago quitado.' : `Se quitaron ${l.length} pagos.`) } catch (e) { avisar(e instanceof Error ? e.message : 'No se pudo quitar.', 'error') } }} />
     </>
   )
 }

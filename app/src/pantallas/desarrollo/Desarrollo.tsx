@@ -1,3 +1,5 @@
+import Pasos from '../../componentes/Pasos'
+import SelectBuscable from '../../componentes/SelectBuscable'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Buscador from '../../componentes/Buscador'
@@ -22,7 +24,7 @@ export default function Desarrollo() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Dev Studio</span><h1 className="erp-titulo">Desarrollo</h1></div>
+        <div><span className="m-etiqueta">Dev Studio</span><h1 className="erp-titulo">Desarrollo</h1><Pasos /></div>
       </div>
       <ParaNoOlvidar limite={vista === 'todo' ? 8 : 3} />
       <Pestanas etiqueta="Ver" valor={vista} onCambio={setVista} opciones={[
@@ -36,10 +38,7 @@ export default function Desarrollo() {
         <Buscador valor={q} onCambio={setQ} ayuda="Nombre, proveedor, dirección o últimos 4" />
         <div className="m-campo">
           <label htmlFor="dv-pro">Proyecto</label>
-          <select id="dv-pro" className="m-entrada" value={proyecto} onChange={(e) => setProyecto(e.target.value)}>
-            <option value="">Todos</option>
-            {m.proyectos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-          </select>
+          <SelectBuscable id="dv-pro" valor={proyecto} onCambio={setProyecto} vacio="Todos" opciones={m.proyectos.map((p) => ({ valor: p.id, nombre: p.nombre }))} />
         </div>
         <div className="c-chips" role="group" aria-label="Filtrar">
           <button type="button" className="m-chip" aria-pressed={!soloAvisos} onClick={() => setSoloAvisos(false)} title="Ver todo">Todos</button>

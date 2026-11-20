@@ -1,3 +1,4 @@
+import SelectBuscable from '../../componentes/SelectBuscable'
 import { FileDown } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
@@ -70,23 +71,15 @@ export default function Armador({ abierto, clienteFijo, onCerrar }: { abierto: b
         <div className="c-form">
           <div className="m-campo">
             <label htmlFor="ar-cli">Cliente</label>
-            <select id="ar-cli" className="m-entrada" value={cliente} disabled={!!clienteFijo} onChange={(e) => { setCliente(e.target.value); setProyecto('') }}>
-              <option value="">Elige…</option>
-              {m.clientes.filter((x) => !x.archivado || x.id === cliente).map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
-            </select>
+            <SelectBuscable id="ar-cli" valor={cliente} disabled={!!clienteFijo} onCambio={(v) => { setCliente(v); setProyecto('') }} vacio="Elige…" opciones={m.clientes.filter((x) => !x.archivado || x.id === cliente).map((x) => ({ valor: x.id, nombre: x.nombre }))} />
           </div>
           <div className="m-campo">
             <label htmlFor="ar-pro">Proyecto</label>
-            <select id="ar-pro" className="m-entrada" value={proyecto} onChange={(e) => setProyecto(e.target.value)} disabled={!cliente}>
-              <option value="">Sin proyecto</option>
-              {proyectosCliente.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
-            </select>
+            <SelectBuscable id="ar-pro" valor={proyecto} onCambio={setProyecto} disabled={!cliente} vacio="Sin proyecto" opciones={proyectosCliente.map((x) => ({ valor: x.id, nombre: x.nombre }))} />
           </div>
           <div className="m-campo">
             <label htmlFor="ar-pla">Plantilla</label>
-            <select id="ar-pla" className="m-entrada" value={plantilla} onChange={(e) => { setPlantilla(e.target.value); setTocado(false) }}>
-              {m.plantillas.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
-            </select>
+            <SelectBuscable id="ar-pla" valor={plantilla} onCambio={(v) => { setPlantilla(v); setTocado(false) }} opciones={m.plantillas.map((x) => ({ valor: x.id, nombre: x.nombre }))} />
           </div>
           <div className="m-campo">
             <label htmlFor="ar-fec">Fecha</label>

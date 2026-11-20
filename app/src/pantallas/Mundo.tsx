@@ -1,3 +1,5 @@
+import Pasos from '../componentes/Pasos'
+import SelectBuscable from '../componentes/SelectBuscable'
 import { Download } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAvisar } from '../componentes/Avisos'
@@ -54,7 +56,7 @@ export default function Mundo() {
 
   return (
     <>
-      <div className="c-cabeza"><div><span className="m-etiqueta">Ajustes</span><h1 className="erp-titulo">Conexión con Monterroso World</h1></div></div>
+      <div className="c-cabeza"><div><span className="m-etiqueta">Ajustes</span><h1 className="erp-titulo">Conexión con Monterroso World</h1><Pasos /></div></div>
       <p className="m-texto-suave c-intro">Aquí solo entran los movimientos de Dinero que estén en las áreas que marques como «Empresa». Lo personal se queda en Monterroso World y este sistema nunca lo lee. Allá no se cambia nada.</p>
       {!remoto ? (
         <div className="m-vacio m-tarjeta"><b>No disponible en modo de prueba</b><span>La conexión lee tu cuenta real de Monterroso World.</span></div>
@@ -71,8 +73,8 @@ export default function Mundo() {
           </section>
           <section>
             <div className="c-herramientas">
-              <div className="m-campo"><label htmlFor="mw-neg">Entran al negocio</label><select id="mw-neg" className="m-entrada" value={negocio} onChange={(e) => setNegocio(e.target.value)}>{opcNegocios(m).map((o) => <option key={o.valor} value={o.valor}>{o.nombre}</option>)}</select></div>
-              <div className="m-campo"><label htmlFor="mw-cat">Con la categoría</label><select id="mw-cat" className="m-entrada" value={categoria} onChange={(e) => setCategoria(e.target.value)}>{opcCategorias(m).map((o) => <option key={o.valor} value={o.valor}>{o.nombre}</option>)}</select></div>
+              <div className="m-campo"><label htmlFor="mw-neg">Entran al negocio</label><SelectBuscable id="mw-neg" valor={negocio} onCambio={setNegocio} opciones={opcNegocios(m)} /></div>
+              <div className="m-campo"><label htmlFor="mw-cat">Con la categoría</label><SelectBuscable id="mw-cat" valor={categoria} onCambio={setCategoria} opciones={opcCategorias(m)} /></div>
               <button type="button" className="m-btn m-btn-primario" disabled={!nuevos.length || !negocio || !categoria || ocupado} onClick={() => void traer()} title={nuevos.length ? 'Copiar estos gastos a Gastos, una sola vez y sin duplicar' : 'No hay gastos nuevos de Empresa'}><Download size={16} aria-hidden /> Traer {nuevos.length} gastos</button>
             </div>
             {otraMoneda > 0 && <p className="c-nota">{otraMoneda} movimientos están en otra moneda y no se traen.</p>}

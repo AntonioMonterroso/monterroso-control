@@ -1,3 +1,4 @@
+import Pasos from '../componentes/Pasos'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Tabla from '../componentes/Tabla'
@@ -38,7 +39,7 @@ export default function Inicio() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">{nombreMes(a, mes)}</span><h1 className="erp-titulo">Inicio</h1></div>
+        <div><span className="m-etiqueta">{nombreMes(a, mes)}</span><h1 className="erp-titulo">Inicio</h1><Pasos /></div>
       </div>
       <div className="c-chips" role="group" aria-label="Negocio">
         <button type="button" className="m-chip" aria-pressed={!negocio} onClick={() => setNegocio('')} title="Ver todos los negocios juntos">Todos</button>

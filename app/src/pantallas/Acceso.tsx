@@ -23,15 +23,15 @@ export default function Acceso() {
   const rCorreo = useRef<HTMLInputElement>(null)
   const rClave = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { (guardado ? rClave : rCorreo).current?.focus() }, [guardado])
+  useEffect(() => { (guardado ? rClave : rCorreo).current?.focus({ preventScroll: true }) }, [guardado])
 
   const revisarMayus = (e: React.KeyboardEvent<HTMLInputElement>) => setMayus(e.getModifierState('CapsLock'))
 
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault()
     if (ocupado) return
-    if (!correo.trim()) { setError('Escribe tu correo.'); rCorreo.current?.focus(); return }
-    if (!clave) { setError('Escribe tu contraseña.'); rClave.current?.focus(); return }
+    if (!correo.trim()) { setError('Escribe tu correo.'); rCorreo.current?.focus({ preventScroll: true }); return }
+    if (!clave) { setError('Escribe tu contraseña.'); rClave.current?.focus({ preventScroll: true }); return }
     setOcupado(true); setError('')
     try { if (recordar) localStorage.setItem(CLAVE_CORREO, correo.trim()); else localStorage.removeItem(CLAVE_CORREO) } catch { void 0 }
     const r = await entrar(correo.trim(), clave)

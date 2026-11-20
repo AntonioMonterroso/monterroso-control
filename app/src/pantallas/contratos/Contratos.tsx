@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { Eye, FileDown, Pencil, PenLine, Plus, Trash2 } from 'lucide-react'
 import { useQuitar } from '../../lib/quitar'
 import { useState } from 'react'
@@ -30,6 +31,7 @@ export function ListaContratos({ contratos }: { contratos: Contrato[] }) {
         buscador={false}
         titulo={`${contratos.length} contratos`}
         filas={contratos}
+        quitarVarias={(l) => q.pedir('ctl_contratos', l, `Se quitan ${l.length} contratos.`)}
         clave={(x) => x.id}
         vacio="Todavía no hay contratos."
         columnas={[
@@ -75,7 +77,7 @@ export default function Contratos() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Dev Studio</span><h1 className="erp-titulo">Contratos</h1></div>
+        <div><span className="m-etiqueta">Dev Studio</span><h1 className="erp-titulo">Contratos</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           {vista === 'plantillas'
             ? <button type="button" className="m-btn m-btn-primario" onClick={() => setPlantilla('nueva')} title="Crear una plantilla de contrato"><Plus size={16} aria-hidden /> Nueva plantilla</button>
@@ -92,6 +94,7 @@ export default function Contratos() {
         <Tabla
           buscador={false}
           titulo="Plantillas"
+          quitarVarias={(l) => { if (l.length >= m.plantillas.length) return; qp.pedir('ctl_plantillas_contrato', l, `Se quitan ${l.length} plantillas. Los contratos ya hechos no cambian.`) }}
           nota="La plantilla base es un punto de partida: revísala con tu abogado antes de usarla."
           filas={m.plantillas}
           clave={(x) => x.id}

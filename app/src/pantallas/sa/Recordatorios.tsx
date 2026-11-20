@@ -1,3 +1,4 @@
+import Pasos from '../../componentes/Pasos'
 import { CheckCircle2, ListPlus, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
@@ -35,7 +36,7 @@ export default function RecordatoriosSA() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Recordatorios y vencimientos</h1></div>
+        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">Recordatorios y vencimientos</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <button type="button" className="m-btn m-btn-secundario" disabled={!s?.regimen} onClick={async () => { await insertar('ctl_recordatorios', obligacionesComunes({ regimen: s!.regimen, cierre_mes: s!.cierre_mes }, hoy)); avisar('Se agregaron las obligaciones comunes. Revisa sus fechas.') }} title={s?.regimen ? 'Agregar las obligaciones que se repiten según el régimen (revisa sus fechas)' : 'Pon el régimen en la ficha de la sociedad'}><ListPlus size={16} aria-hidden /> Obligaciones comunes</button>
           <button type="button" className="m-btn m-btn-primario" onClick={() => setEditar('nuevo')} title="Agregar un recordatorio propio"><Plus size={16} aria-hidden /> Recordatorio</button>

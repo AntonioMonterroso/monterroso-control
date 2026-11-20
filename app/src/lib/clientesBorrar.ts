@@ -31,3 +31,11 @@ export function planBorrarCliente(key: string, d: { trabajos: number; pagos: num
     ].filter((x) => x.ids.length),
   }
 }
+
+export function unirConY(l: string[]): string {
+  return l.length <= 1 ? (l[0] ?? '') : `${l.slice(0, -1).join(', ')} y ${l[l.length - 1]}`
+}
+
+export function textoPlan(plan: PlanBorrar): string {
+  return plan.modo === 'borrar' ? 'Lo borra; no tiene movimientos' : `Lo archiva porque tiene ${unirConY(plan.motivos)}`
+}
