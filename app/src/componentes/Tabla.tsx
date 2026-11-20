@@ -48,7 +48,7 @@ export function comparar(a: string | number, b: string | number): number {
 
 export interface Marcar<T> { puede: (f: T) => boolean; marcadas: Set<string>; cambiar: (ids: string[], si: boolean) => void }
 
-export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, onFila, acciones, pie, buscador = true, marcar }: {
+export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, onFila, acciones, pie, buscador = true, marcar: marcarExterno, quitarVarias }: {
   titulo?: ReactNode
   nota?: ReactNode
   columnas: Columna<T>[]
@@ -60,7 +60,11 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
   pie?: ReactNode
   buscador?: boolean
   marcar?: Marcar<T>
+  quitarVarias?: (filas: T[]) => void
 }) {
+  const [propias, setPropias] = useState<Set<string>>(new Set())
+  const marcar: Marcar<T> | undefined = marcarExterno ?? (quitarVarias && filas.length > 1 ? { puede: () => true, marcadas: propias, cambiar: (ids, si) => setPropias((x) => { const n = new Set(x); ids.forEach((k) => (si ? n.add(k) : n.delete(k))); return n }) } : undefined)
+  const elegidasPropias = quitarVarias ? filas.filter((f) => propias.has(clave(f))) : []
   const cols = columnas.filter((c) => !c.oculto)
   const [orden, setOrden] = useState<{ i: number; dir: 1 | -1 } | null>(null)
   const [q, setQ] = useState('')
@@ -82,10 +86,17 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
 
   return (
     <div className="m-tabla-envoltura c-tabla-adapta c-tabla-erp">
-      {(titulo || nota || conBuscador) && (
+      {(titulo || nota || conBuscador || elegidasPropias.length > 0) && (
         <div className="m-tabla-titulo">
           {titulo && <b>{titulo}</b>}
           {nota && <span>{nota}</span>}
+          {elegidasPropias.length > 0 && (
+            <span className="c-tabla-masa">
+              <b>{elegidasPropias.length} {elegidasPropias.length === 1 ? 'marcada' : 'marcadas'}</b>
+              <button type="button" className="m-btn m-btn-fantasma m-btn-sm" onClick={() => setPropias(new Set())} title="Quitar todas las marcas">Desmarcar</button>
+              <button type="button" className="m-btn m-btn-peligro m-btn-sm" onClick={() => { quitarVarias!(elegidasPropias); setPropias(new Set()) }} title="Quitar todas las filas marcadas (se puede deshacer)">Quitar las marcadas</button>
+            </span>
+          )}
           {conBuscador && <div className="c-tabla-buscar"><Buscador valor={q} onCambio={setQ} ayuda={`Buscar en ${filas.length}`} /></div>}
         </div>
       )}

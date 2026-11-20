@@ -1,4 +1,5 @@
-import { HandCoins, Pencil, Plus } from 'lucide-react'
+import { HandCoins, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useQuitar } from '../lib/quitar'
 import { useState } from 'react'
 import FormRegistro from '../componentes/FormRegistro'
 import Tabla from '../componentes/Tabla'
@@ -19,6 +20,7 @@ export default function Salario() {
   const { aumentos, pagos } = useModelo()
   const cobrosSal = useCobros().filter((c) => c.tipo === 'salario')
   const [recibir, setRecibir] = useState<Cobro | null>(null)
+  const q = useQuitar()
   const { guardar } = useDatos()
   const hoy = useHoy()
   const [editar, setEditar] = useState<AumentoSalario | 'nuevo' | null>(null)
@@ -53,7 +55,12 @@ export default function Salario() {
           { titulo: 'Neto', num: true, valor: (x) => quetzales(netoSalario(x)) },
           { titulo: 'Nota', valor: (x) => x.nota ?? '' },
         ]}
-        acciones={(x) => <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Corregir este monto"><Pencil aria-hidden /></button>}
+        acciones={(x) => (
+          <>
+            <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Corregir este monto"><Pencil aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_salario_aumentos', [x], 'Se quita este monto del historial. Los meses que ya marcaste recibidos se conservan.')} aria-label="Quitar" title="Quitar este monto del historial (se puede deshacer)"><Trash2 aria-hidden /></button>
+          </>
+        )}
       />
       {meses.length > 0 && (
         <Tabla
@@ -71,6 +78,7 @@ export default function Salario() {
         />
       )}
       <VentanaPago cobro={recibir} onCerrar={() => setRecibir(null)} />
+      {q.ventana}
       <FormRegistro
         abierta={editar != null}
         titulo={a ? 'Corregir salario' : actual ? 'Registrar aumento' : 'Poner salario'}

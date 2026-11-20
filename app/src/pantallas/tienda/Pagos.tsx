@@ -1,4 +1,5 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
+import FormRegistro from '../../componentes/FormRegistro'
 import { useEffect, useMemo, useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
 import Confirmar from '../../componentes/Confirmar'
@@ -86,11 +87,12 @@ function NuevoPago({ abierta, onCerrar }: { abierta: boolean; onCerrar: () => vo
 
 export default function PagosTienda() {
   const m = useModelo()
-  const { borrar } = useDatos()
+  const { borrar, insertar, guardar, tablas } = useDatos()
   const avisar = useAvisar()
   const [periodo, setPeriodo] = usePeriodo()
   const [nuevo, setNuevo] = useState(false)
   const [quitar, setQuitar] = useState<PagoTienda | null>(null)
+  const [editar, setEditar] = useState<PagoTienda | null>(null)
   const delMes = m.pagosTienda.filter((p) => periodoDe(p.fecha) === periodo)
   const total = deCentavos(delMes.reduce((s, p) => s + aCentavos(p.monto), 0))
   const pedidosDe = (id: string) => m.partesTienda.filter((x) => x.pago_id === id).map((x) => m.ventas.find((v) => v.id === x.venta_id)?.pedido).filter(Boolean).join(', ')
@@ -115,13 +117,36 @@ export default function PagosTienda() {
           { titulo: 'Pedidos', valor: (p) => pedidosDe(p.id) || <span className="m-vacia">—</span> },
           { titulo: 'Monto', num: true, valor: (p) => quetzales(p.monto), orden: (p) => p.monto },
         ]}
-        acciones={(p) => <button type="button" className="m-icono-btn" onClick={() => setQuitar(p)} aria-label="Quitar" title="Quitar el pago (los pedidos vuelven a quedar por cobrar)"><Trash2 aria-hidden /></button>}
+        acciones={(p) => (
+          <>
+            <button type="button" className="m-icono-btn" onClick={() => setEditar(p)} aria-label="Editar" title="Corregir la fecha, el medio o la referencia"><Pencil aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setQuitar(p)} aria-label="Quitar" title="Quitar el pago (los pedidos vuelven a quedar por cobrar)"><Trash2 aria-hidden /></button>
+          </>
+        )}
         pie={<tr><td colSpan={3}>Total del mes</td><td className="m-num">{quetzales(total)}</td><td /></tr>}
       />
       <NuevoPago abierta={nuevo} onCerrar={() => setNuevo(false)} />
       <Confirmar abierta={quitar != null} titulo="Quitar pago" peligro boton="Quitar el pago" texto={quitar ? `Se quita el pago de ${quetzales(quitar.monto)} del ${fechaCorta(quitar.fecha)} y sus pedidos vuelven a quedar por cobrar.` : ''}
         onNo={() => setQuitar(null)}
-        onSi={async () => { if (quitar) { await borrar('ctl_tienda_pago_partes', m.partesTienda.filter((x) => x.pago_id === quitar.id).map((x) => x.id)); await borrar('ctl_tienda_pagos', [quitar.id]); avisar('Pago quitado.') } setQuitar(null) }} />
+        onSi={async () => {
+          if (quitar) {
+            const pago = tablas.ctl_tienda_pagos.find((x) => x.id === quitar.id)
+            const partesP = tablas.ctl_tienda_pago_partes.filter((x) => x.pago_id === quitar.id)
+            await borrar('ctl_tienda_pago_partes', partesP.map((x) => x.id)); await borrar('ctl_tienda_pagos', [quitar.id])
+            avisar('Pago quitado.', 'bien', { texto: 'Deshacer', hacer: async () => { if (pago) await insertar('ctl_tienda_pagos', [{ ...pago }]); if (partesP.length) await insertar('ctl_tienda_pago_partes', partesP.map((x) => ({ ...x }))); avisar('Se deshizo.') } })
+          }
+          setQuitar(null)
+        }} />
+      <FormRegistro abierta={editar != null} titulo="Editar pago de la tienda" subtitulo={editar ? `${quetzales(editar.monto)} · el monto sale de sus pedidos` : ''}
+        campos={[
+          { k: 'fecha', etiqueta: 'Fecha', tipo: 'fecha', requerido: true },
+          { k: 'medio', etiqueta: 'Medio', tipo: 'select', requerido: true, opciones: MEDIOS },
+          { k: 'referencia', etiqueta: 'Referencia', tipo: 'texto', max: 120 },
+          { k: 'nota', etiqueta: 'Nota', tipo: 'texto', max: 500, ancho: true },
+        ]}
+        inicial={editar ? (editar as unknown as Record<string, unknown>) : {}}
+        onGuardar={async (d) => { if (editar) await guardar('ctl_tienda_pagos', editar.id, d) }}
+        onCerrar={() => setEditar(null)} />
     </>
   )
 }

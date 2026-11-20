@@ -4,6 +4,7 @@ import { rangoMes } from './finanzas'
 import { hoyISO } from './fechas'
 import { useModelo } from './modelo'
 import { avisosDev } from './desarrollo'
+import { avisosSA } from './sa'
 
 export function useHoy(): string {
   return hoyISO()
@@ -26,5 +27,5 @@ export function useCobros(hastaPeriodo?: string): Cobro[] {
 export function useAvisosDev() {
   const m = useModelo()
   const hoy = useHoy()
-  return useMemo(() => avisosDev({ supabase: m.devSupabase, tokens: m.devTokens, servicios: m.devServicios, enlaces: m.devEnlaces }, hoy), [m.devSupabase, m.devTokens, m.devServicios, m.devEnlaces, hoy])
+  return useMemo(() => [...avisosDev({ supabase: m.devSupabase, tokens: m.devTokens, servicios: m.devServicios, enlaces: m.devEnlaces }, hoy), ...avisosSA(m.recordatorios, m.sociedad, hoy)].sort((a, b) => (a.nivel === b.nivel ? a.dias - b.dias : a.nivel === 'peligro' ? -1 : 1)), [m.devSupabase, m.devTokens, m.devServicios, m.devEnlaces, m.recordatorios, m.sociedad, hoy])
 }

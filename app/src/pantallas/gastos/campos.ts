@@ -4,7 +4,7 @@ import { CUENTAS } from '../../lib/tipos'
 
 export const opcNegocios = (m: Modelo) => m.negocios.filter((n) => n.activo).map((n) => ({ valor: n.id, nombre: n.nombre }))
 export const opcCategorias = (m: Modelo, tipo: 'gasto' | 'ingreso' = 'gasto', incluir?: string) => m.categorias.filter((c) => c.tipo === tipo && (c.activo || c.id === incluir)).map((c) => ({ valor: c.id, nombre: c.nombre }))
-export const opcClientes = (m: Modelo) => m.clientes.filter((c) => c.activo).map((c) => ({ valor: c.id, nombre: c.nombre }))
+export const opcClientes = (m: Modelo) => m.clientes.filter((c) => c.activo && !c.archivado).map((c) => ({ valor: c.id, nombre: c.nombre }))
 
 export function camposGasto(m: Modelo, incluirCat?: string): Campo[] {
   return [

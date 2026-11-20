@@ -1,4 +1,6 @@
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, RotateCcw } from 'lucide-react'
+import { useAvisar } from '../componentes/Avisos'
+import { useEscribir } from '../lib/escribir'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Tabla from '../componentes/Tabla'
@@ -9,18 +11,21 @@ import { cobraMensualidad } from '../lib/mensualidad'
 import type { Cliente } from '../lib/tipos'
 import FormCliente from './FormCliente'
 
-type Filtro = 'activos' | 'todos' | 'inactivos'
+type Filtro = 'activos' | 'todos' | 'inactivos' | 'archivados'
 
 export default function Clientes() {
   const { clientes, proyectos, negocios } = useModelo()
   const ir = useNavigate()
+  const esc = useEscribir()
+  const avisar = useAvisar()
+  const reactivar = async (c: Cliente) => { await esc.archivarCliente(c.id, false); avisar(`${c.nombre} vuelve a estar activo.`, 'bien', { texto: 'Deshacer', hacer: async () => { await esc.archivarCliente(c.id, true) } }) }
   const [q, setQ] = useState('')
   const [filtro, setFiltro] = useState<Filtro>('activos')
   const [editar, setEditar] = useState<Cliente | null>(null)
   const [nuevo, setNuevo] = useState(false)
 
   const lista = clientes
-    .filter((c) => (filtro === 'todos' ? true : filtro === 'activos' ? c.activo : !c.activo))
+    .filter((c) => (filtro === 'archivados' ? c.archivado : !c.archivado && (filtro === 'todos' ? true : filtro === 'activos' ? c.activo : !c.activo)))
     .filter((c) => coincide(q, c.nombre, c.nit, c.whatsapp, c.correo, c.rubro))
   const deCliente = (id: string) => proyectos.filter((p) => p.cliente_id === id)
   const mensual = (id: string) => deCliente(id).filter(cobraMensualidad).reduce((s, p) => s + Math.round(p.mensualidad * 100), 0) / 100
@@ -39,7 +44,7 @@ export default function Clientes() {
       <div className="c-herramientas">
         <Buscador valor={q} onCambio={setQ} ayuda="Nombre, NIT, teléfono o correo" />
         <div className="c-chips" role="group" aria-label="Filtrar clientes">
-          {(['activos', 'todos', 'inactivos'] as Filtro[]).map((f) => (
+          {(['activos', 'todos', 'inactivos', 'archivados'] as Filtro[]).map((f) => (
             <button key={f} type="button" className="m-chip" aria-pressed={filtro === f} onClick={() => setFiltro(f)} title={`Ver ${f === 'todos' ? 'todos los clientes' : `los clientes ${f}`}`}>{f[0].toUpperCase() + f.slice(1)}</button>
           ))}
         </div>
@@ -67,7 +72,9 @@ export default function Clientes() {
             { titulo: 'Proyectos', num: true, valor: (c) => deCliente(c.id).length, orden: (c) => deCliente(c.id).length },
             { titulo: 'Mensualidad', num: true, valor: (c) => quetzales(mensual(c.id)), orden: (c) => mensual(c.id) },
           ]}
-          acciones={(c) => <button type="button" className="m-icono-btn" onClick={() => setEditar(c)} aria-label={`Editar ${c.nombre}`} title="Editar los datos del cliente"><Pencil aria-hidden /></button>}
+          acciones={(c) => (c.archivado
+            ? <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => void reactivar(c)} title="Volver a mostrarlo en las listas y selectores"><RotateCcw size={14} aria-hidden /> Reactivar</button>
+            : <button type="button" className="m-icono-btn" onClick={() => setEditar(c)} aria-label={`Editar ${c.nombre}`} title="Editar los datos del cliente"><Pencil aria-hidden /></button>)}
         />
       )}
 

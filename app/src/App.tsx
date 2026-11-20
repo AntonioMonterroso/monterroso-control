@@ -20,6 +20,15 @@ import Presupuestos from './pantallas/presupuesto/Presupuestos'
 import Proyectos from './pantallas/Proyectos'
 import ProyectoFicha from './pantallas/ProyectoFicha'
 import Desarrollo from './pantallas/desarrollo/Desarrollo'
+import FichaSA from './pantallas/sa/Ficha'
+import Documentos from './pantallas/documentos/Documentos'
+import MiMarca from './pantallas/marca/MiMarca'
+import SociosSA from './pantallas/sa/Socios'
+import UtilidadesSA from './pantallas/sa/Utilidades'
+import BancosSA from './pantallas/sa/Bancos'
+import EstadosSA from './pantallas/sa/Estados'
+import TramitesSA from './pantallas/sa/Tramites'
+import RecordatoriosSA from './pantallas/sa/Recordatorios'
 import Reportes from './pantallas/Reportes'
 import Salario from './pantallas/Salario'
 import Tienda from './pantallas/tienda/Tienda'
@@ -51,6 +60,15 @@ function Contenido() {
         <Route path="/proyectos" element={<Proyectos />} />
         <Route path="/proyectos/:id" element={<ProyectoFicha />} />
         <Route path="/desarrollo" element={<Desarrollo />} />
+        <Route path="/documentos" element={<Documentos />} />
+        <Route path="/marca" element={<MiMarca />} />
+        <Route path="/sa" element={<FichaSA />} />
+        <Route path="/sa/socios" element={<SociosSA />} />
+        <Route path="/sa/utilidades" element={<UtilidadesSA />} />
+        <Route path="/sa/bancos" element={<BancosSA />} />
+        <Route path="/sa/estados" element={<EstadosSA />} />
+        <Route path="/sa/tramites" element={<TramitesSA />} />
+        <Route path="/sa/recordatorios" element={<RecordatoriosSA />} />
         <Route path="/cobros" element={<Cobros />} />
         <Route path="/contratos" element={<Contratos />} />
         <Route path="/tienda" element={<ResumenTienda />} />

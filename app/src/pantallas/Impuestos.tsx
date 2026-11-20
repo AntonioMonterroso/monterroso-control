@@ -1,4 +1,5 @@
-import { FileInput, Pencil, Plus } from 'lucide-react'
+import { FileInput, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useQuitar } from '../lib/quitar'
 import { useState } from 'react'
 import { useAvisar } from '../componentes/Avisos'
 import Buscador, { coincide } from '../componentes/Buscador'
@@ -29,6 +30,7 @@ export default function Impuestos() {
   const [q, setQ] = useState('')
   const [factura, setFactura] = useState<Factura | 'emitida' | 'recibida' | null>(null)
   const [modo, setModo] = useState<ModoImpuesto | 'nuevo' | null>(null)
+  const qi = useQuitar()
   const nom = (l: { id: string; nombre: string }[], id: string | null) => l.find((x) => x.id === id)?.nombre ?? ''
   const negocios = m.negocios.filter((n) => n.activo)
   const delMes = m.facturas.filter((f) => periodoDe(f.fecha) === periodo && (!tipo || f.tipo === tipo) && coincide(q, f.nombre, f.nit, f.numero, f.serie))
@@ -111,6 +113,7 @@ export default function Impuestos() {
             filas={delMes}
             clave={(x) => x.id}
             vacio="No hay facturas en este mes."
+            quitarVarias={(l) => qi.pedir('ctl_facturas', l, `Se quitan ${l.length} facturas.`)}
             columnas={[
               { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha) },
               { titulo: 'Tipo', valor: (x) => (x.tipo === 'emitida' ? <span className="m-estado en-proceso">Emitida</span> : <span className="m-estado pendiente">Recibida</span>) },
@@ -124,6 +127,7 @@ export default function Impuestos() {
               <>
                 <Ojito ruta={x.archivo} titulo={`Factura ${x.numero}`} />
                 <button type="button" className="m-icono-btn" onClick={() => setFactura(x)} aria-label="Editar" title="Editar la factura"><Pencil aria-hidden /></button>
+                <button type="button" className="m-icono-btn" onClick={() => qi.pedir('ctl_facturas', [x], `Se quita la factura ${x.serie ? `${x.serie}-` : ''}${x.numero} de ${x.nombre}.`)} aria-label="Quitar" title="Quitar la factura (se puede deshacer)"><Trash2 aria-hidden /></button>
               </>
             )}
           />
@@ -155,7 +159,12 @@ export default function Impuestos() {
               { titulo: 'Para', principal: true, valor: (x) => (x.ambito === 'negocio' ? nom(m.negocios, x.negocio_id) : <>{nom(m.clientes, x.cliente_id)}<small>Cliente</small></>) },
               { titulo: 'Régimen', valor: (x) => nombreRegimen(x.regimen) },
             ]}
-            acciones={(x) => <button type="button" className="m-icono-btn" onClick={() => setModo(x)} aria-label="Editar" title="Corregir este cambio"><Pencil aria-hidden /></button>}
+            acciones={(x) => (
+              <>
+                <button type="button" className="m-icono-btn" onClick={() => setModo(x)} aria-label="Editar" title="Corregir este cambio"><Pencil aria-hidden /></button>
+                <button type="button" className="m-icono-btn" onClick={() => qi.pedir('ctl_impuesto_modo', [x], 'Se quita este cambio de régimen. Desde ese mes vale el anterior.')} aria-label="Quitar" title="Quitar este cambio de régimen (se puede deshacer)"><Trash2 aria-hidden /></button>
+              </>
+            )}
           />
         </>
       )}
@@ -176,6 +185,7 @@ export default function Impuestos() {
         inicial={md ? (md as unknown as Record<string, unknown>) : { ambito: 'negocio', negocio_id: m.negocios.find((n) => n.clave === 'dev')?.id, desde: `${periodo}-01` }}
         onGuardar={async (d) => { await guardar('ctl_impuesto_modo', md?.id ?? null, { ...d, desde: `${String(d.desde).slice(0, 7)}-01`, negocio_id: d.ambito === 'negocio' ? d.negocio_id : null, cliente_id: d.ambito === 'cliente' ? d.cliente_id : null }) }}
         onCerrar={() => setModo(null)} />
+      {qi.ventana}
     </>
   )
 }

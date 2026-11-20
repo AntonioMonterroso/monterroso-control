@@ -1,4 +1,4 @@
-export type ClaveNegocio = 'dev' | 'canela' | 'salario'
+export type ClaveNegocio = 'dev' | 'canela' | 'salario' | 'musica' | 'diseno' | 'sa'
 export type Regimen = 'sin_iva' | 'pequeno' | 'general'
 export type EstadoProyecto = 'propuesta' | 'en_curso' | 'entregado' | 'cerrado'
 export type FormaInscripcion = 'completa' | 'mitad' | 'personalizada'
@@ -11,6 +11,7 @@ export interface Negocio {
   descripcion: string | null
   activo: boolean
   orden: number
+  en_sa?: boolean
 }
 
 export interface Cliente {
@@ -27,6 +28,7 @@ export interface Cliente {
   activo: boolean
   creado: string
   aka?: string[]
+  archivado?: boolean
 }
 
 export interface ParteInscripcion {
@@ -81,7 +83,12 @@ export const NEGOCIOS_BASE: { clave: ClaveNegocio; nombre: string; descripcion: 
   { clave: 'dev', nombre: 'Monterroso Dev Studio', descripcion: 'Páginas y sistemas: inscripción y mensualidad por cliente.', orden: 1 },
   { clave: 'canela', nombre: 'Hogar Canela', descripcion: 'Tienda en Shopify con Dropi.', orden: 2 },
   { clave: 'salario', nombre: 'Salario', descripcion: 'Sueldo fijo mensual y sus gastos.', orden: 3 },
+  { clave: 'musica', nombre: 'Música', descripcion: 'Parte de la sociedad anónima.', orden: 4 },
+  { clave: 'diseno', nombre: 'Diseño', descripcion: 'Parte de la sociedad anónima.', orden: 5 },
+  { clave: 'sa', nombre: 'Sociedad anónima (generales)', descripcion: 'Gastos e ingresos de la sociedad que no son de un negocio: constitución, contador, banco.', orden: 6 },
 ]
+
+export const NEGOCIOS_SA: ClaveNegocio[] = ['dev', 'musica', 'diseno', 'sa']
 
 export type TipoCobro = 'inscripcion' | 'mensualidad' | 'extra' | 'salario'
 export type EstadoCobro = 'pagado' | 'por_cobrar' | 'vencido' | 'saldado'

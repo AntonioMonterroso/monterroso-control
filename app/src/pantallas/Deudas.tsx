@@ -1,7 +1,6 @@
 import { CreditCard, HandCoins, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { useAvisar } from '../componentes/Avisos'
-import Confirmar from '../componentes/Confirmar'
+import { useQuitar } from '../lib/quitar'
 import FormRegistro, { type Campo } from '../componentes/FormRegistro'
 import Tabla from '../componentes/Tabla'
 import { useDatos } from '../lib/datos'
@@ -15,13 +14,13 @@ import { opcCategorias, opcNegocios } from './gastos/campos'
 
 export default function Deudas() {
   const m = useModelo()
-  const { guardar, insertar, borrar } = useDatos()
-  const avisar = useAvisar()
+  const { guardar, insertar } = useDatos()
   const hoy = useHoy()
   const [editar, setEditar] = useState<Deuda | 'nuevo' | null>(null)
   const [mov, setMov] = useState<{ deuda: Deuda; tipo: 'pago' | 'cargo' } | null>(null)
   const [ver, setVer] = useState<string | null>(null)
-  const [quitar, setQuitar] = useState<MovimientoDeuda | null>(null)
+  const q = useQuitar()
+  const [editarMov, setEditarMov] = useState<MovimientoDeuda | null>(null)
   const catDeudas = m.categorias.find((c) => c.clave === 'deudas')
   const d = editar && editar !== 'nuevo' ? editar : null
   const totalSaldo = deCentavos(m.deudas.filter((x) => x.activo).reduce((s, x) => s + aCentavos(saldoDeuda(x, m.movimientos)), 0))
@@ -72,6 +71,7 @@ export default function Deudas() {
             <button type="button" className="m-btn m-btn-primario m-btn-sm" onClick={() => setMov({ deuda: x, tipo: 'pago' })} title="Registrar un pago a esta deuda"><HandCoins size={14} aria-hidden /> Pago</button>
             {x.tipo === 'tarjeta' && <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => setMov({ deuda: x, tipo: 'cargo' })} title="Registrar una compra con la tarjeta"><CreditCard size={14} aria-hidden /> Compra</button>}
             <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Editar la deuda"><Pencil aria-hidden /></button>
+            {movsDe(x.id).length === 0 && <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_deudas', [x], `Se quita la deuda «${x.nombre}».`)} aria-label="Quitar" title="Quitar la deuda (no tiene movimientos; se puede deshacer)"><Trash2 aria-hidden /></button>}
           </>
         )}
       />
@@ -87,7 +87,13 @@ export default function Deudas() {
             { titulo: 'Nota', principal: true, valor: (x) => x.nota ?? '' },
             { titulo: 'Monto', num: true, valor: (x) => quetzales(x.monto) },
           ]}
-          acciones={(x) => <button type="button" className="m-icono-btn" onClick={() => setQuitar(x)} aria-label="Quitar" title="Quitar este movimiento"><Trash2 aria-hidden /></button>}
+          quitarVarias={(l) => q.pedir('ctl_deuda_movimientos', l, `Se quitan ${l.length} movimientos.`)}
+          acciones={(x) => (
+            <>
+              <button type="button" className="m-icono-btn" onClick={() => setEditarMov(x)} aria-label="Editar" title="Corregir el movimiento"><Pencil aria-hidden /></button>
+              <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_deuda_movimientos', [x], `Se quita el movimiento de ${quetzales(x.monto)} del ${fechaCorta(x.fecha)}.`)} aria-label="Quitar" title="Quitar este movimiento (se puede deshacer)"><Trash2 aria-hidden /></button>
+            </>
+          )}
         />
       )}
       <FormRegistro abierta={editar != null} titulo={d ? 'Editar deuda' : 'Nueva deuda'} campos={campos}
@@ -103,9 +109,17 @@ export default function Deudas() {
         inicial={{ fecha: hoy, monto: mov?.tipo === 'pago' && mov.deuda.cuota ? mov.deuda.cuota.toFixed(2) : '' }}
         onGuardar={async (x) => { if (mov) await insertar('ctl_deuda_movimientos', [{ ...x, deuda_id: mov.deuda.id, tipo: mov.tipo }]) }}
         onCerrar={() => setMov(null)} />
-      <Confirmar abierta={quitar != null} titulo="Quitar movimiento" peligro boton="Quitar" texto={quitar ? `Se quita el movimiento de ${quetzales(quitar.monto)} del ${fechaCorta(quitar.fecha)}.` : ''}
-        onNo={() => setQuitar(null)}
-        onSi={async () => { if (quitar) { await borrar('ctl_deuda_movimientos', [quitar.id]); avisar('Movimiento quitado.') } setQuitar(null) }} />
+      <FormRegistro abierta={editarMov != null} titulo="Editar movimiento"
+        campos={[
+          { k: 'tipo', etiqueta: 'Tipo', tipo: 'select', requerido: true, opciones: [{ valor: 'pago', nombre: 'Pago' }, { valor: 'cargo', nombre: 'Compra con la tarjeta' }] },
+          { k: 'fecha', etiqueta: 'Fecha', tipo: 'fecha', requerido: true },
+          { k: 'monto', etiqueta: 'Monto', tipo: 'monto', requerido: true },
+          { k: 'nota', etiqueta: 'Nota', tipo: 'texto', max: 300, ancho: true },
+        ]}
+        inicial={editarMov ? { ...editarMov, monto: editarMov.monto.toFixed(2) } : {}}
+        onGuardar={async (x) => { if (editarMov) await guardar('ctl_deuda_movimientos', editarMov.id, x) }}
+        onCerrar={() => setEditarMov(null)} />
+      {q.ventana}
     </>
   )
 }

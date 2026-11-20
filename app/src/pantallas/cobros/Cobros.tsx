@@ -1,4 +1,4 @@
-import { CheckCheck, ChevronDown, FolderKanban, HandCoins, MessageCircle, Plus, Printer, Trash2, Undo2, User, X } from 'lucide-react'
+import { CheckCheck, ChevronDown, Pencil, FolderKanban, HandCoins, MessageCircle, Plus, Printer, Trash2, Undo2, User, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAvisar } from '../../componentes/Avisos'
@@ -18,7 +18,8 @@ import { CUENTAS, type Pago } from '../../lib/tipos'
 import { useEscribir } from '../../lib/escribir'
 import Ventana from '../../componentes/Ventana'
 import { imprimirRecibo } from './documentos'
-import { VentanaExtra, VentanaPago, VentanaRecordatorios, VentanaSaldar } from './Ventanas'
+import { VentanaEditarExtra, VentanaEditarPago, VentanaExtra, VentanaPago, VentanaRecordatorios, VentanaSaldar } from './Ventanas'
+import { useQuitar } from '../../lib/quitar'
 
 type Filtro = 'pendientes' | 'vencidos' | 'pagados' | 'saldados' | 'todos'
 type VerPor = 'nada' | 'cliente' | 'proyecto' | 'rubro' | 'negocio'
@@ -75,6 +76,9 @@ export default function Cobros() {
   const [extra, setExtra] = useState(false)
   const [avisos, setAvisos] = useState(false)
   const [quitarPago, setQuitarPago] = useState<Pago | null>(null)
+  const [editarPago, setEditarPago] = useState<Pago | null>(null)
+  const [editarExtra, setEditarExtra] = useState<Cobro | null>(null)
+  const quitarExtra = useQuitar()
   const [marcadas, setMarcadas] = useState<Set<string>>(new Set())
   const [masa, setMasa] = useState(false)
   const [masaFecha, setMasaFecha] = useState(hoy)
@@ -143,6 +147,8 @@ export default function Cobros() {
       {(c.estado === 'por_cobrar' || c.estado === 'vencido') && <button type="button" className="m-btn m-btn-primario m-btn-sm" onClick={() => setPagar(c)} title={c.tipo === 'salario' ? 'Marcar que ya recibiste el salario' : 'Registrar lo que pagó el cliente'}><HandCoins size={14} aria-hidden /> {c.tipo === 'salario' ? 'Recibido' : 'Pago'}</button>}
       {(c.estado === 'por_cobrar' || c.estado === 'vencido') && <button type="button" className="m-btn m-btn-fantasma m-btn-sm" onClick={() => setSaldar(c)} title="Dejar de contarlo como pendiente (por ejemplo un descuento)">Saldar</button>}
       {c.estado === 'saldado' && <button type="button" className="m-btn m-btn-fantasma m-btn-sm" onClick={() => void quitarSaldado(c)} title="Volver a contarlo como pendiente"><Undo2 size={14} aria-hidden /> Deshacer</button>}
+      {c.tipo === 'extra' && c.guardado && !c.clave.startsWith('a:') && <button type="button" className="m-icono-btn" onClick={() => setEditarExtra(c)} aria-label="Editar" title="Editar el cobro extra"><Pencil aria-hidden /></button>}
+      {c.tipo === 'extra' && c.guardado && !c.clave.startsWith('a:') && c.pagado === 0 && <button type="button" className="m-icono-btn" onClick={() => quitarExtra.pedir('ctl_cobros', [c.guardado!], `Se quita el cobro «${c.concepto}» de ${quetzales(c.monto)}.`)} aria-label="Quitar" title="Quitar este cobro extra (se puede deshacer)"><Trash2 aria-hidden /></button>}
       {c.tipo !== 'salario' && pagosDe(c.clave).length > 0 && <button type="button" className="m-icono-btn c-salida" onClick={() => reciboDe(c)} aria-label="Recibo" title="Abrir el recibo de este pago"><Printer aria-hidden /></button>}
     </>
   )
@@ -299,7 +305,8 @@ export default function Cobros() {
           acciones={(p) => (
             <>
               {!p.cobro_clave.startsWith('s:') && <button type="button" className="m-icono-btn c-salida" onClick={() => imprimirRecibo(p, cliente(p.cliente_id), conceptoDe(p.cobro_clave))} aria-label="Recibo" title="Abrir el recibo para guardarlo en PDF o imprimirlo"><Printer aria-hidden /></button>}
-              <button type="button" className="m-icono-btn" onClick={() => setQuitarPago(p)} aria-label="Quitar pago" title="Quitar este pago si se registró por error"><Trash2 aria-hidden /></button>
+              <button type="button" className="m-icono-btn" onClick={() => setEditarPago(p)} aria-label="Editar pago" title="Corregir fecha, monto, cuenta o referencia"><Pencil aria-hidden /></button>
+              {p.origen !== 'world' && <button type="button" className="m-icono-btn" onClick={() => setQuitarPago(p)} aria-label="Quitar pago" title="Quitar este pago si se registró por error"><Trash2 aria-hidden /></button>}
             </>
           )}
           pie={<tr><td colSpan={5}>Total del mes</td><td className="m-num">{quetzales(cobrado)}</td><td /></tr>}
@@ -307,6 +314,9 @@ export default function Cobros() {
       )}
 
       <VentanaPago cobro={pagar} onCerrar={() => setPagar(null)} />
+      <VentanaEditarPago pago={editarPago} onCerrar={() => setEditarPago(null)} />
+      <VentanaEditarExtra cobro={editarExtra} onCerrar={() => setEditarExtra(null)} />
+      {quitarExtra.ventana}
       <Ventana abierta={masa} titulo={soloSalario ? 'Marcar como recibidos' : 'Marcar como pagados'} subtitulo={`${elegidos.length} ${elegidos.length === 1 ? 'cobro' : 'cobros'} · ${quetzales(totalMarcado)}. Cada uno se registra por lo que debe.`} onCerrar={() => setMasa(false)} pie={
         <>
           <button type="button" className="m-btn m-btn-fantasma" onClick={() => setMasa(false)} title="Cerrar sin registrar">Cancelar</button>

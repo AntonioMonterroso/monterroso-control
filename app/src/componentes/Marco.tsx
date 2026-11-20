@@ -1,4 +1,4 @@
-import { BarChart3, Building2, ChevronRight, Code2, ChevronsLeft, CreditCard, FileSignature, FolderKanban, Globe, HandCoins, LayoutDashboard, LogOut, Menu, Moon, Package, Palette, PiggyBank, Receipt, ShoppingBag, Tags, Target, Sun, Users, Wallet, X } from 'lucide-react'
+import { BarChart3, FileText, Sparkles, Building, Building2, CalendarClock, ClipboardList, Landmark, Scale, UsersRound, ChevronRight, Code2, ChevronsLeft, CreditCard, FileSignature, FolderKanban, Globe, HandCoins, LayoutDashboard, LogOut, Menu, Moon, Package, Palette, PiggyBank, Receipt, ShoppingBag, Tags, Target, Sun, Users, Wallet, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useModelo } from '../lib/modelo'
@@ -7,6 +7,8 @@ import { useAvisosDev, useCobros } from '../lib/usos'
 import { notificar } from '../lib/notificar'
 import { guardarTemaEnUsuario, temaApi, traerTemaDelUsuario } from '../lib/tema'
 import Temas from './Temas'
+import LogoStudio from './Logo'
+import { rutaAviso } from '../pantallas/desarrollo/ParaNoOlvidar'
 
 const GRUPOS: { titulo: string; modo?: Modo; enlaces: { a: string; nombre: string; icono: ReactNode; fin?: boolean }[] }[] = [
   { titulo: 'General', enlaces: [
@@ -18,6 +20,7 @@ const GRUPOS: { titulo: string; modo?: Modo; enlaces: { a: string; nombre: strin
     { a: '/proyectos', nombre: 'Proyectos', icono: <FolderKanban aria-hidden /> },
     { a: '/cobros', nombre: 'Cobros', icono: <HandCoins aria-hidden /> },
     { a: '/contratos', nombre: 'Contratos', icono: <FileSignature aria-hidden /> },
+    { a: '/documentos', nombre: 'Documentos', icono: <FileText aria-hidden /> },
     { a: '/desarrollo', nombre: 'Desarrollo', icono: <Code2 aria-hidden /> },
   ] },
   { titulo: 'Hogar Canela', modo: 'canela', enlaces: [
@@ -27,6 +30,15 @@ const GRUPOS: { titulo: string; modo?: Modo; enlaces: { a: string; nombre: strin
     { a: '/tienda/productos', nombre: 'Productos', icono: <Package aria-hidden /> },
     { a: '/tienda/gastos', nombre: 'Gastos de la tienda', icono: <Receipt aria-hidden /> },
     { a: '/tienda/presupuesto', nombre: 'Presupuesto', icono: <Target aria-hidden /> },
+  ] },
+  { titulo: 'Sociedad anónima', modo: 'sa', enlaces: [
+    { a: '/sa', nombre: 'Ficha', icono: <Building aria-hidden />, fin: true },
+    { a: '/sa/socios', nombre: 'Socios y capital', icono: <UsersRound aria-hidden /> },
+    { a: '/sa/utilidades', nombre: 'Utilidades', icono: <PiggyBank aria-hidden /> },
+    { a: '/sa/bancos', nombre: 'Bancos', icono: <Landmark aria-hidden /> },
+    { a: '/sa/estados', nombre: 'Estados financieros', icono: <Scale aria-hidden /> },
+    { a: '/sa/tramites', nombre: 'Trámites', icono: <ClipboardList aria-hidden /> },
+    { a: '/sa/recordatorios', nombre: 'Recordatorios', icono: <CalendarClock aria-hidden /> },
   ] },
   { titulo: 'Salario', modo: 'salario', enlaces: [
     { a: '/salario', nombre: 'Mi salario', icono: <Wallet aria-hidden />, fin: true },
@@ -43,16 +55,18 @@ const GRUPOS: { titulo: string; modo?: Modo; enlaces: { a: string; nombre: strin
   { titulo: 'Ajustes', enlaces: [
     { a: '/negocios', nombre: 'Negocios', icono: <Building2 aria-hidden /> },
     { a: '/categorias', nombre: 'Categorías', icono: <Tags aria-hidden /> },
+    { a: '/marca', nombre: 'Mi marca', icono: <Sparkles aria-hidden /> },
     { a: '/mundo', nombre: 'Monterroso World', icono: <Globe aria-hidden /> },
   ] },
 ]
 
-type Modo = 'dev' | 'canela' | 'salario'
+type Modo = 'dev' | 'canela' | 'salario' | 'sa'
 
 const MODOS: { id: Modo; nombre: string; icono: ReactNode; a: string }[] = [
   { id: 'dev', nombre: 'Dev Studio', icono: <FolderKanban aria-hidden />, a: '/clientes' },
   { id: 'canela', nombre: 'Canela', icono: <ShoppingBag aria-hidden />, a: '/tienda' },
   { id: 'salario', nombre: 'Salario', icono: <Wallet aria-hidden />, a: '/salario' },
+  { id: 'sa', nombre: 'S.A.', icono: <Building aria-hidden />, a: '/sa' },
 ]
 
 function modoDeRuta(ruta: string): Modo | null {
@@ -61,7 +75,7 @@ function modoDeRuta(ruta: string): Modo | null {
 }
 
 function leerModo(): Modo {
-  try { const v = localStorage.getItem('mc_modo'); return v === 'canela' || v === 'salario' ? v : 'dev' } catch { return 'dev' }
+  try { const v = localStorage.getItem('mc_modo'); return v === 'canela' || v === 'salario' || v === 'sa' ? v : 'dev' } catch { return 'dev' }
 }
 
 function leerCompacto(): boolean {
@@ -109,7 +123,7 @@ export default function Marco({ children }: { children: ReactNode }) {
   const avisosRef = useRef(avisosDev)
   avisosRef.current = avisosDev
   useEffect(() => {
-    const correr = () => notificar(avisosRef.current, (a) => ir(a.proyecto_id ? `/proyectos/${a.proyecto_id}?ver=desarrollo` : `/desarrollo?ver=${a.tipo}`))
+    const correr = () => notificar(avisosRef.current, (a) => ir(rutaAviso(a)))
     const t0 = setTimeout(correr, 1500)
     const t = setInterval(correr, 3600000)
     return () => { clearTimeout(t0); clearInterval(t) }
@@ -131,7 +145,7 @@ export default function Marco({ children }: { children: ReactNode }) {
     <div className="m-app c-app" data-lateral={compacto || angosta ? 'compacto' : 'normal'} data-menu={abierto ? 'abierto' : 'cerrado'}>
       <header className="c-barra-movil">
         <button type="button" className="m-icono-btn" onClick={() => setAbierto(true)} aria-label="Abrir el menú" title="Abrir el menú"><Menu aria-hidden /></button>
-        <span className="c-acceso-logo c-barra-logo"><img className="c-logo-oscuro" src="/marca/studio-oscuro.png" alt="Studio Monterroso" /><img className="c-logo-claro" src="/marca/studio-claro.png" alt="" aria-hidden="true" /></span>
+        <LogoStudio className="c-acceso-logo c-barra-logo" />
       </header>
       <div className="c-velo" onClick={() => setAbierto(false)} aria-hidden />
       <nav className="m-lateral" aria-label="Menú principal">

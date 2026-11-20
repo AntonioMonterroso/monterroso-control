@@ -16,6 +16,7 @@ export const CATEGORIAS_BASE: { nombre: string; tipo: 'gasto' | 'ingreso'; clave
   { nombre: 'Publicidad', tipo: 'gasto', clave: null, orden: 16 },
   { nombre: 'Pago de deudas y tarjeta', tipo: 'gasto', clave: 'deudas', orden: 17 },
   { nombre: 'Costo de pedidos de la tienda', tipo: 'gasto', clave: 'costo_tienda', orden: 18 },
+  { nombre: 'Gastos de constitución', tipo: 'gasto', clave: 'constitucion', orden: 19 },
   { nombre: 'Otros gastos', tipo: 'gasto', clave: null, orden: 30 },
 ]
 
@@ -37,7 +38,7 @@ export const PLANTILLA_BASE = {
 
 export function semillas(t: Record<Tabla, Fila[]>): [Tabla, Record<string, unknown>[]][] {
   const r: [Tabla, Record<string, unknown>[]][] = []
-  const neg = NEGOCIOS_BASE.filter((b) => !t.ctl_negocios.some((n) => n.clave === b.clave)).map((b) => ({ ...b, activo: true }))
+  const neg = NEGOCIOS_BASE.filter((b) => !t.ctl_negocios.some((n) => n.clave === b.clave)).map((b) => ({ ...b, activo: true, en_sa: ['dev', 'musica', 'diseno', 'sa'].includes(b.clave) }))
   if (neg.length) r.push(['ctl_negocios', neg])
   if (t.ctl_categorias.length === 0) r.push(['ctl_categorias', CATEGORIAS_BASE.map((c) => ({ ...c, activo: true }))])
   else {

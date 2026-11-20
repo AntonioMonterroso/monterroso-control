@@ -5,7 +5,9 @@ import { hoyISO } from './fechas'
 import { useModelo } from './modelo'
 import { filasARenombrar, proyectoAWorld, proyectosDelCliente, type DatosProyecto } from './puente'
 import type { FormaInscripcion, ParteInscripcion, Pago } from './tipos'
-import { clientKey, conClienteCreado, conInfoCambiada, type ClientInfo, type WProject } from './world'
+import { cleanAll, clientKey, conClienteCreado, conInfoCambiada, type ClientInfo, type WProject } from './world'
+import { planBorrarCliente, type PlanBorrar } from './clientesBorrar'
+import type { Fila } from './almacen'
 
 export const TABLAS_CON_CLIENTE: Tabla[] = ['ctl_cobros', 'ctl_pagos', 'ctl_gastos', 'ctl_gastos_fijos', 'ctl_contratos', 'ctl_impuesto_modo', 'ctl_facturas']
 
@@ -105,12 +107,40 @@ export function useEscribir() {
       return deshacer
     },
 
+    planBorrar(key: string): PlanBorrar {
+      return planBorrarCliente(key, {
+        trabajos: proyectosDelCliente(m.wProjects, key).length,
+        pagos: m.pagos.filter((p) => p.cliente_id === key).length,
+        contratos: m.contratos, facturas: m.facturas, cobros: m.cobros, modos: m.modos, gastos: m.gastos, gastosFijos: m.gastosFijos,
+        extra: m.extraClientes.filter((e) => e.client_key === key).map((e) => ({ id: e.id, cliente_id: key })),
+      })
+    },
+
+    async archivarCliente(key: string, si: boolean) {
+      const fila = m.extraClientes.find((e) => e.client_key === key)
+      await d.guardar('ctl_cliente_extra', fila?.id ?? null, fila ? { archivado: si } : { client_key: key, archivado: si, activo: true })
+    },
+
+    async borrarCliente(key: string): Promise<() => Promise<void>> {
+      const plan = this.planBorrar(key)
+      if (plan.modo !== 'borrar') throw new Error('Este cliente tiene movimientos: se archiva, no se borra.')
+      const antesAjustes = d.ajustes.clientExtra
+      const quitadas: { t: Tabla; filas: Fila[] }[] = plan.borrar.map((b) => ({ t: b.t, filas: (d.tablas[b.t] as Fila[]).filter((f) => b.ids.includes(f.id)) }))
+      for (const b of plan.desligar) for (const id of b.ids) await d.guardar(b.t, id, { cliente_id: null })
+      for (const q of quitadas) await d.borrar(q.t, q.filas.map((f) => f.id))
+      const extra = cleanAll(d.ajustes.clientExtra)
+      delete extra[key]
+      await d.guardarAjustes({ clientExtra: extra })
+      return async () => {
+        await d.guardarAjustes({ clientExtra: antesAjustes })
+        for (const q of quitadas) if (q.filas.length) await d.insertar(q.t, q.filas.map((f) => ({ ...f })))
+        for (const b of plan.desligar) for (const id of b.ids) await d.guardar(b.t, id, { cliente_id: key })
+      }
+    },
+
     async quitarPago(p: Pago) {
-      if (p.origen === 'world') {
-        const ex = m.extraPagos.filter((x) => x.payment_id === p.id).map((x) => x.id)
-        if (ex.length) await d.borrar('ctl_pago_extra', ex)
-        await d.borrar('payments', [p.id])
-      } else await d.borrar('ctl_pagos', [p.id])
+      if (p.origen === 'world') throw new Error('Los pagos de Monterroso World no se borran desde aquí: corrígelos con el lápiz.')
+      await d.borrar('ctl_pagos', [p.id])
     },
   }
 }

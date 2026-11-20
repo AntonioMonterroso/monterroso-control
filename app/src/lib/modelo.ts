@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import type { PagoTienda, PartePagoTienda } from './tiendaPagos'
+import type { Documento } from './documentos'
+import type { Accion, Aporte, Conciliacion, CuentaBanco, MovBanco, Recordatorio, Reparto, RepartoSocio, Sociedad, Socio, Tramite, Transmision } from './sa'
 import type { DevBitacora, DevEnlace, DevServicio, DevSupabase, DevToken } from './desarrollo'
 import { useDatos } from './datos'
 import { clientesDeWorld, pagoDeWorld, proyectoDeWorld, type ExtraCliente, type ExtraPago, type ExtraProyecto } from './puente'
@@ -42,6 +44,21 @@ export interface Modelo {
   extraClientes: ExtraCliente[]
   extraPagos: ExtraPago[]
   clientExtraRaw: unknown
+  sociedad: Sociedad | null
+  saDocumentos: { id: string; nombre: string; tipo: string | null; fecha: string | null; archivo: string | null; nota: string | null }[]
+  socios: Socio[]
+  acciones: Accion[]
+  aportes: Aporte[]
+  transmisiones: Transmision[]
+  repartos: Reparto[]
+  repartoSocios: RepartoSocio[]
+  bancos: CuentaBanco[]
+  movBancos: MovBanco[]
+  conciliaciones: Conciliacion[]
+  tramites: Tramite[]
+  recordatorios: Recordatorio[]
+  documentos: Documento[]
+  marca: { id: string; nombre: string | null; cargo: string | null; correo: string | null; telefono: string | null; sitio: string | null; redes: Record<string, string>; color: string | null } | null
   partesTienda: PartePagoTienda[]
 }
 
@@ -84,6 +101,21 @@ export function useModelo(): Modelo {
       devTokens: porNombre(t.ctl_dev_tokens as unknown as DevToken[]),
       devServicios: [...(t.ctl_dev_servicios as unknown as DevServicio[])].sort((a, b) => (a.renovacion ?? '9').localeCompare(b.renovacion ?? '9')),
       devEnlaces: porNombre(t.ctl_dev_enlaces as unknown as DevEnlace[]),
+      sociedad: ((t.ctl_sa as unknown as Sociedad[])[0] ?? null),
+      saDocumentos: [...(t.ctl_sa_documentos as unknown as Modelo['saDocumentos'])].sort((a, b) => (b.fecha ?? '').localeCompare(a.fecha ?? '')),
+      socios: porNombre(t.ctl_sa_socios as unknown as Socio[]),
+      acciones: [...(t.ctl_sa_acciones as unknown as Accion[])].sort((a, b) => a.fecha.localeCompare(b.fecha)),
+      aportes: [...(t.ctl_sa_aportes as unknown as Aporte[])].sort((a, b) => a.fecha.localeCompare(b.fecha)),
+      transmisiones: [...(t.ctl_sa_transmisiones as unknown as Transmision[])].sort((a, b) => a.fecha.localeCompare(b.fecha)),
+      repartos: [...(t.ctl_sa_repartos as unknown as Reparto[])].sort((a, b) => b.hasta.localeCompare(a.hasta)),
+      repartoSocios: t.ctl_sa_reparto_socios as unknown as RepartoSocio[],
+      bancos: [...(t.ctl_bancos as unknown as CuentaBanco[])].sort((a, b) => a.banco.localeCompare(b.banco, 'es')),
+      movBancos: [...(t.ctl_banco_movimientos as unknown as MovBanco[])].sort((a, b) => b.fecha.localeCompare(a.fecha)),
+      conciliaciones: t.ctl_banco_conciliaciones as unknown as Conciliacion[],
+      tramites: [...(t.ctl_sa_tramites as unknown as Tramite[])].sort((a, b) => a.orden - b.orden),
+      recordatorios: [...(t.ctl_recordatorios as unknown as Recordatorio[])].sort((a, b) => a.proxima.localeCompare(b.proxima)),
+      documentos: [...(t.ctl_documentos as unknown as Documento[])].sort((a, b) => b.fecha.localeCompare(a.fecha) || (b.numero ?? 0) - (a.numero ?? 0)),
+      marca: ((t.ctl_marca as unknown as Modelo['marca'][])[0] ?? null),
       wProjects, wPayments, extraProyectos, extraClientes, extraPagos, clientExtraRaw: ajustes.clientExtra,
       pagosTienda: [...(t.ctl_tienda_pagos as unknown as PagoTienda[])].sort((a, b) => b.fecha.localeCompare(a.fecha)),
       partesTienda: t.ctl_tienda_pago_partes as unknown as PartePagoTienda[],

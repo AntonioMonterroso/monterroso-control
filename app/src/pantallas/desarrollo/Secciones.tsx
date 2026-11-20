@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAvisar } from '../../componentes/Avisos'
 import { coincide } from '../../componentes/Buscador'
-import Confirmar from '../../componentes/Confirmar'
+import { useQuitar } from '../../lib/quitar'
 import FormRegistro, { type Campo } from '../../componentes/FormRegistro'
 import Tabla from '../../componentes/Tabla'
 import Ventana from '../../componentes/Ventana'
@@ -40,15 +40,10 @@ function ProyectoCol({ id, nombre }: { id: string | null; nombre: string }) {
 }
 
 function useBorrar(t: NombreTabla) {
-  const { borrar } = useDatos()
-  const avisar = useAvisar()
-  const [quitar, setQuitar] = useState<{ id: string; nombre: string } | null>(null)
-  const ventana = (
-    <Confirmar abierta={quitar != null} titulo="Quitar" peligro boton="Quitar" texto={quitar ? `Se quita «${quitar.nombre}».` : ''}
-      onNo={() => setQuitar(null)}
-      onSi={async () => { if (quitar) { try { await borrar(t, [quitar.id]); avisar('Quitado.') } catch (e) { avisar(e instanceof Error ? e.message : 'No se pudo quitar.', 'error') } } setQuitar(null) }} />
-  )
-  return { setQuitar, ventana }
+  const { tablas } = useDatos()
+  const q = useQuitar()
+  const setQuitar = (x: { id: string; nombre: string }) => q.pedir(t, tablas[t].filter((f) => f.id === x.id), `Se quita «${x.nombre}».`)
+  return { setQuitar, ventana: q.ventana }
 }
 
 export function SeccionSupabase({ f }: { f: Filtro }) {

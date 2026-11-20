@@ -1,3 +1,4 @@
+import LogoStudio from '../componentes/Logo'
 import { Eye, EyeOff, FlaskConical, LoaderCircle, LockKeyhole } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useSesion } from '../lib/sesion'
@@ -44,7 +45,7 @@ export default function Acceso() {
       </div>
       <div className="m-acceso-forma">
         <form className="m-tarjeta c-acceso-tarjeta" onSubmit={enviar} noValidate>
-          <span className="c-acceso-logo"><img className="c-logo-oscuro" src="/marca/studio-oscuro.png" alt="Studio Monterroso" /><img className="c-logo-claro" src="/marca/studio-claro.png" alt="" aria-hidden="true" /></span>
+          <LogoStudio className="c-acceso-logo" />
           <div><div className="m-etiqueta">Control de negocios</div><h1 className="m-titulo-3">Bienvenido de nuevo</h1></div>
           <div className="m-campo">
             <label htmlFor="aCorreo">Correo</label>

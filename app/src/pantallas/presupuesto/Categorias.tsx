@@ -1,4 +1,5 @@
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { useQuitar } from '../../lib/quitar'
 import { useState } from 'react'
 import FormRegistro from '../../componentes/FormRegistro'
 import Tabla from '../../componentes/Tabla'
@@ -7,7 +8,10 @@ import { useModelo } from '../../lib/modelo'
 import type { Categoria } from '../../lib/tipos'
 
 export default function Categorias() {
-  const { categorias } = useModelo()
+  const m = useModelo()
+  const { categorias } = m
+  const q = useQuitar()
+  const enUso = (id: string) => m.gastos.some((g) => g.categoria_id === id) || m.gastosFijos.some((g) => g.categoria_id === id) || m.presupuestos.some((p) => p.categoria_id === id) || m.deudas.some((d) => d.categoria_id === id) || m.devServicios.some((d) => d.categoria_id === id)
   const { guardar } = useDatos()
   const [editar, setEditar] = useState<Categoria | 'nuevo' | null>(null)
   const c = editar && editar !== 'nuevo' ? editar : null
@@ -23,7 +27,12 @@ export default function Categorias() {
         { titulo: 'Nombre', principal: true, valor: (x) => <>{x.nombre}{x.clave && <small>Se llena sola</small>}</> },
         { titulo: 'Estado', valor: (x) => (x.activo ? <span className="m-estado aprobado">Activa</span> : <span className="m-estado bloqueado">Apagada</span>) },
       ]}
-      acciones={(x) => <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label={`Editar ${x.nombre}`} title="Renombrar o apagar la categoría"><Pencil aria-hidden /></button>}
+      acciones={(x) => (
+        <>
+          <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label={`Editar ${x.nombre}`} title="Renombrar o apagar la categoría"><Pencil aria-hidden /></button>
+          {!x.clave && !enUso(x.id) && <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_categorias', [x], `Se quita la categoría «${x.nombre}». No tiene nada registrado.`)} aria-label="Quitar" title="Quitar la categoría (no tiene nada registrado; se puede deshacer)"><Trash2 aria-hidden /></button>}
+        </>
+      )}
     />
   )
   return (
@@ -48,6 +57,7 @@ export default function Categorias() {
         onGuardar={async (d) => { await guardar('ctl_categorias', c?.id ?? null, c ? { ...d, orden: d.orden ?? c.orden } : { ...d, tipo: 'gasto', orden: d.orden ?? 50 }) }}
         onCerrar={() => setEditar(null)}
       />
+      {q.ventana}
     </>
   )
 }

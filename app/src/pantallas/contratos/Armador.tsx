@@ -72,7 +72,7 @@ export default function Armador({ abierto, clienteFijo, onCerrar }: { abierto: b
             <label htmlFor="ar-cli">Cliente</label>
             <select id="ar-cli" className="m-entrada" value={cliente} disabled={!!clienteFijo} onChange={(e) => { setCliente(e.target.value); setProyecto('') }}>
               <option value="">Elige…</option>
-              {m.clientes.map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
+              {m.clientes.filter((x) => !x.archivado || x.id === cliente).map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
             </select>
           </div>
           <div className="m-campo">

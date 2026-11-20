@@ -1,4 +1,5 @@
-import { Check, Copy, Pencil, Plus } from 'lucide-react'
+import { Check, Copy, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useQuitar } from '../lib/quitar'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import FormRegistro from '../componentes/FormRegistro'
@@ -23,6 +24,7 @@ export default function Precios() {
   const { guardar } = useDatos()
   const [editar, setEditar] = useState<Tarifa | 'paquete' | 'extra' | null>(null)
   const [copiado, setCopiado] = useState(false)
+  const q = useQuitar()
   const t = editar && typeof editar !== 'string' ? editar : null
   const tipo = t?.tipo ?? (typeof editar === 'string' ? editar : 'paquete')
   const compartibles = preciosCompartibles(m)
@@ -43,7 +45,12 @@ export default function Precios() {
           : [{ titulo: 'Precio', num: true, valor: (x: Tarifa) => quetzales(x.precio) }]),
         { titulo: 'Página', valor: (x) => (x.compartir ? <span className="m-estado en-proceso">Compartido</span> : <span className="m-vacia">No</span>) },
       ]}
-      acciones={(x) => <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Editar la tarifa"><Pencil aria-hidden /></button>}
+      acciones={(x) => (
+        <>
+          <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label="Editar" title="Editar la tarifa"><Pencil aria-hidden /></button>
+          <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_tarifas', [x], `Se quita la tarifa «${x.nombre}». Los proyectos que ya la usaron no cambian.`)} aria-label="Quitar" title="Quitar la tarifa (se puede deshacer)"><Trash2 aria-hidden /></button>
+        </>
+      )}
     />
   )
   return (
@@ -74,6 +81,7 @@ export default function Precios() {
         inicial={t ? (t as unknown as Record<string, unknown>) : { activo: true, orden: 50, inscripcion: '0', mensualidad: '0', precio: '0' }}
         onGuardar={async (d) => { await guardar('ctl_tarifas', t?.id ?? null, { inscripcion: 0, mensualidad: 0, precio: 0, ...d, orden: d.orden ?? 50, ...(t ? {} : { tipo }) }) }}
         onCerrar={() => setEditar(null)} />
+      {q.ventana}
     </>
   )
 }

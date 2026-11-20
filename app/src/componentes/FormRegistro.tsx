@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useDatos } from '../lib/datos'
 import { leerMonto } from '../lib/dinero'
 import { useAvisar } from './Avisos'
+import SelectBuscable from './SelectBuscable'
 import Ventana from './Ventana'
 
 export type TipoCampo = 'texto' | 'area' | 'monto' | 'numero' | 'fecha' | 'mes' | 'select' | 'casilla' | 'archivo'
@@ -123,10 +124,7 @@ export default function FormRegistro({ abierta, titulo, subtitulo, campos, inici
             <div key={c.k} className={`m-campo${c.ancho || c.tipo === 'area' ? ' c-ancho' : ''}`}>
               <label htmlFor={id(c.k)}>{c.etiqueta}{c.requerido ? '' : <span className="c-opcional"> (opcional)</span>}</label>
               {c.tipo === 'select' ? (
-                <select id={id(c.k)} className="m-entrada" value={val} onChange={(e) => set(e.target.value)} autoFocus={i === 0}>
-                  {!c.requerido || !val ? <option value="">{c.requerido ? 'Elige…' : 'Ninguno'}</option> : null}
-                  {c.opciones?.map((o) => <option key={o.valor} value={o.valor}>{o.nombre}</option>)}
-                </select>
+                <SelectBuscable id={id(c.k)} valor={val} opciones={c.opciones ?? []} onCambio={set} autoFocus={i === 0} vacio={!c.requerido || !val ? (c.requerido ? 'Elige…' : 'Ninguno') : undefined} />
               ) : c.tipo === 'area' ? (
                 <textarea id={id(c.k)} className="m-entrada" value={val} maxLength={c.max ?? 2000} onChange={(e) => set(e.target.value)} />
               ) : c.tipo === 'archivo' ? (

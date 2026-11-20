@@ -44,7 +44,7 @@ export function VentanaExtra({ abierta, clienteFijo, onCerrar }: { abierta: bool
   const { clientes, proyectos } = useModelo()
   const hoy = useHoy()
   const campos: Campo[] = [
-    { k: 'cliente_id', etiqueta: 'Cliente', tipo: 'select', requerido: true, opciones: clientes.filter((c) => c.activo || c.id === clienteFijo).map((c) => ({ valor: c.id, nombre: c.nombre })) },
+    { k: 'cliente_id', etiqueta: 'Cliente', tipo: 'select', requerido: true, opciones: clientes.filter((c) => (c.activo && !c.archivado) || c.id === clienteFijo).map((c) => ({ valor: c.id, nombre: c.nombre })) },
     { k: 'proyecto_id', etiqueta: 'Proyecto', tipo: 'select', opciones: proyectos.map((p) => ({ valor: p.id, nombre: p.nombre })) },
     { k: 'concepto', etiqueta: 'Concepto', tipo: 'texto', requerido: true, max: 200, ancho: true },
     { k: 'monto', etiqueta: 'Monto', tipo: 'monto', requerido: true },
@@ -140,5 +140,55 @@ export function VentanaRecordatorios({ abierta, cobros, onCerrar }: { abierta: b
         </ul>
       )}
     </Ventana>
+  )
+}
+
+export function VentanaEditarPago({ pago, onCerrar }: { pago: import('../../lib/tipos').Pago | null; onCerrar: () => void }) {
+  const { guardar, insertar } = useDatos()
+  const m = useModelo()
+  const campos: Campo[] = [
+    { k: 'fecha', etiqueta: 'Fecha del pago', tipo: 'fecha', requerido: true },
+    { k: 'monto', etiqueta: 'Monto', tipo: 'monto', requerido: true },
+    { k: 'cuenta', etiqueta: 'Dónde cayó', tipo: 'select', requerido: true, opciones: [...new Set([...CUENTAS, pago?.cuenta ?? 'Banco'])].map((c) => ({ valor: c, nombre: c })) },
+    { k: 'referencia', etiqueta: 'Referencia o número de boleta', tipo: 'texto', max: 120 },
+    { k: 'nota', etiqueta: 'Nota', tipo: 'area', max: 300 },
+  ]
+  return (
+    <FormRegistro
+      abierta={pago != null}
+      titulo="Editar pago"
+      subtitulo={pago?.origen === 'world' ? 'Se corrige también en Monterroso World.' : undefined}
+      campos={campos}
+      inicial={pago ? { ...pago, monto: pago.monto.toFixed(2) } : {}}
+      onGuardar={async (d) => {
+        if (!pago) return
+        if (pago.origen === 'world') {
+          await guardar('payments', pago.id, { paid_at: d.fecha, amount: d.monto, method: String(d.cuenta).slice(0, 60), note: d.nota ? String(d.nota).slice(0, 300) : null })
+          const ex = m.extraPagos.find((x) => x.payment_id === pago.id)
+          if (ex) await guardar('ctl_pago_extra', ex.id, { referencia: d.referencia })
+          else if (d.referencia) await insertar('ctl_pago_extra', [{ payment_id: pago.id, referencia: d.referencia, recibo_numero: null }])
+        } else await guardar('ctl_pagos', pago.id, d)
+      }}
+      onCerrar={onCerrar}
+    />
+  )
+}
+
+export function VentanaEditarExtra({ cobro, onCerrar }: { cobro: Cobro | null; onCerrar: () => void }) {
+  const { guardar } = useDatos()
+  return (
+    <FormRegistro
+      abierta={cobro != null}
+      titulo="Editar cobro extra"
+      campos={[
+        { k: 'concepto', etiqueta: 'Concepto', tipo: 'texto', requerido: true, max: 200, ancho: true },
+        { k: 'monto', etiqueta: 'Monto', tipo: 'monto', requerido: true },
+        { k: 'vence', etiqueta: 'Vence', tipo: 'fecha' },
+      ]}
+      inicial={cobro ? { concepto: cobro.concepto, monto: cobro.monto.toFixed(2), vence: cobro.vence } : {}}
+      validar={(v) => (cobro && Number(String(v.monto).replace(/[^\d.]/g, '')) < cobro.pagado ? `No puede ser menos de lo ya pagado (${quetzales(cobro.pagado)}).` : null)}
+      onGuardar={async (d) => { if (cobro?.guardado) await guardar('ctl_cobros', cobro.guardado.id, d) }}
+      onCerrar={onCerrar}
+    />
   )
 }

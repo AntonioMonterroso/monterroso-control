@@ -6,3 +6,5 @@ import './app.css'
 import './erp.css'
 
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
+
+if (import.meta.env.DEV) void import('./lib/marcaExport')

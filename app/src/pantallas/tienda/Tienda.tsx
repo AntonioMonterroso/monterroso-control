@@ -2,7 +2,7 @@ import { FileUp, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useAvisar } from '../../componentes/Avisos'
 import Buscador, { coincide } from '../../componentes/Buscador'
-import Confirmar from '../../componentes/Confirmar'
+import { useQuitar } from '../../lib/quitar'
 import FormRegistro, { type Campo } from '../../componentes/FormRegistro'
 import Pestanas from '../../componentes/Pestanas'
 import SelectorMes from '../../componentes/SelectorMes'
@@ -47,7 +47,7 @@ const camposProducto: Campo[] = [
 
 export default function Tienda({ fija }: { fija?: 'pedidos' | 'productos' } = {}) {
   const m = useModelo()
-  const { guardar, insertar, borrar } = useDatos()
+  const { guardar, insertar } = useDatos()
   const avisar = useAvisar()
   const hoy = useHoy()
   const [periodo, setPeriodo] = usePeriodo()
@@ -56,7 +56,8 @@ export default function Tienda({ fija }: { fija?: 'pedidos' | 'productos' } = {}
   const [q, setQ] = useState('')
   const [venta, setVenta] = useState<VentaTienda | 'nuevo' | null>(null)
   const [producto, setProducto] = useState<Producto | 'nuevo' | null>(null)
-  const [quitar, setQuitar] = useState<VentaTienda | null>(null)
+  const qt = useQuitar()
+  const setQuitar = (x: VentaTienda) => qt.pedir('ctl_ventas_tienda', [x], `Se quita el pedido ${x.pedido}.`)
   const [imp, setImp] = useState<Importacion | null>(null)
   const [ocupado, setOcupado] = useState(false)
   const archivo = useRef<HTMLInputElement>(null)
@@ -117,6 +118,7 @@ export default function Tienda({ fija }: { fija?: 'pedidos' | 'productos' } = {}
         <Tabla
           buscador={false}
           titulo={`${delMes.length} pedidos`}
+          quitarVarias={(l) => qt.pedir('ctl_ventas_tienda', l, `Se quitan ${l.length} pedidos.`)}
           filas={delMes}
           clave={(x) => x.id}
           vacio="No hay pedidos en este mes."
@@ -150,7 +152,13 @@ export default function Tienda({ fija }: { fija?: 'pedidos' | 'productos' } = {}
             { titulo: 'Margen', num: true, valor: (x) => `${margen(x.precio, x.costo + x.envio_estimado).toFixed(1)} %` },
             { titulo: 'Página', valor: (x) => (x.compartir ? <span className="m-estado en-proceso">Compartido</span> : <span className="m-vacia">No</span>) },
           ]}
-          acciones={(x) => <button type="button" className="m-icono-btn" onClick={() => setProducto(x)} aria-label="Editar" title="Editar el producto"><Pencil aria-hidden /></button>}
+          quitarVarias={(l) => qt.pedir('ctl_productos', l, `Se quitan ${l.length} productos.`)}
+          acciones={(x) => (
+            <>
+              <button type="button" className="m-icono-btn" onClick={() => setProducto(x)} aria-label="Editar" title="Editar el producto"><Pencil aria-hidden /></button>
+              <button type="button" className="m-icono-btn" onClick={() => qt.pedir('ctl_productos', [x], `Se quita el producto «${x.nombre}». Los pedidos ya registrados no cambian.`)} aria-label="Quitar" title="Quitar el producto (se puede deshacer)"><Trash2 aria-hidden /></button>
+            </>
+          )}
         />
       )}
       <FormRegistro abierta={venta != null} titulo={v ? 'Editar pedido' : 'Nuevo pedido'} campos={camposVenta}
@@ -181,9 +189,7 @@ export default function Tienda({ fija }: { fija?: 'pedidos' | 'productos' } = {}
           </div>
         )}
       </Ventana>
-      <Confirmar abierta={quitar != null} titulo="Quitar pedido" peligro boton="Quitar el pedido" texto={quitar ? `Se quita el pedido ${quitar.pedido}.` : ''}
-        onNo={() => setQuitar(null)}
-        onSi={async () => { if (quitar) { await borrar('ctl_ventas_tienda', [quitar.id]); avisar('Pedido quitado.') } setQuitar(null) }} />
+      {qt.ventana}
     </>
   )
 }

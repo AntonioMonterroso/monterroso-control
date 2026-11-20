@@ -234,3 +234,22 @@ a.m-icono-btn { text-decoration: none; }
 :root[data-modo="claro"] .c-logo-oscuro { display: none !important; }
 .c-acceso .m-acceso-marca::after { -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat; mask: url("/marca/studio-mascara.svg") center / contain no-repeat; aspect-ratio: 1797 / 1449; opacity: 0.07; }
 .c-carga-iso { width: 96px; height: auto; }
+.c-tabla-masa { display: inline-flex; align-items: center; gap: var(--e-2); flex-wrap: wrap; }
+.c-select-buscable { display: grid; gap: 6px; }
+.c-estado-fin .m-tabla td { padding: 9px 14px; }
+.c-estado-fin .c-ef-grupo td { font-weight: 700; color: var(--primary-texto); padding-top: 16px; }
+.c-estado-fin .c-ef-total td { font-weight: 700; background: color-mix(in srgb, var(--primary) 10%, var(--card)); }
+@container (max-width: 900px) { .c-estado-fin .m-tabla tbody tr { grid-template-columns: 1fr auto; } .c-estado-fin .m-tabla td::before { content: none; } .c-estado-fin .m-tabla td { grid-column: auto; } }
+.c-ficha-cabeza { flex-wrap: wrap; }
+.c-fila-botones { flex-wrap: wrap; }
+.c-ficha .c-form + .c-datos { margin-top: var(--e-5); }
+.c-logo-svg { display: block; line-height: 0; }
+.c-logo-svg svg { display: block; width: 100%; height: auto; }
+.c-select-chico { min-height: 32px !important; font-size: var(--t-xs); padding-right: 28px !important; width: auto; }
+.c-renglon { grid-template-columns: 3fr 1fr 1.4fr auto !important; }
+@media (max-width: 600px) { .c-renglon { grid-template-columns: 1fr 1fr !important; } }
+.c-piezas { display: grid; gap: var(--e-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.c-pieza { margin: 0; border-radius: var(--radio-md); overflow: hidden; border: 1px solid var(--hairline); box-shadow: var(--sombra-1); line-height: 0; }
+.c-pieza svg { width: 100%; height: auto; display: block; }
+.c-pieza-ancha { grid-column: 1 / -1; }
+.c-pieza-cuadrada { max-width: 420px; }

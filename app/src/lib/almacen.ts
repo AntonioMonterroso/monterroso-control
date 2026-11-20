@@ -12,6 +12,9 @@ export const TABLAS = [
   'ctl_mw_areas',
   'ctl_dev_supabase', 'ctl_dev_tokens', 'ctl_dev_servicios', 'ctl_dev_enlaces', 'ctl_dev_bitacora',
   'ctl_tienda_pagos', 'ctl_tienda_pago_partes',
+  'ctl_sa', 'ctl_sa_documentos', 'ctl_sa_socios', 'ctl_sa_acciones', 'ctl_sa_aportes', 'ctl_sa_transmisiones', 'ctl_sa_repartos', 'ctl_sa_reparto_socios',
+  'ctl_bancos', 'ctl_banco_movimientos', 'ctl_banco_conciliaciones', 'ctl_sa_tramites', 'ctl_recordatorios',
+  'ctl_marca', 'ctl_documentos',
 ] as const
 
 export type Tabla = (typeof TABLAS)[number]
@@ -19,6 +22,7 @@ export type Fila = { id: string; creado?: string } & Record<string, unknown>
 
 const NUMERICOS = new Set([
   'amount', 'setup_fee', 'monthly_fee',
+  'capital_autorizado', 'capital_suscrito', 'valor_nominal', 'pagado', 'utilidad', 'isr_sociedad', 'reserva', 'repartido', 'isr_dividendos_tasa', 'bruto', 'isr', 'neto', 'porcentaje', 'saldo_banco',
   'monto', 'inscripcion_total', 'mensualidad', 'costo', 'precio', 'envio', 'comision', 'otros', 'precio_venta', 'costo_producto',
   'bruto', 'descuentos', 'total', 'cuota', 'limite', 'saldo_inicial', 'inscripcion', 'cantidad', 'envio_estimado', 'monto_ajustado', 'costo',
 ])
@@ -128,6 +132,10 @@ const UNICOS: Partial<Record<Tabla, string[][]>> = {
   ctl_salario_aumentos: [['desde']],
   ctl_mw_areas: [['area']],
   ctl_tienda_pago_partes: [['pago_id', 'venta_id']],
+  ctl_banco_conciliaciones: [['cuenta_id', 'periodo']],
+  ctl_banco_movimientos: [['origen', 'origen_id']],
+  ctl_sa_reparto_socios: [['reparto_id', 'socio_id']],
+  ctl_documentos: [['tipo', 'anio', 'numero']],
 }
 
 function choca(t: Tabla, lista: Fila[], f: Fila): boolean {

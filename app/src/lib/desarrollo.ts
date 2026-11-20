@@ -144,7 +144,7 @@ export interface AvisoDev {
   id: string
   clave: string
   nivel: Nivel
-  tipo: 'supabase' | 'token' | 'servicio' | 'enlace'
+  tipo: 'supabase' | 'token' | 'servicio' | 'enlace' | 'recordatorio' | 'sociedad'
   titulo: string
   detalle: string
   dias: number

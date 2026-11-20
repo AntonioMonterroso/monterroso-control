@@ -1,4 +1,5 @@
-import { Eye, FileDown, Pencil, PenLine, Plus } from 'lucide-react'
+import { Eye, FileDown, Pencil, PenLine, Plus, Trash2 } from 'lucide-react'
+import { useQuitar } from '../../lib/quitar'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Buscador, { coincide } from '../../componentes/Buscador'
@@ -21,6 +22,7 @@ export function ListaContratos({ contratos }: { contratos: Contrato[] }) {
   const hoy = useHoy()
   const [ver, setVer] = useState<Contrato | null>(null)
   const [firmar, setFirmar] = useState<Contrato | null>(null)
+  const q = useQuitar()
   const cliente = (id: string) => m.clientes.find((c) => c.id === id)?.nombre ?? ''
   return (
     <>
@@ -39,18 +41,25 @@ export function ListaContratos({ contratos }: { contratos: Contrato[] }) {
           <>
             <button type="button" className="m-icono-btn c-ojito" onClick={() => setVer(x)} aria-label="Ver" title="Ver el contrato"><Eye aria-hidden /></button>
             <button type="button" className="m-icono-btn c-salida" onClick={() => imprimirContrato(x.titulo, x.contenido, 'El prestador', cliente(x.cliente_id))} aria-label="PDF" title="Abrir el contrato para guardarlo en PDF o imprimirlo"><FileDown aria-hidden /></button>
-            <button type="button" className="m-icono-btn" onClick={() => setFirmar(x)} aria-label="Fecha de firma" title="Poner la fecha en que se firmó"><PenLine aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => setFirmar(x)} aria-label="Editar" title="Editar el título, la fecha, la firma o el texto"><PenLine aria-hidden /></button>
+            <button type="button" className="m-icono-btn" onClick={() => q.pedir('ctl_contratos', [x], `Se quita «${x.titulo}».`)} aria-label="Quitar" title="Quitar el contrato (se puede deshacer)"><Trash2 aria-hidden /></button>
           </>
         )}
       />
       <Ventana abierta={ver != null} ancho="amplia" titulo={ver?.titulo ?? ''} subtitulo={ver ? `Hecho el ${fechaCorta(ver.fecha)}` : ''} onCerrar={() => setVer(null)}>
         <div className="c-contrato-texto">{ver?.contenido.split(/\n{2,}/).map((p, i) => <p key={i}>{p}</p>)}</div>
       </Ventana>
-      <FormRegistro abierta={firmar != null} titulo="Fecha de firma" subtitulo={firmar?.titulo}
-        campos={[{ k: 'fecha_firma', etiqueta: 'Se firmó el', tipo: 'fecha' }]}
-        inicial={{ fecha_firma: firmar?.fecha_firma ?? hoy }}
+      <FormRegistro abierta={firmar != null} titulo="Editar contrato" subtitulo={firmar?.titulo}
+        campos={[
+          { k: 'titulo', etiqueta: 'Título', tipo: 'texto', requerido: true, max: 200, ancho: true },
+          { k: 'fecha', etiqueta: 'Fecha del contrato', tipo: 'fecha', requerido: true },
+          { k: 'fecha_firma', etiqueta: 'Se firmó el', tipo: 'fecha' },
+          { k: 'contenido', etiqueta: 'Texto', tipo: 'area', requerido: true, max: 60000 },
+        ]}
+        inicial={firmar ? { ...firmar } : { fecha_firma: hoy }}
         onGuardar={async (d) => { if (firmar) await guardar('ctl_contratos', firmar.id, d) }}
         onCerrar={() => setFirmar(null)} />
+      {q.ventana}
     </>
   )
 }
@@ -61,6 +70,7 @@ export default function Contratos() {
   const [q, setQ] = useState('')
   const [armar, setArmar] = useState(false)
   const [plantilla, setPlantilla] = useState<PlantillaContrato | 'nueva' | null>(null)
+  const qp = useQuitar()
   const lista = m.contratos.filter((c) => coincide(q, c.titulo, m.clientes.find((x) => x.id === c.cliente_id)?.nombre))
   return (
     <>
@@ -90,11 +100,17 @@ export default function Contratos() {
             { titulo: 'Nombre', principal: true, valor: (x) => x.nombre },
             { titulo: 'Cláusulas', num: true, valor: (x) => x.clausulas.length },
           ]}
-          acciones={(x) => <button type="button" className="m-icono-btn" onClick={() => setPlantilla(x)} aria-label="Editar" title="Editar la plantilla"><Pencil aria-hidden /></button>}
+          acciones={(x) => (
+            <>
+              <button type="button" className="m-icono-btn" onClick={() => setPlantilla(x)} aria-label="Editar" title="Editar la plantilla"><Pencil aria-hidden /></button>
+              {m.plantillas.length > 1 && <button type="button" className="m-icono-btn" onClick={() => qp.pedir('ctl_plantillas_contrato', [x], `Se quita la plantilla «${x.nombre}». Los contratos ya hechos no cambian.`)} aria-label="Quitar" title="Quitar la plantilla (se puede deshacer)"><Trash2 aria-hidden /></button>}
+            </>
+          )}
         />
       )}
       <Armador abierto={armar} onCerrar={() => setArmar(false)} />
       <EditorPlantilla plantilla={plantilla} onCerrar={() => setPlantilla(null)} />
+      {qp.ventana}
     </>
   )
 }

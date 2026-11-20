@@ -4,7 +4,7 @@ import type { Cliente, EstadoProyecto, FormaInscripcion, Pago, ParteInscripcion,
 import { cleanAll, clientKey, clientName, type AllExtra, type WNewProject, type WPayment, type WProject, type WStatus } from './world'
 
 export interface ExtraProyecto { id: string; project_id: string; inscripcion_forma: FormaInscripcion | null; partes: ParteInscripcion[]; fecha_firma: string | null; notas_tecnicas: string | null }
-export interface ExtraCliente { id: string; client_key: string; direccion: string | null; notas: string | null; activo: boolean }
+export interface ExtraCliente { id: string; client_key: string; direccion: string | null; notas: string | null; activo: boolean; archivado?: boolean }
 export interface ExtraPago { id: string; payment_id: string; recibo_numero: number | null; referencia: string | null }
 
 const DE_WORLD: Record<WStatus, EstadoProyecto> = { idea: 'propuesta', active: 'en_curso', review: 'en_curso', delivered: 'entregado', closed: 'cerrado' }
@@ -129,6 +129,7 @@ export function clientesDeWorld(projects: WProject[], rawExtra: unknown, extras:
       activo: c?.activo ?? true,
       creado: '',
       aka: e.aka ?? [],
+      archivado: c?.archivado ?? false,
     }
   }).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 }

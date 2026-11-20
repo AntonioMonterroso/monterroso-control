@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAvisar } from '../../componentes/Avisos'
 import Buscador, { coincide } from '../../componentes/Buscador'
-import Confirmar from '../../componentes/Confirmar'
+import { useQuitar } from '../../lib/quitar'
 import FormRegistro from '../../componentes/FormRegistro'
 import Ojito from '../../componentes/Ojito'
 import Pestanas from '../../componentes/Pestanas'
@@ -23,7 +23,7 @@ type Vista = 'gastos' | 'fijos' | 'clientes'
 
 export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'salario' } = {}) {
   const m = useModelo()
-  const { guardar, insertar, borrar } = useDatos()
+  const { guardar, insertar } = useDatos()
   const avisar = useAvisar()
   const hoy = useHoy()
   const [periodo, setPeriodo] = usePeriodo()
@@ -34,7 +34,8 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'sa
   const negocio = fijo?.id ?? negocioSel
   const [editar, setEditar] = useState<Gasto | 'nuevo' | null>(null)
   const [editarFijo, setEditarFijo] = useState<GastoFijo | 'nuevo' | null>(null)
-  const [quitar, setQuitar] = useState<Gasto | null>(null)
+  const q2 = useQuitar()
+  const setQuitar = (x: Gasto) => q2.pedir('ctl_gastos', [x], `Se quita «${x.descripcion}» de ${quetzales(x.monto)}.`)
 
   const nom = (l: { id: string; nombre: string }[], id: string | null) => l.find((x) => x.id === id)?.nombre ?? ''
   const delMes = m.gastos.filter((g) => periodoDe(g.fecha) === periodo && (!negocio || g.negocio_id === negocio) && coincide(q, g.descripcion, g.proveedor, g.proveedor_nit, g.factura_numero, nom(m.clientes, g.cliente_id), nom(m.categorias, g.categoria_id)))
@@ -108,6 +109,7 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'sa
               { titulo: 'Factura', valor: (x) => (x.factura_numero ? `${x.factura_serie ? `${x.factura_serie}-` : ''}${x.factura_numero}` : <span className="m-vacia">Sin factura</span>) },
               { titulo: 'Monto', num: true, valor: (x) => quetzales(x.monto) },
             ]}
+            quitarVarias={(l) => q2.pedir('ctl_gastos', l, `Se quitan ${l.length} gastos por ${quetzales(l.reduce((t, g) => t + g.monto, 0))}.`)}
             acciones={(x) => (
               <>
                 <Ojito ruta={x.archivo} titulo={`Comprobante: ${x.descripcion}`} />
@@ -135,7 +137,13 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'sa
             { titulo: 'Vigencia', valor: (x) => `${fechaCorta(x.inicio)}${x.fin ? ` a ${fechaCorta(x.fin)}` : ' en adelante'}` },
             { titulo: 'Monto', num: true, valor: (x) => quetzales(x.monto) },
           ]}
-          acciones={(x) => <button type="button" className="m-icono-btn" onClick={() => setEditarFijo(x)} aria-label="Editar" title="Editar el gasto fijo"><Pencil aria-hidden /></button>}
+          quitarVarias={(l) => q2.pedir('ctl_gastos_fijos', l, `Se quitan ${l.length} gastos fijos. Lo ya registrado en los meses se conserva.`)}
+          acciones={(x) => (
+            <>
+              <button type="button" className="m-icono-btn" onClick={() => setEditarFijo(x)} aria-label="Editar" title="Editar el gasto fijo"><Pencil aria-hidden /></button>
+              <button type="button" className="m-icono-btn" onClick={() => q2.pedir('ctl_gastos_fijos', [x], `Se quita el gasto fijo «${x.nombre}». Lo ya registrado en los meses se conserva.`)} aria-label="Quitar" title="Quitar el gasto fijo (se puede deshacer)"><Trash2 aria-hidden /></button>
+            </>
+          )}
         />
       )}
 
@@ -159,9 +167,7 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'sa
         onGuardar={async (d) => { await guardar('ctl_gastos_fijos', fj?.id ?? null, d) }}
         onCerrar={() => setEditarFijo(null)}
       />
-      <Confirmar abierta={quitar != null} titulo="Quitar gasto" peligro boton="Quitar el gasto" texto={quitar ? `Se quita «${quitar.descripcion}» de ${quetzales(quitar.monto)}.` : ''}
-        onNo={() => setQuitar(null)}
-        onSi={async () => { if (quitar) { try { await borrar('ctl_gastos', [quitar.id]); avisar('Gasto quitado.') } catch (e) { avisar(e instanceof Error ? e.message : 'No se pudo quitar.', 'error') } } setQuitar(null) }} />
+      {q2.ventana}
     </>
   )
 }

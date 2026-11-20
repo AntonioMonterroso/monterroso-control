@@ -1,6 +1,7 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAvisar } from '../componentes/Avisos'
+import SelectBuscable from '../componentes/SelectBuscable'
 import Ventana from '../componentes/Ventana'
 import { useEscribir } from '../lib/escribir'
 import { leerMonto, quetzales } from '../lib/dinero'
@@ -105,10 +106,7 @@ export default function FormProyecto({ abierta, proyecto, clienteFijo, onCerrar 
       <form id="form-proyecto" className="c-form" onSubmit={enviar}>
         <div className="m-campo">
           <label htmlFor="pr-cliente">Cliente</label>
-          <select id="pr-cliente" className="m-entrada" value={v.cliente_id} disabled={!!clienteFijo} onChange={(e) => setV((x) => ({ ...x, cliente_id: e.target.value }))}>
-            <option value="">Elige…</option>
-            {clientes.filter((c) => c.activo || c.id === v.cliente_id).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-          </select>
+          <SelectBuscable id="pr-cliente" valor={v.cliente_id} disabled={!!clienteFijo} vacio="Elige…" onCambio={(x) => setV((y) => ({ ...y, cliente_id: x }))} opciones={clientes.filter((c) => (c.activo && !c.archivado) || c.id === v.cliente_id).map((c) => ({ valor: c.id, nombre: c.nombre }))} />
         </div>
         <div className="m-campo">
           <label htmlFor="pr-estado">Estado</label>

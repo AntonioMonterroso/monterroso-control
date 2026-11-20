@@ -252,7 +252,7 @@ input.m-entrada[type="date"], input.m-entrada[type="month"] { min-height: 40px; 
 @font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 400 700; font-stretch: 100%; font-display: swap; src: url("/marca/fuentes/instrument-sans-latin-variable.woff2") format("woff2"); }
 .m-lateral-nombre, .m-acceso-marca h1 { font-family: "Instrument Sans", var(--fuente-texto); font-weight: 600; letter-spacing: 0.04em; }
 .c-cerrar-fila { display: none; }
-.c-modos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; margin: 0 0 var(--e-3); border-radius: 12px; background: color-mix(in srgb, #000 22%, transparent); }
+.c-modos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; margin: 0 0 var(--e-3); border-radius: 12px; background: color-mix(in srgb, #000 22%, transparent); }
 .c-modos button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 48px; padding: 6px 4px; border: 0; border-radius: 9px; background: transparent; color: inherit; opacity: 0.88; font: 600 var(--t-xs) var(--fuente-texto); cursor: pointer; transition: background-color 160ms var(--ease-out), opacity 160ms var(--ease-out); }
 .c-modos button svg { width: 17px; height: 17px; }
 .c-modos button .m-txt { white-space: nowrap; }
@@ -267,6 +267,6 @@ input.m-entrada[type="date"], input.m-entrada[type="month"] { min-height: 40px; 
 @media (max-width: 860px) {
   .c-cerrar-fila { display: flex; justify-content: flex-end; margin-bottom: var(--e-2); }
   .c-app .c-modos .m-txt { display: inline; }
-  .c-app .c-modos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .c-app .c-modos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (max-width: 860px) { .c-app .m-lateral { background: var(--card); backdrop-filter: none; } }

@@ -1,4 +1,4 @@
-import { Bell, BellRing, Database, Globe, KeyRound, Link2 } from 'lucide-react'
+import { Bell, BellRing, Building, CalendarClock, Database, Globe, KeyRound, Link2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { AvisoDev } from '../../lib/desarrollo'
@@ -6,7 +6,13 @@ import { useModelo } from '../../lib/modelo'
 import { pedirPermiso, permisoNotificaciones } from '../../lib/notificar'
 import { useAvisosDev } from '../../lib/usos'
 
-const ICONO: Record<AvisoDev['tipo'], typeof Database> = { supabase: Database, token: KeyRound, servicio: Globe, enlace: Link2 }
+const ICONO: Record<AvisoDev['tipo'], typeof Database> = { supabase: Database, token: KeyRound, servicio: Globe, enlace: Link2, recordatorio: CalendarClock, sociedad: Building }
+
+export function rutaAviso(a: AvisoDev): string {
+  if (a.tipo === 'recordatorio') return '/sa/recordatorios'
+  if (a.tipo === 'sociedad') return '/sa'
+  return a.proyecto_id ? `/proyectos/${a.proyecto_id}?ver=desarrollo` : `/desarrollo?ver=${a.tipo}`
+}
 
 export function BotonNotificaciones() {
   const [p, setP] = useState(permisoNotificaciones)
@@ -29,7 +35,7 @@ export default function ParaNoOlvidar({ limite, proyectoId, ocultarVacio }: { li
         <BotonNotificaciones />
       </div>
       {lista.length === 0 ? (
-        <div className="m-vacio c-vacio-chico"><b>Nada pendiente</b><span>Supabase, tokens, dominios y enlaces están al día.</span></div>
+        <div className="m-vacio c-vacio-chico"><b>Nada pendiente</b><span>Supabase, tokens, dominios, enlaces y recordatorios están al día.</span></div>
       ) : (
         <ul className="c-lista-saldos c-lista-avisos">
           {lista.map((a) => {
@@ -39,7 +45,7 @@ export default function ParaNoOlvidar({ limite, proyectoId, ocultarVacio }: { li
               <li key={a.id} className={`c-av-${a.nivel}`}>
                 <span className="c-av-ico"><I size={16} aria-hidden /></span>
                 <span><b>{a.titulo}</b><small> · {a.detalle}</small>{p && <small> · {p}</small>}</span>
-                <Link className="m-btn m-btn-secundario m-btn-sm" to={a.proyecto_id ? `/proyectos/${a.proyecto_id}?ver=desarrollo` : `/desarrollo?ver=${a.tipo}`} title="Ir a donde se arregla">Ver</Link>
+                <Link className="m-btn m-btn-secundario m-btn-sm" to={rutaAviso(a)} title="Ir a donde se arregla">Ver</Link>
               </li>
             )
           })}
