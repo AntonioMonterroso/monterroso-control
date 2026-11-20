@@ -10,7 +10,7 @@ import { useCobros } from '../../lib/usos'
 import { EstadoCobro } from '../cobros/Cobros'
 import { VentanaPago } from '../cobros/Ventanas'
 
-export default function RegistrarPago({ clienteFijo, proyectoFijo, pequeno }: { clienteFijo?: string; proyectoFijo?: string; pequeno?: boolean }) {
+export default function RegistrarPago({ clienteFijo, proyectoFijo, pequeno, icono }: { clienteFijo?: string; proyectoFijo?: string; pequeno?: boolean; icono?: boolean }) {
   const m = useModelo()
   const cobros = useCobros()
   const [abierta, setAbierta] = useState(false)
@@ -31,7 +31,7 @@ export default function RegistrarPago({ clienteFijo, proyectoFijo, pequeno }: { 
   const problema = !cliente ? 'Elige el cliente.' : !elegidos.length ? 'Marca al menos un cobro.' : null
   return (
     <>
-      <button type="button" className={`m-btn m-btn-primario c-btn-principal${pequeno ? ' m-btn-sm' : ''}`} onClick={() => setAbierta(true)} title="Elige al cliente y lo que pagó; después pones la fecha, la forma, dónde cayó y el comprobante"><HandCoins size={16} aria-hidden /> Registrar pago</button>
+      {icono ? <button type="button" className="m-icono-btn" onClick={() => setAbierta(true)} aria-label="Registrar pago" title="Registra un pago de este cliente: eliges qué pagó, la forma, dónde cayó y el comprobante"><HandCoins aria-hidden /></button> : <button type="button" className={`m-btn m-btn-primario c-btn-principal${pequeno ? ' m-btn-sm' : ''}`} onClick={() => setAbierta(true)} title="Elige al cliente y lo que pagó; después pones la fecha, la forma, dónde cayó y el comprobante"><HandCoins size={16} aria-hidden /> Registrar pago</button>}
       <Ventana abierta={abierta} titulo="Registrar pago" subtitulo="Paso 1 de 2 · ¿Qué pagó?" onCerrar={() => setAbierta(false)} pie={
         <>
           <button type="button" className="m-btn m-btn-secundario" onClick={() => setAbierta(false)} title="Cierra sin registrar nada">Cancelar</button>

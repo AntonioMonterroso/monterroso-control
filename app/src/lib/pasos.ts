@@ -11,6 +11,7 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'En «Lo que me deben: vencido y esta semana» toca el nombre del cliente para abrir su ficha, o «Ver todo lo que me deben» para ver la lista completa.' },
       { texto: 'En «Pagos que recibí» ves los últimos pagos; toca «Ver todos» para abrir todo el historial.', ir: 'a[title="Abre el historial completo de pagos recibidos"]' },
       { texto: 'Si aparece «Para no olvidar», toca «Ver» en cada aviso para ir a donde se arregla.' },
+      { texto: 'Arriba del menú, toca el cuadro de un negocio (Dev Studio, Canela, Salario o S.A.) para cambiar el menú; cada cuadro muestra un dato corto y también se elige con las flechas y Enter.', ir: '.c-modos' },
     ],
   },
   {
@@ -23,6 +24,7 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'Toca el basurero «Borrar o archivar» de la fila: si no tiene movimientos se borra, y si tiene trabajos o pagos se archiva; después puedes tocar «Deshacer».' },
       { texto: 'Marca varias casillas y toca «Borrar o archivar las marcadas»; antes te muestra cuáles se borran y cuáles se archivan.' },
       { texto: 'Con clic derecho o dejando presionada una fila tienes «Abrir», «Editar» y «Borrar o archivar»; los archivados se ven en «Archivados» y vuelven con «Reactivar».' },
+      { texto: 'Cada cliente muestra su estado («Al día», «Debe», «Vencido» o «Saldo a favor»); abajo de la lista está el total y lo recurrente al mes y al año. En pantalla angosta usa «Ordenar por» y «Cómoda / Compacta»; al pie de cada tarjeta están WhatsApp, Registrar pago y Estado de cuenta.', ir: '.c-tabla-erp' },
     ],
   },
   {
@@ -183,6 +185,7 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'Toca «Registrar pago»: eliges el cliente y marcas los cobros, tocas «Siguiente» y pones fecha, forma de pago, «Dónde cayó» y comprobante.', ir: 'button[title="Elige al cliente y lo que pagó; después pones la fecha, la forma, dónde cayó y el comprobante"]' },
       { texto: 'En cada fila toca «Pago» para registrar lo que pagó, o «Saldar» para dejar de cobrarlo a propósito; marca varias y toca «Marcar como pagados».' },
       { texto: 'En «Más» tienes «Agregar cobro», «Registrar anticipo» y «Recordatorios por WhatsApp».', ir: 'button[aria-haspopup="menu"]' },
+      { texto: 'La fila «Total» suma lo que se ve; al marcar varios, la barra de abajo dice cuántos y cuánto suman. En tarjetas, al pie están «Registrar pago» y «Recordar por WhatsApp».', ir: '.c-tabla-erp' },
     ],
   },
   {
@@ -195,6 +198,7 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'El lápiz abre «Editar pago»: en «A qué se aplicó (tipo y período)» cambias el cobro o tocas «Repartir en otro cobro»; «Eliminar pago» te dice qué cobros vuelven a «por cobrar» y si también se borra en Monterroso World.' },
       { texto: 'Marca varios para «Completar forma y cuenta», «Eliminar los marcados» o «Bajar recibos».' },
       { texto: 'Toca «Excel» o «PDF» para bajar lo filtrado; en «Más» está «Registrar anticipo».', ir: '.c-cabeza-acciones' },
+      { texto: 'Abajo de la tabla ves el total de lo que se ve y el reparto por forma de pago y por cuenta; en tarjetas, al pie están el comprobante y el recibo.', ir: '.c-tabla-erp' },
     ],
   },
   {

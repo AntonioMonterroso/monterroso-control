@@ -1,4 +1,6 @@
-import { FileDown, Pencil, Printer, Trash2 } from 'lucide-react'
+import { porcentaje } from '../../lib/totales'
+import MenuMas from '../../componentes/MenuMas'
+import { FileDown, Pencil, Printer } from 'lucide-react'
 import { useQuitar } from '../../lib/quitar'
 import { useDatos } from '../../lib/datos'
 import { useMemo, useState } from 'react'
@@ -76,7 +78,7 @@ export default function TablaEntradas({ entradas, titulo, conCliente = true, agr
     { titulo: 'Concepto', principal: !conCliente, valor: (e) => <>{e.concepto}{e.tipo === 'anticipo' && <span className="m-estado en-proceso">Anticipo</span>}{repetidos.has(e.id) && <button type="button" className="m-estado error c-chip-boton" onClick={(x) => { x.stopPropagation(); setDetalle(e) }} title="Hay otro pago igual (mismo proyecto, monto y fecha, o la misma inscripción); ábrelo para revisar">¿Repetido?</button>}{e.pago?.origen === 'world' && e.pago.nota && <small>«{e.pago.nota}»</small>}<small className="c-origen">{origenDe(e)}</small>{(e.referencia || e.recibo || (!conCliente && e.proyecto_id)) && <small>{[!conCliente && e.proyecto_id ? n.proyecto(e.proyecto_id) : '', e.referencia ? `Ref. ${e.referencia}` : '', e.recibo ? `Recibo ${String(e.recibo).padStart(5, '0')}` : ''].filter(Boolean).join(' · ')}</small>}</> },
     { titulo: 'Forma', valor: (e) => (e.forma ? nombreForma(e.forma) : <button type="button" className="m-estado pendiente c-chip-boton" onClick={(x) => { x.stopPropagation(); editar(e) }} title="Abre el pago para decir cómo te pagaron">Falta la forma</button>) },
     { titulo: 'Dónde cayó', valor: (e) => (e.forma === 'anticipo' ? <span className="m-vacia">Del saldo a favor</span> : <>{e.destino ? n.destino(e.destino) : <button type="button" className="m-estado pendiente c-chip-boton" onClick={(x) => { x.stopPropagation(); editar(e) }} title="Abre el pago para decir en qué cuenta cayó el dinero">Falta decir dónde cayó</button>}{enCuentaPersonalSA({ ...e, texto: e.concepto }, ids, inicio) && !m.traslados.some((t) => t.pagos.includes(e.id)) && <small className="c-alerta-txt">Pendiente de pasar a la S.A.</small>}</>), orden: (e) => grupoDestino(e.destino) },
-    { titulo: 'Monto', num: true, valor: (e) => quetzales(e.monto), orden: (e) => e.monto },
+    { titulo: 'Monto', etiqueta: 'Pagó', destacado: true, num: true, valor: (e) => quetzales(e.monto), orden: (e) => e.monto },
   ]
 
   const total = entradas.reduce((t, e) => t + Math.round(e.monto * 100), 0) / 100
@@ -91,6 +93,7 @@ export default function TablaEntradas({ entradas, titulo, conCliente = true, agr
       onFila={setDetalle}
       columnas={columnas}
       marcable={(e) => e.tipo === 'pago' || quitable(e)}
+      resumen={(x) => { const tot = x.reduce((t, e) => t + Math.round(e.monto * 100), 0); const g = (k: (e: EntradaDinero) => string) => [...x.reduce((m2, e) => m2.set(k(e), (m2.get(k(e)) ?? 0) + Math.round(e.monto * 100)), new Map<string, number>()).entries()].sort((a, b) => b[1] - a[1]).slice(0, 3); return <><span className="c-resumen-t">Por forma:</span>{g((e) => nombreForma(e.forma)).map(([k, v]) => <span key={`f${k}`}>{k} <b>{quetzales(v / 100)}</b> · {porcentaje(v, tot)}</span>)}<span className="c-resumen-t">Por cuenta:</span>{g((e) => (e.forma === 'anticipo' ? 'Saldo a favor' : n.destino(e.destino))).map(([k, v]) => <span key={`d${k}`}>{k} <b>{quetzales(v / 100)}</b></span>)}</> }}
       masa={[
         { texto: 'Completar forma y cuenta', titulo: (k) => `Pone la forma de pago y dónde cayó a los ${k} pagos marcados; se puede deshacer`, hacer: (x) => setCompletar(x.map((e) => e.pago!).filter(Boolean)) },
         { texto: 'Eliminar los marcados', titulo: (k) => `Muestra qué cobros vuelven a quedar pendientes al eliminar los ${k} pagos marcados; pregunta antes y se puede deshacer`, hacer: (x) => quitar(x), peligro: true },
@@ -105,8 +108,9 @@ export default function TablaEntradas({ entradas, titulo, conCliente = true, agr
       acciones={(e) => (
         <>
           <VerComprobantes rutas={e.comprobantes} titulo={`Comprobante · ${e.concepto}`} />
+          {e.pago && e.recibo && <button type="button" className="m-icono-btn c-salida" onClick={() => imprimirRecibo(e.pago!, m.clientes.find((c) => c.id === e.cliente_id), e.concepto)} aria-label="Recibo" title="Abre el recibo listo para guardar en PDF o imprimir"><Printer aria-hidden /></button>}
           <button type="button" className="m-icono-btn" onClick={() => editar(e)} aria-label="Editar" title="Abre el pago para corregir la forma, la cuenta, la referencia o el comprobante"><Pencil aria-hidden /></button>
-          {quitable(e) && <button type="button" className="m-icono-btn" onClick={() => quitar([e])} aria-label="Eliminar pago" title={e.pago?.origen === 'world' ? 'Elimina este pago aquí y en Monterroso World; pregunta antes y se puede deshacer' : 'Elimina este pago; pregunta antes y se puede deshacer'}><Trash2 aria-hidden /></button>}
+          <MenuMas icono items={[{ texto: 'Ver detalle', titulo: 'Abre qué pagó, sus comprobantes y su historia', hacer: () => setDetalle(e) }, ...(quitable(e) ? [{ texto: 'Eliminar pago', titulo: e.pago?.origen === 'world' ? 'Lo elimina aquí y en Monterroso World; pregunta antes y se puede deshacer' : 'Pregunta antes de eliminarlo; se puede deshacer', hacer: () => quitar([e]), peligro: true }] : [])]} />
         </>
       )}
       pie={<tr><td colSpan={columnas.filter((c) => !c.oculto).length - 1}>Total · {l.length} {l.length === 1 ? 'pago' : 'pagos'}</td><td className="m-num">{quetzales(l.reduce((t, e) => t + Math.round(e.monto * 100), 0) / 100)}</td><td /></tr>}

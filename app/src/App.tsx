@@ -41,7 +41,7 @@ import DocumentoWeb from './pantallas/web/DocumentoWeb'
 import AplicarSolo from './pantallas/pagos/AplicarSolo'
 
 function Cargando() {
-  return <div className="m-cargando"><img className="c-carga-iso" src="/marca/studio-isotipo.svg" alt="" /><div className="m-cargando-linea"><span /></div></div>
+  return <div className="c-carga" role="status" aria-label="Leyendo los datos"><img className="c-carga-iso" src="/marca/studio-isotipo.svg" alt="" /><div className="c-esqueleto-kpis">{[0, 1, 2, 3].map((i) => <div key={i} className="c-esqueleto c-esqueleto-kpi" />)}</div><div className="c-esqueleto-tarjetas">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="c-esqueleto" />)}</div></div>
 }
 
 function Contenido() {

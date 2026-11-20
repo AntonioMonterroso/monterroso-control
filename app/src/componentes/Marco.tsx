@@ -3,7 +3,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useModelo } from '../lib/modelo'
 import { useSesion } from '../lib/sesion'
-import { useAvisosDev, useCobros } from '../lib/usos'
+import { useAvisosDev, useCobros, useHoy } from '../lib/usos'
+import { quetzales } from '../lib/dinero'
+import { nombreMes } from '../lib/fechas'
 import { notificar } from '../lib/notificar'
 import { guardarTemaEnUsuario, temaApi, traerTemaDelUsuario } from '../lib/tema'
 import Temas from './Temas'
@@ -91,7 +93,7 @@ function leerCompacto(): boolean {
 
 export default function Marco({ children }: { children: ReactNode }) {
   const { correo, prueba, salir } = useSesion()
-  const { clientes } = useModelo()
+  const { clientes, ventas, tramites } = useModelo()
   const cobros = useCobros()
   const avisosDev = useAvisosDev()
   const [compacto, setCompacto] = useState(leerCompacto)
@@ -154,6 +156,36 @@ export default function Marco({ children }: { children: ReactNode }) {
     '/clientes': clientes.filter((c) => c.activo).length,
     '/cobros': cobros.filter((c) => c.estado === 'vencido').length,
   }
+  const hoyModos = useHoy()
+  const datosModo: Record<Modo, string> = (() => {
+    const deben = cobros.filter((c) => c.tipo !== 'salario' && c.saldo > 0 && (c.estado === 'vencido' || c.estado === 'por_cobrar'))
+    const activos = clientes.filter((c) => c.activo).length
+    const falta = deben.reduce((t, c) => t + Math.round(c.saldo * 100), 0) / 100
+    const dev = [activos ? `${activos} ${activos === 1 ? 'cliente' : 'clientes'}` : '', falta > 0 ? `${quetzales(falta).replace(' ', '\u00a0')} por cobrar` : ''].filter(Boolean).join(' · ')
+    const hoyPed = ventas.filter((v) => v.fecha.slice(0, 10) === hoyModos).length
+    const canela = hoyPed ? `${hoyPed} ${hoyPed === 1 ? 'pedido' : 'pedidos'} hoy` : ''
+    const per = hoyModos.slice(0, 7)
+    const sal = cobros.find((c) => c.clave === `s:${per}`)
+    const mes = nombreMes(Number(per.slice(0, 4)), Number(per.slice(5, 7))).slice(0, 3).toLowerCase()
+    const salario = sal ? (sal.estado === 'pagado' || sal.estado === 'saldado' ? `Recibido ${mes}.` : 'Por recibir') : ''
+    const listos = tramites.filter((x) => x.estado === 'hecho' || x.estado === 'no_aplica').length
+    const sa = tramites.length ? `${listos} de ${tramites.length} trámites` : ''
+    return { dev, canela, salario, sa }
+  })()
+  const moverModos = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const botones = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('button[role="tab"]')]
+    const i = botones.indexOf(document.activeElement as HTMLButtonElement)
+    if (i < 0) return
+    const cols = getComputedStyle(e.currentTarget).gridTemplateColumns.split(' ').filter(Boolean).length || 1
+    const paso: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }
+    let j = i
+    if (e.key === 'Home') j = 0
+    else if (e.key === 'End') j = botones.length - 1
+    else if (paso[e.key] != null) j = (i + paso[e.key] + botones.length) % botones.length
+    else return
+    e.preventDefault()
+    botones[j].focus()
+  }
   const alternar = () => {
     const v = !compacto
     setCompacto(v)
@@ -172,10 +204,10 @@ export default function Marco({ children }: { children: ReactNode }) {
         <div className="c-cerrar-fila">
           <button type="button" className="m-icono-btn c-cerrar-menu" onClick={() => setAbierto(false)} aria-label="Cerrar el menú" title="Cierra el menú (Esc)"><X aria-hidden /></button>
         </div>
-        <div className="c-modos" role="tablist" aria-label="Qué negocio trabajar">
+        <div className="c-modos" role="tablist" aria-label="Qué negocio trabajar" aria-orientation={compacto || angosta ? 'vertical' : 'horizontal'} onKeyDown={moverModos}>
           {MODOS.map((m) => (
-            <button key={m.id} type="button" role="tab" aria-selected={modo === m.id} title={`Muestra el menú de ${m.nombre}`} onClick={() => elegirModo(m)}>
-              {m.icono}<span className="m-txt">{m.nombre}</span>
+            <button key={m.id} type="button" role="tab" data-modo={m.id} aria-selected={modo === m.id} tabIndex={modo === m.id ? 0 : -1} aria-label={datosModo[m.id] ? `${m.nombre}: ${datosModo[m.id]}` : m.nombre} title={`Muestra el menú de ${m.nombre}${datosModo[m.id] ? ` · ${datosModo[m.id]}` : ''}`} onClick={() => elegirModo(m)}>
+              {m.icono}<span className="m-txt c-modo-nombre">{m.nombre}</span>{datosModo[m.id] && <span className="m-txt c-modo-dato">{datosModo[m.id].split(' · ').map((x) => <span key={x}>{x}</span>)}</span>}
             </button>
           ))}
         </div>

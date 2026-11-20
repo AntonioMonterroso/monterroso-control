@@ -12,6 +12,7 @@ import { useModelo } from '../../lib/modelo'
 import { copiarMes, lineasPresupuesto, type LineaPresupuesto } from '../../lib/presupuesto'
 import { useHoy, usePeriodo } from '../../lib/usos'
 import Barra from './Barra'
+import { porcentaje } from '../../lib/totales'
 
 export default function Presupuestos({ negocioClave }: { negocioClave?: 'canela' | 'salario' } = {}) {
   const m = useModelo()
@@ -55,7 +56,7 @@ export default function Presupuestos({ negocioClave }: { negocioClave?: 'canela'
         { titulo: 'Avance', valor: (x) => <Barra avance={x.avance} tipo={x.categoria.tipo} /> },
       ]}
       acciones={negocio ? (x) => <button type="button" className="m-icono-btn" onClick={() => setEditar(x)} aria-label={`Editar ${x.categoria.nombre}`} title="Poner el monto presupuestado"><Pencil aria-hidden /></button> : undefined}
-      pie={<tr><td>Total</td><td className="m-num">{quetzales(total(l, 'plan'))}</td><td className="m-num">{quetzales(total(l, 'real'))}</td><td className="m-num">{quetzales(l[0]?.categoria.tipo === 'gasto' ? total(l, 'plan') - total(l, 'real') : total(l, 'real') - total(l, 'plan'))}</td><td />{negocio && <td />}</tr>}
+      pie={<tr><td>Total</td><td className="m-num">{quetzales(total(l, 'plan'))}</td><td className="m-num">{quetzales(total(l, 'real'))}</td><td className="m-num">{quetzales(l[0]?.categoria.tipo === 'gasto' ? total(l, 'plan') - total(l, 'real') : total(l, 'real') - total(l, 'plan'))}</td><td><span className="c-total-avance"><Barra avance={total(l, 'plan') > 0 ? total(l, 'real') / total(l, 'plan') : 0} tipo={l[0]?.categoria.tipo ?? 'gasto'} /><span className="m-num">{porcentaje(total(l, 'real'), total(l, 'plan'))} ejecutado</span></span></td>{negocio && <td />}</tr>}
     />
   )
 

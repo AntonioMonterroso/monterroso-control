@@ -252,21 +252,25 @@ input.m-entrada[type="date"], input.m-entrada[type="month"] { min-height: 40px; 
 @font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 400 700; font-stretch: 100%; font-display: swap; src: url("/marca/fuentes/instrument-sans-latin-variable.woff2") format("woff2"); }
 .m-lateral-nombre, .m-acceso-marca h1 { font-family: "Instrument Sans", var(--fuente-texto); font-weight: 600; letter-spacing: 0.04em; }
 .c-cerrar-fila { display: none; }
-.c-modos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; margin: 0 0 var(--e-3); border-radius: 12px; background: color-mix(in srgb, #000 22%, transparent); }
-.c-modos button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 48px; padding: 6px 4px; border: 0; border-radius: 9px; background: transparent; color: inherit; opacity: 0.88; font: 600 var(--t-xs) var(--fuente-texto); cursor: pointer; transition: background-color 160ms var(--ease-out), opacity 160ms var(--ease-out); }
-.c-modos button svg { width: 17px; height: 17px; }
-.c-modos button .m-txt { white-space: nowrap; }
-.c-modos button[aria-selected="true"] { background: color-mix(in srgb, var(--sobre-lateral, #f4ebe2) 16%, transparent); opacity: 1; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--laton) 35%, transparent); }
+.c-modos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 var(--e-3); }
+.c-modos button { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 4px; min-height: 68px; padding: 12px; border: 1px solid color-mix(in srgb, currentColor 14%, transparent); border-radius: 12px; background: color-mix(in srgb, currentColor 5%, transparent); color: inherit; text-align: left; font: 600 var(--t-sm) var(--fuente-texto); line-height: 1.2; cursor: pointer; min-width: 0; transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), transform 120ms var(--ease-out); }
+.c-modos button svg { width: 20px; height: 20px; flex: none; opacity: 0.85; }
+.c-modos .c-modo-nombre { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-modos .c-modo-dato { display: block; max-width: 100%; font: 500 11px/1.3 var(--fuente-texto); opacity: 0.78; overflow-wrap: anywhere; }
+.c-modos button[aria-selected="true"] { background: color-mix(in srgb, var(--primary) 22%, transparent); border-color: color-mix(in srgb, var(--primary) 70%, currentColor); }
+.c-modos button[aria-selected="true"] svg { opacity: 1; }
+.c-modos button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .c-modos button:active { transform: scale(0.97); }
-@media (hover: hover) and (pointer: fine) { .c-modos button:not([aria-selected="true"]):hover { background: color-mix(in srgb, currentColor 8%, transparent); } }
-:root[data-modo="claro"] .c-modos { background: color-mix(in srgb, var(--primary) 8%, transparent); }
-:root[data-modo="claro"] .c-modos button[aria-selected="true"] { background: var(--card); box-shadow: 0 1px 2px rgba(62, 18, 28, 0.12), inset 0 0 0 1px color-mix(in srgb, var(--laton) 45%, transparent); color: var(--primary-texto, var(--primary)); }
-.m-app[data-lateral="compacto"] .c-modos { grid-template-columns: 1fr; }
+@media (hover: hover) and (pointer: fine) { .c-modos button:not([aria-selected="true"]):hover { background: color-mix(in srgb, currentColor 10%, transparent); border-color: color-mix(in srgb, currentColor 24%, transparent); } }
+:root[data-modo="claro"] .c-modos button[aria-selected="true"] { background: color-mix(in srgb, var(--primary) 10%, var(--card)); border-color: var(--primary); color: var(--primary-texto, var(--primary)); }
+.m-app[data-lateral="compacto"] .c-modos { grid-template-columns: 1fr; gap: 6px; }
 .m-app[data-lateral="compacto"] .c-modos .m-txt { display: none; }
-.m-app[data-lateral="compacto"] .c-modos button { min-height: 38px; }
+.m-app[data-lateral="compacto"] .c-modos button { min-height: 44px; padding: 0; align-items: center; justify-content: center; }
 @media (max-width: 860px) {
   .c-cerrar-fila { display: flex; justify-content: flex-end; margin-bottom: var(--e-2); }
-  .c-app .c-modos .m-txt { display: inline; }
-  .c-app .c-modos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .c-app .c-modos .m-txt { display: block; }
+  .c-app .c-modos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .c-app .c-modos button { min-height: 68px; padding: 12px; align-items: flex-start; justify-content: flex-start; }
 }
 @media (max-width: 860px) { .c-app .m-lateral { background: var(--card); backdrop-filter: none; } }
+.c-modos .c-modo-dato > span { display: block; }

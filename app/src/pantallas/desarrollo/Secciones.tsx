@@ -100,8 +100,8 @@ export function SeccionSupabase({ f }: { f: Filtro }) {
           { titulo: 'Supabase', principal: true, valor: (x) => <>{x.nombre}<small>{x.ref}</small></> },
           { titulo: 'Para copiar', sinOrden: true, valor: (x) => <span className="c-copiar-fila"><Copiable valor={urlSupabase(x.ref)} etiqueta="Dirección" femenino />{x.anon_key ? <Copiable valor={x.anon_key} etiqueta="Llave pública" secreto femenino /> : <span className="m-vacia">Sin llave</span>}</span> },
           { titulo: 'Proyecto', valor: (x) => <ProyectoCol id={x.proyecto_id} nombre={nombreProyecto(x.proyecto_id)} /> },
-          { titulo: 'Plan', valor: (x) => (x.plan === 'pro' ? 'Pro' : 'Gratis') },
-          { titulo: 'Último uso', valor: (x) => (x.ultimo_uso ? `${fechaCorta(x.ultimo_uso)} · hace ${Math.max(0, diasEntre(x.ultimo_uso.slice(0, 10), hoyISO()))} d` : <span className="m-vacia">Sin anotar</span>) },
+          { titulo: 'Plan', baja: true, valor: (x) => (x.plan === 'pro' ? 'Pro' : 'Gratis') },
+          { titulo: 'Último uso', baja: true, valor: (x) => (x.ultimo_uso ? `${fechaCorta(x.ultimo_uso)} · hace ${Math.max(0, diasEntre(x.ultimo_uso.slice(0, 10), hoyISO()))} d` : <span className="m-vacia">Sin anotar</span>) },
           { titulo: 'Estado', valor: (x) => (x.plan === 'pro' ? <span className="m-estado en-proceso">No se pausa</span> : <EstadoAviso a={conAviso(x.id)} />) },
         ]}
         acciones={(x) => (
@@ -184,9 +184,9 @@ export function SeccionTokens({ f }: { f: Filtro }) {
         vacio="Sin tokens anotados."
         columnas={[
           { titulo: 'Token', principal: true, valor: (x) => <>{x.nombre}{x.ultimos4 && <small>···{x.ultimos4}</small>}</> },
-          { titulo: 'Tipo', valor: (x) => nombreTipo(x.tipo) },
+          { titulo: 'Tipo', baja: true, valor: (x) => nombreTipo(x.tipo) },
           { titulo: 'Proyecto', valor: (x) => <ProyectoCol id={x.proyecto_id} nombre={nombreProyecto(x.proyecto_id)} /> },
-          { titulo: 'Dónde', valor: (x) => x.donde ?? <span className="m-vacia">Sin anotar</span> },
+          { titulo: 'Dónde', baja: true, valor: (x) => x.donde ?? <span className="m-vacia">Sin anotar</span> },
           { titulo: 'Vence / revocar', valor: (x) => [x.vence && `Vence ${fechaCorta(x.vence)}`, x.revocar_el && `Revocar ${fechaCorta(x.revocar_el)}`].filter(Boolean).join(' · ') || <span className="m-vacia">Sin fecha</span> },
           { titulo: 'Estado', valor: (x) => (x.revocado ? <span className="m-estado bloqueado">Revocado{x.revocado_el ? ` ${fechaCorta(x.revocado_el)}` : ''}</span> : <EstadoAviso a={conAviso(x.id)} />) },
         ]}
@@ -268,7 +268,7 @@ export function SeccionServicios({ f }: { f: Filtro }) {
           { titulo: 'Servicio', principal: true, valor: (x) => <>{x.nombre}<small>{nombreTipo(x.tipo)}{x.proveedor ? ` · ${x.proveedor}` : ''}</small>{!x.activo && <span className="m-estado bloqueado">Apagado</span>}</> },
           { titulo: 'Proyecto', valor: (x) => <ProyectoCol id={x.proyecto_id} nombre={nombreProyecto(x.proyecto_id)} /> },
           { titulo: 'Renovación', valor: (x) => (x.renovacion ? fechaCorta(x.renovacion) : <span className="m-vacia">Sin fecha</span>) },
-          { titulo: 'Lo paga', valor: (x) => (x.paga === 'yo' ? 'Yo' : 'El cliente') },
+          { titulo: 'Lo paga', baja: true, valor: (x) => (x.paga === 'yo' ? 'Yo' : 'El cliente') },
           { titulo: 'Costo', num: true, valor: (x) => quetzales(x.costo) },
           { titulo: 'Estado', valor: (x) => (yaRegistrado(x) ? <span className="m-estado aprobado">Registrado</span> : <EstadoAviso a={conAviso(x.id)} />) },
         ]}
@@ -328,7 +328,7 @@ export function SeccionEnlaces({ f }: { f: Filtro }) {
         vacio="Sin enlaces."
         columnas={[
           { titulo: 'Enlace', principal: true, valor: (x) => <><a className="c-enlace" href={x.url} target="_blank" rel="noreferrer" onClick={(ev) => ev.stopPropagation()}>{x.nombre}</a><small className="c-url">{x.url.replace(/^https?:\/\//, '')}</small></> },
-          { titulo: 'Tipo', valor: (x) => nombreTipo(x.tipo) },
+          { titulo: 'Tipo', baja: true, valor: (x) => nombreTipo(x.tipo) },
           { titulo: 'Proyecto', valor: (x) => <ProyectoCol id={x.proyecto_id} nombre={nombreProyecto(x.proyecto_id)} /> },
           { titulo: 'Estado', valor: (x) => (x.responde == null ? <span className="m-vacia">Sin revisar</span> : <span className={`m-estado ${x.responde ? 'aprobado' : 'error'}`}>{x.responde ? 'Responde' : 'No responde'}{x.revisado_en ? ` · ${fechaCorta(x.revisado_en)}` : ''}</span>) },
         ]}

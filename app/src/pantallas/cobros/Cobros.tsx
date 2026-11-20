@@ -1,13 +1,14 @@
+import { porcentaje } from '../../lib/totales'
 import Pasos from '../../componentes/Pasos'
 import SelectBuscable from '../../componentes/SelectBuscable'
-import { CheckCheck, ChevronDown, Pencil, FolderKanban, HandCoins, Printer, Trash2, Undo2, User, X } from 'lucide-react'
+import { CheckCheck, ChevronDown, FolderKanban, HandCoins, MessageCircle, User, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAvisar } from '../../componentes/Avisos'
 import Buscador, { coincide } from '../../componentes/Buscador'
 import SelectorMes from '../../componentes/SelectorMes'
 import Tabla, { type Columna } from '../../componentes/Tabla'
-import { pendientes, totalSaldo, type Cobro } from '../../lib/cobros'
+import { numeroWhatsApp, pendientes, totalSaldo, type Cobro } from '../../lib/cobros'
 import { useDatos } from '../../lib/datos'
 import { aCentavos, deCentavos, quetzales } from '../../lib/dinero'
 import { fechaCorta } from '../../lib/fechas'
@@ -131,22 +132,31 @@ export default function Cobros() {
   const columnas: Columna<Cobro>[] = [
     { titulo: 'Vence', valor: (c) => (c.vence ? <>{fechaCorta(c.vence)}{c.vence === hoy && <span className="c-hoy">Hoy</span>}</> : <span className="m-vacia">Sin fecha</span>), orden: (c) => c.vence ?? '9999' },
     { titulo: 'Cliente', principal: true, oculto: verPor === 'cliente', valor: (c) => (c.tipo === 'salario' ? <Link to="/salario" className="c-enlace" onClick={(e) => e.stopPropagation()}>Mi salario</Link> : <Link to={`/clientes/${encodeURIComponent(c.cliente_id ?? "")}`} className="c-enlace" onClick={(e) => e.stopPropagation()}>{cliente(c.cliente_id)?.nombre}</Link>), orden: (c) => (c.tipo === 'salario' ? 'mi salario' : (cliente(c.cliente_id)?.nombre ?? '').toLowerCase()) },
-    { titulo: 'Proyecto', oculto: verPor === 'proyecto', valor: (c) => (c.proyecto_id ? <Link to={`/proyectos/${c.proyecto_id}`} className="c-enlace-suave" onClick={(e) => e.stopPropagation()}>{proyecto(c.proyecto_id)}</Link> : <span className="m-vacia">{c.tipo === 'salario' ? 'Salario' : '—'}</span>), orden: (c) => proyecto(c.proyecto_id).toLowerCase() },
-    { titulo: 'Concepto', principal: verPor === 'cliente', valor: (c) => <>{c.concepto}{c.guardado?.saldado && c.guardado.nota && <small>{c.guardado.nota}</small>}</> },
-    { titulo: 'Estado', valor: (c) => <EstadoCobro c={c} />, orden: (c) => ORDEN_ESTADO[c.estado] },
-    { titulo: 'Monto', num: true, valor: (c) => quetzales(c.monto), orden: (c) => c.monto },
-    { titulo: 'Falta', num: true, valor: (c) => quetzales(c.saldo), orden: (c) => c.saldo },
+    { titulo: 'Proyecto', baja: true, oculto: verPor === 'proyecto', valor: (c) => (c.proyecto_id ? <Link to={`/proyectos/${c.proyecto_id}`} className="c-enlace-suave" onClick={(e) => e.stopPropagation()}>{proyecto(c.proyecto_id)}</Link> : <span className="m-vacia">{c.tipo === 'salario' ? 'Salario' : '—'}</span>), orden: (c) => proyecto(c.proyecto_id).toLowerCase() },
+    { titulo: 'Concepto', baja: true, principal: verPor === 'cliente', valor: (c) => <>{c.concepto}{c.guardado?.saldado && c.guardado.nota && <small>{c.guardado.nota}</small>}</> },
+    { titulo: 'Estado', cabecera: true, valor: (c) => <EstadoCobro c={c} />, orden: (c) => ORDEN_ESTADO[c.estado] },
+    { titulo: 'Monto', baja: true, num: true, valor: (c) => quetzales(c.monto), orden: (c) => c.monto },
+    { titulo: 'Falta', etiqueta: 'Debe', destacado: true, num: true, valor: (c) => quetzales(c.saldo), orden: (c) => c.saldo },
   ]
-  const acciones = (c: Cobro) => (
-    <>
-      {(c.estado === 'por_cobrar' || c.estado === 'vencido') && <button type="button" className="m-btn m-btn-primario m-btn-sm" onClick={() => setPagar(c)} title={c.tipo === 'salario' ? 'Marcar que ya recibiste el salario' : 'Registrar lo que pagó el cliente'}><HandCoins size={14} aria-hidden /> {c.tipo === 'salario' ? 'Recibido' : 'Pago'}</button>}
-      {(c.estado === 'por_cobrar' || c.estado === 'vencido') && <button type="button" className="m-btn m-btn-fantasma m-btn-sm" onClick={() => setSaldar(c)} title="Dejar de contarlo como pendiente (por ejemplo un descuento)">Saldar</button>}
-      {c.estado === 'saldado' && <button type="button" className="m-btn m-btn-fantasma m-btn-sm" onClick={() => void quitarSaldado(c)} title="Volver a contarlo como pendiente"><Undo2 size={14} aria-hidden /> Deshacer</button>}
-      {c.tipo === 'extra' && c.guardado && !c.clave.startsWith('a:') && <button type="button" className="m-icono-btn" onClick={() => setEditarExtra(c)} aria-label="Editar" title="Editar el cobro extra"><Pencil aria-hidden /></button>}
-      {c.tipo === 'extra' && c.guardado && !c.clave.startsWith('a:') && c.pagado === 0 && <button type="button" className="m-icono-btn" onClick={() => quitarExtra.pedir('ctl_cobros', [c.guardado!], `Se quita el cobro «${c.concepto}» de ${quetzales(c.monto)}.`)} aria-label="Quitar" title="Quitar este cobro extra (se puede deshacer)"><Trash2 aria-hidden /></button>}
-      {c.tipo !== 'salario' && pagosDe(c.clave).length > 0 && <button type="button" className="m-icono-btn c-salida" onClick={() => reciboDe(c)} aria-label="Recibo" title="Abrir el recibo de este pago"><Printer aria-hidden /></button>}
-    </>
-  )
+  const recordar = (c: Cobro) => { const cl = cliente(c.cliente_id); return `https://wa.me/${numeroWhatsApp(cl?.whatsapp ?? null)}?text=${encodeURIComponent(`Hola${cl ? `, ${cl.nombre}` : ''}. Te recuerdo ${c.concepto.toLowerCase()} por ${quetzales(c.saldo)}${c.vence ? `, ${c.vence < hoy ? 'venció' : 'vence'} el ${fechaCorta(c.vence)}` : ''}. ¡Gracias!`)}` }
+  const acciones = (c: Cobro) => {
+    const pendiente = c.estado === 'por_cobrar' || c.estado === 'vencido'
+    const extraEditable = c.tipo === 'extra' && c.guardado && !c.clave.startsWith('a:')
+    const mas = [
+      ...(pendiente ? [{ texto: 'Saldar', titulo: 'Deja de contarlo como pendiente (por ejemplo un descuento)', hacer: () => setSaldar(c) }] : []),
+      ...(c.estado === 'saldado' ? [{ texto: 'Volver a cobrar', titulo: 'Vuelve a contarlo como pendiente', hacer: () => void quitarSaldado(c) }] : []),
+      ...(extraEditable ? [{ texto: 'Editar cobro', titulo: 'Abre el cobro para corregirlo', hacer: () => setEditarExtra(c) }] : []),
+      ...(extraEditable && c.pagado === 0 ? [{ texto: 'Quitar cobro', titulo: 'Quita este cobro; se puede deshacer', hacer: () => quitarExtra.pedir('ctl_cobros', [c.guardado!], `Se quita el cobro «${c.concepto}» de ${quetzales(c.monto)}.`), peligro: true }] : []),
+      ...(c.tipo !== 'salario' && pagosDe(c.clave).length > 0 ? [{ texto: 'Recibo', titulo: 'Abre el recibo de este pago', hacer: () => reciboDe(c) }] : []),
+    ]
+    return (
+      <>
+        {pendiente && <button type="button" className="m-btn m-btn-primario m-btn-sm" onClick={() => setPagar(c)} title={c.tipo === 'salario' ? 'Marca que ya recibiste el salario' : 'Registra lo que pagó el cliente'}><HandCoins size={14} aria-hidden /> {c.tipo === 'salario' ? 'Recibido' : 'Registrar pago'}</button>}
+        {pendiente && c.tipo !== 'salario' && <a className="m-icono-btn c-salida" href={recordar(c)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} aria-label="Recordar por WhatsApp" title="Abre WhatsApp del cliente con el recordatorio de este cobro"><MessageCircle aria-hidden /></a>}
+        {mas.length > 0 && <MenuMas icono items={mas} />}
+      </>
+    )
+  }
   const puedeMarcar = (c: Cobro) => c.estado === 'por_cobrar' || c.estado === 'vencido'
   const marcar = { puede: puedeMarcar, marcadas, cambiar: (ids: string[], si: boolean) => setMarcadas((x) => { const n = new Set(x); ids.forEach((k) => (si ? n.add(k) : n.delete(k))); return n }) }
   const elegidos = todos.filter((c) => marcadas.has(c.clave) && puedeMarcar(c))
@@ -243,6 +253,9 @@ export default function Cobros() {
               columnas={columnas}
               acciones={acciones}
               marcar={marcar}
+              llave="cobros"
+              resumen={(l) => { const v = l.filter((c) => c.estado === 'vencido'); const pv = l.filter((c) => c.estado === 'por_cobrar'); const tv = totalSaldo(v), tp = totalSaldo(pv); return <><span className="c-txt-peligro">Vencido <b>{quetzales(tv)}</b> · {v.length}</span><span>Por vencer <b>{quetzales(tp)}</b> · {pv.length}</span><span>{porcentaje(tv, tv + tp)} vencido</span></> }}
+              claseFila={(c) => (c.estado === 'vencido' ? 'c-fila-vencida' : undefined)}
             />
           ) : grupos.length === 0 ? (
             <div className="m-vacio c-vacio-chico"><b>Sin cobros con estos filtros</b></div>

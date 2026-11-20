@@ -1,3 +1,4 @@
+import { porcentaje } from '../../lib/totales'
 import Pasos from '../../componentes/Pasos'
 import { CalendarCheck, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
@@ -101,13 +102,14 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'sa
             filas={delMes}
             clave={(x) => x.id}
             vacio="No hay gastos en este mes."
+            resumen={(l) => { const por = [...l.reduce((g, x) => g.set(x.categoria_id ?? '', (g.get(x.categoria_id ?? '') ?? 0) + Math.round(x.monto * 100)), new Map<string, number>()).entries()].sort((a, b) => b[1] - a[1]); const tot = por.reduce((t, x) => t + x[1], 0); return <>{por.slice(0, 3).map(([k, v]) => <span key={k}><b>{nom(m.categorias, k) || 'Sin categoría'}</b> {quetzales(v / 100)} · {porcentaje(v, tot)}</span>)}<span>Promedio {quetzales(tot / 100 / Math.max(1, l.length))}</span></> }}
             columnas={[
               { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha) },
               { titulo: 'Descripción', principal: true, valor: (x) => <>{x.descripcion}{x.proveedor && <small>{x.proveedor}{x.proveedor_nit ? ` · NIT ${x.proveedor_nit}` : ''}</small>}</> },
               { titulo: 'Categoría', valor: (x) => nom(m.categorias, x.categoria_id) },
               { titulo: 'Negocio', valor: (x) => nom(m.negocios, x.negocio_id) },
               { titulo: 'Cliente', valor: (x) => (x.cliente_id ? <Link to={`/clientes/${encodeURIComponent(x.cliente_id ?? "")}`} className="c-enlace">{nom(m.clientes, x.cliente_id)}</Link> : <span className="m-vacia">—</span>) },
-              { titulo: 'Factura', valor: (x) => (x.factura_numero ? `${x.factura_serie ? `${x.factura_serie}-` : ''}${x.factura_numero}` : <span className="m-vacia">Sin factura</span>) },
+              { titulo: 'Factura', baja: true, valor: (x) => (x.factura_numero ? `${x.factura_serie ? `${x.factura_serie}-` : ''}${x.factura_numero}` : <span className="m-vacia">Sin factura</span>) },
               { titulo: 'Monto', num: true, valor: (x) => quetzales(x.monto) },
             ]}
             quitarVarias={(l) => q2.pedir('ctl_gastos', l, `Se quitan ${l.length} gastos por ${quetzales(l.reduce((t, g) => t + g.monto, 0))}.`)}
@@ -135,7 +137,7 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'sa
             { titulo: 'Día', num: true, valor: (x) => x.dia },
             { titulo: 'Categoría', valor: (x) => nom(m.categorias, x.categoria_id) },
             { titulo: 'Negocio', valor: (x) => nom(m.negocios, x.negocio_id) },
-            { titulo: 'Vigencia', valor: (x) => `${fechaCorta(x.inicio)}${x.fin ? ` a ${fechaCorta(x.fin)}` : ' en adelante'}` },
+            { titulo: 'Vigencia', baja: true, valor: (x) => `${fechaCorta(x.inicio)}${x.fin ? ` a ${fechaCorta(x.fin)}` : ' en adelante'}` },
             { titulo: 'Monto', num: true, valor: (x) => quetzales(x.monto) },
           ]}
           quitarVarias={(l) => q2.pedir('ctl_gastos_fijos', l, `Se quitan ${l.length} gastos fijos. Lo ya registrado en los meses se conserva.`)}

@@ -81,6 +81,15 @@ const guia: GuiaVideo = {
         { t: '«Ver todos» abre «Pagos que recibí» con todo el historial.', en: 'verTodos' },
       ],
     },
+    {
+      t: '4 · Cambiar de negocio en el menú',
+      e0: { etiqueta: 'Menú', titulo: 'Qué negocio trabajar', piezas: [{ k: 'chips', g: 'modos', l: [{ t: 'Dev Studio', on: true, g: 'modoDev' }, { t: 'Canela', g: 'modoCanela' }, { t: 'Salario' }, { t: 'S.A.' }] }] },
+      tomas: [
+        { t: 'Arriba del menú están los cuatro negocios en cuadros; cada uno muestra un dato corto, como clientes y lo que te deben.', en: 'modos', ms: 4200 },
+        { t: 'El negocio elegido se ve con el color principal.', en: 'modoDev' },
+        { t: 'Toca otro cuadro, o muévete con las flechas y Enter, para cambiar el menú a ese negocio.', en: 'modoCanela', clic: true },
+      ],
+    },
   ],
 }
 
