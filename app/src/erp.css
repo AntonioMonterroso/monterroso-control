@@ -225,3 +225,12 @@ a.m-icono-btn { text-decoration: none; }
 }
 :root[data-modo="oscuro"] .c-acceso .logo-completo { box-sizing: border-box; width: min(300px, 88%); padding: 12px 18px; border-radius: var(--radio-md); background: #f7f3ea; box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 6px 18px rgba(0, 0, 0, .28); }
 :root[data-modo="oscuro"] .c-acceso .m-acceso-marca { background: color-mix(in srgb, var(--primary-deeper) 50%, var(--bg)); }
+.c-acceso-logo { display: block; align-self: flex-start; }
+.c-acceso-logo img { display: block; width: 100%; height: auto; }
+.c-acceso .c-acceso-logo { width: min(230px, 72%); margin-bottom: var(--e-1); }
+.c-barra-logo { width: 150px; }
+.c-logo-claro { display: none !important; }
+:root[data-modo="claro"] .c-logo-claro { display: block !important; }
+:root[data-modo="claro"] .c-logo-oscuro { display: none !important; }
+.c-acceso .m-acceso-marca::after { -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat; mask: url("/marca/studio-mascara.svg") center / contain no-repeat; aspect-ratio: 114 / 59; opacity: 0.07; }
+.c-carga-iso { width: 96px; height: auto; }

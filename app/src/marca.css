@@ -386,8 +386,8 @@ textarea.m-entrada { padding: var(--e-3); min-height: 90px; resize: vertical; }
   aspect-ratio: 1797 / 1449;
   background: var(--laton);
   opacity: 0.045;
-  -webkit-mask: url("/marca/logo-am.png") center / contain no-repeat;
-  mask: url("/marca/logo-am.png") center / contain no-repeat;
+  -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat;
+  mask: url("/marca/studio-mascara.svg") center / contain no-repeat;
   pointer-events: none;
   z-index: -1;
 }
@@ -563,8 +563,8 @@ textarea.m-entrada { padding: var(--e-3); min-height: 90px; resize: vertical; }
   display: inline-block;
   aspect-ratio: 1797 / 1449;
   background: var(--logo-color, var(--logo-defecto, var(--primary)));
-  -webkit-mask: url("/marca/logo-am.png") center / contain no-repeat;
-  mask: url("/marca/logo-am.png") center / contain no-repeat;
+  -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat;
+  mask: url("/marca/studio-mascara.svg") center / contain no-repeat;
 }
 .m-app {
   --ancho-lateral: 300px;
@@ -700,8 +700,8 @@ textarea.m-entrada { padding: var(--e-3); min-height: 90px; resize: vertical; }
   transform: translateY(-50%) rotate(-6deg);
   background: var(--marca-color, var(--primary));
   opacity: var(--marca-opacidad, 0.06);
-  -webkit-mask: url("/marca/logo-am.png") center / contain no-repeat;
-  mask: url("/marca/logo-am.png") center / contain no-repeat;
+  -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat;
+  mask: url("/marca/studio-mascara.svg") center / contain no-repeat;
   pointer-events: none;
   z-index: -1;
 }
@@ -755,8 +755,8 @@ textarea.m-entrada { padding: var(--e-3); min-height: 90px; resize: vertical; }
   aspect-ratio: 1797 / 1449;
   background: var(--laton);
   opacity: 0.07;
-  -webkit-mask: url("/marca/logo-am.png") center / contain no-repeat;
-  mask: url("/marca/logo-am.png") center / contain no-repeat;
+  -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat;
+  mask: url("/marca/studio-mascara.svg") center / contain no-repeat;
   z-index: -1;
 }
 .m-acceso-marca .m-logo { width: 150px; --logo-color: var(--laton); }

@@ -27,7 +27,7 @@ import ResumenTienda from './pantallas/tienda/Resumen'
 import PagosTienda from './pantallas/tienda/Pagos'
 
 function Cargando() {
-  return <div className="m-cargando"><span className="c-placa c-placa-carga"><img src="/marca/logo-am.png" alt="" /></span><div className="m-cargando-linea"><span /></div></div>
+  return <div className="m-cargando"><img className="c-carga-iso" src="/marca/studio-isotipo.svg" alt="" /><div className="m-cargando-linea"><span /></div></div>
 }
 
 function Contenido() {
