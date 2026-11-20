@@ -50,7 +50,7 @@
   const COLORES = Object.keys(TEMAS).filter(k => !DE_PAR[k]);
   const nombreBase = k => TEMAS[k].nombre.replace(/\s*·\s*(Claro|Oscuro)$/i, '');
   const CLAVE_GUARDADA = 'monterroso.tema', CLAVE_MODO = 'monterroso.modo';
-  const POR_DEFECTO = 'vino';
+  const POR_DEFECTO = 'azulcielo';
   const leerDe = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const guardarEn = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {  } };
   const rgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };

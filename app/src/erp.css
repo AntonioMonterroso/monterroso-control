@@ -201,17 +201,27 @@ a.m-icono-btn { text-decoration: none; }
 .c-tabla-erp .m-tabla td.m-num { overflow-wrap: normal; }
 
 .erp-error { margin: 0; padding: var(--e-2) var(--e-3); border-radius: var(--radio-sm); background: var(--peligro-fondo); color: var(--peligro); font-size: var(--t-sm); }
-.c-acceso .m-acceso-marca { background: var(--vino-profundo); }
-.c-acceso-sello p { margin: 0; }
-.c-acceso .m-acceso-marca .c-acceso-nombre { font: 600 var(--t-3xl)/1 "Instrument Sans", var(--fuente-texto); letter-spacing: 0.08em; opacity: 1; text-transform: none; margin-bottom: var(--e-2); }
-.c-acceso .m-acceso-marca .c-acceso-linea { opacity: 0.85; letter-spacing: 0.08em; text-transform: none; font-size: var(--t-sm); }
-.c-logo-am { display: block; width: 92px !important; align-self: center; }
-.c-logo-am img { display: block; width: 100%; height: auto; }
-:root[data-modo="oscuro"] .m-acceso-forma .c-logo-am { box-sizing: border-box; width: 112px !important; padding: 10px 14px; border-radius: var(--radio-md); background: #f7f3ea; box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 6px 18px rgba(0, 0, 0, .28); }
+
+.c-acceso .m-acceso-marca { background: color-mix(in srgb, var(--primary-deeper) 78%, var(--bg)); justify-content: flex-end; }
+.c-acceso .m-acceso-marca::after { background: var(--accent); opacity: 0.08; }
+.c-acceso-linea { font-size: var(--t-xs); letter-spacing: 0.16em; text-transform: uppercase; color: color-mix(in srgb, #ffffff 62%, transparent); }
+.c-acceso .m-acceso-forma .m-tarjeta { border-top-color: var(--accent); box-shadow: var(--sombra-3); animation: c-acceso-entra 420ms var(--ease-out) both; }
 .c-acceso .m-tarjeta > .m-btn { width: 100%; }
+.c-acceso .m-btn-primario { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; }
+.c-acceso .m-btn-primario:active:not(:disabled) { transform: scale(0.97); }
+.c-acceso-mayus { font-size: var(--t-xs); color: var(--aviso); }
+.c-acceso-recordar { display: flex; align-items: center; gap: 8px; font-size: var(--t-sm); color: var(--text-muted); cursor: pointer; }
+.c-acceso-recordar input { width: 16px; height: 16px; accent-color: var(--primary); }
+.c-acceso .m-acceso-pie { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.c-girando { animation: c-gira 900ms linear infinite; }
+@keyframes c-gira { to { transform: rotate(360deg); } }
+@keyframes c-acceso-entra { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .c-acceso .m-acceso-forma .m-tarjeta { animation: c-acceso-aparece 200ms var(--ease-out) both; } .c-girando { animation-duration: 2400ms; } }
+@keyframes c-acceso-aparece { from { opacity: 0; } to { opacity: 1; } }
 @media (max-width: 760px) {
-  .c-acceso .m-acceso-marca { min-height: 0; padding: var(--e-6) 16px; gap: var(--e-3); }
-  .c-acceso .m-acceso-marca .c-acceso-nombre { font-size: var(--t-2xl); }
+  .c-acceso .m-acceso-marca { min-height: 120px; padding: var(--e-5) 16px; }
   .c-acceso .m-acceso-forma { padding: var(--e-5) 16px var(--e-8); }
   .c-acceso .m-acceso-forma .m-tarjeta { padding: var(--e-6) var(--e-5); }
 }
+:root[data-modo="oscuro"] .c-acceso .logo-completo { box-sizing: border-box; width: min(300px, 88%); padding: 12px 18px; border-radius: var(--radio-md); background: #f7f3ea; box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 6px 18px rgba(0, 0, 0, .28); }
+:root[data-modo="oscuro"] .c-acceso .m-acceso-marca { background: color-mix(in srgb, var(--primary-deeper) 50%, var(--bg)); }
