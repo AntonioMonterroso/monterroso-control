@@ -44,7 +44,7 @@ export default function Acceso() {
       </div>
       <div className="m-acceso-forma">
         <form className="m-tarjeta c-acceso-tarjeta" onSubmit={enviar} noValidate>
-          <span className="c-acceso-logo"><img className="c-logo-oscuro" src="/marca/studio-oscuro.svg" alt="Studio Monterroso" /><img className="c-logo-claro" src="/marca/studio-claro.svg" alt="" aria-hidden="true" /></span>
+          <span className="c-acceso-logo"><img className="c-logo-oscuro" src="/marca/studio-oscuro.png" alt="Studio Monterroso" /><img className="c-logo-claro" src="/marca/studio-claro.png" alt="" aria-hidden="true" /></span>
           <div><div className="m-etiqueta">Control de negocios</div><h1 className="m-titulo-3">Bienvenido de nuevo</h1></div>
           <div className="m-campo">
             <label htmlFor="aCorreo">Correo</label>

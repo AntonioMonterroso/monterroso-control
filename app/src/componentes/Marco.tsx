@@ -131,7 +131,7 @@ export default function Marco({ children }: { children: ReactNode }) {
     <div className="m-app c-app" data-lateral={compacto || angosta ? 'compacto' : 'normal'} data-menu={abierto ? 'abierto' : 'cerrado'}>
       <header className="c-barra-movil">
         <button type="button" className="m-icono-btn" onClick={() => setAbierto(true)} aria-label="Abrir el menú" title="Abrir el menú"><Menu aria-hidden /></button>
-        <span className="c-acceso-logo c-barra-logo"><img className="c-logo-oscuro" src="/marca/studio-oscuro.svg" alt="Studio Monterroso" /><img className="c-logo-claro" src="/marca/studio-claro.svg" alt="" aria-hidden="true" /></span>
+        <span className="c-acceso-logo c-barra-logo"><img className="c-logo-oscuro" src="/marca/studio-oscuro.png" alt="Studio Monterroso" /><img className="c-logo-claro" src="/marca/studio-claro.png" alt="" aria-hidden="true" /></span>
       </header>
       <div className="c-velo" onClick={() => setAbierto(false)} aria-hidden />
       <nav className="m-lateral" aria-label="Menú principal">

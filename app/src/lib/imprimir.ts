@@ -12,7 +12,7 @@ const ESTILO = `
 body { margin: 0; font: 400 11pt/1.55 "IBM Plex Sans", sans-serif; color: #2a1a1d; background: #fffdf9; }
 .hoja { max-width: 760px; margin: 0 auto; padding: 24px; }
 header { display: flex; align-items: center; gap: 16px; padding-bottom: 14px; border-bottom: 2px solid #7a2e3b; margin-bottom: 20px; }
-.logo { width: 64px; aspect-ratio: 114 / 59; background: #3b82c4; -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat; mask: url("/marca/studio-mascara.svg") center / contain no-repeat; }
+.logo { width: 60px; aspect-ratio: 1797 / 1449; background: #3b82c4; -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat; mask: url("/marca/studio-mascara.svg") center / contain no-repeat; }
 header b { display: block; font: 700 20pt/1 "Cormorant Garamond", serif; letter-spacing: 0.08em; text-transform: uppercase; }
 header small { display: block; font-size: 8pt; letter-spacing: 0.16em; text-transform: uppercase; color: #6b5558; margin-top: 4px; }
 header .dato { margin-left: auto; text-align: right; font-size: 9pt; color: #6b5558; }

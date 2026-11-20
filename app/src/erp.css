@@ -227,10 +227,10 @@ a.m-icono-btn { text-decoration: none; }
 :root[data-modo="oscuro"] .c-acceso .m-acceso-marca { background: color-mix(in srgb, var(--primary-deeper) 50%, var(--bg)); }
 .c-acceso-logo { display: block; align-self: flex-start; }
 .c-acceso-logo img { display: block; width: 100%; height: auto; }
-.c-acceso .c-acceso-logo { width: min(230px, 72%); margin-bottom: var(--e-1); }
-.c-barra-logo { width: 150px; }
+.c-acceso .c-acceso-logo { width: min(260px, 80%); margin-left: -12px; margin-bottom: var(--e-1); }
+.c-barra-logo { width: 140px; margin-left: -6px; }
 .c-logo-claro { display: none !important; }
 :root[data-modo="claro"] .c-logo-claro { display: block !important; }
 :root[data-modo="claro"] .c-logo-oscuro { display: none !important; }
-.c-acceso .m-acceso-marca::after { -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat; mask: url("/marca/studio-mascara.svg") center / contain no-repeat; aspect-ratio: 114 / 59; opacity: 0.07; }
+.c-acceso .m-acceso-marca::after { -webkit-mask: url("/marca/studio-mascara.svg") center / contain no-repeat; mask: url("/marca/studio-mascara.svg") center / contain no-repeat; aspect-ratio: 1797 / 1449; opacity: 0.07; }
 .c-carga-iso { width: 96px; height: auto; }
