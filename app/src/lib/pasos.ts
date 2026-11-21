@@ -24,7 +24,7 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'Toca el basurero «Borrar o archivar» de la fila: si no tiene movimientos se borra, y si tiene trabajos o pagos se archiva; después puedes tocar «Deshacer».' },
       { texto: 'Marca varias casillas y toca «Borrar o archivar las marcadas»; antes te muestra cuáles se borran y cuáles se archivan.' },
       { texto: 'Con clic derecho o dejando presionada una fila tienes «Abrir», «Editar» y «Borrar o archivar»; los archivados se ven en «Archivados» y vuelven con «Reactivar».' },
-      { texto: 'Cada cliente muestra su estado («Al día», «Debe», «Vencido» o «Saldo a favor»); abajo de la lista está el total y lo recurrente al mes y al año. En pantalla angosta usa «Ordenar por» y «Cómoda / Compacta»; al pie de cada tarjeta están WhatsApp, Registrar pago y Estado de cuenta.', ir: '.c-tabla-erp' },
+      { texto: 'Cada cliente muestra su estado («Al día», «Por vencer», «Vencido» o «Saldo a favor»); abajo de la lista está el total y lo recurrente al mes y al año. En pantalla angosta usa «Ordenar por» y «Cómoda / Compacta»; al pie de cada tarjeta están WhatsApp, Registrar pago y Estado de cuenta.', ir: '.c-tabla-erp' },
     ],
   },
   {

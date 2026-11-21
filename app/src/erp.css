@@ -620,3 +620,4 @@ p.c-alerta-txt { font-size: var(--t-sm); margin: 0 0 var(--e-3); }
 @container (max-width: 900px) { .c-tabla-erp.c-tabla-adapta .m-tabla td.c-acciones { width: auto; white-space: normal; } }
 @container (min-width: 901px) and (max-width: 1240px) { .c-tabla-erp.c-tabla-adapta .m-tabla .c-baja { display: none; } }
 .c-total-avance { display: flex; align-items: center; gap: var(--e-2); flex-wrap: wrap; } .c-total-avance .c-barra { flex: 1 1 80px; }
+.m-tabla .m-estado, .c-tabla-erp .m-estado { white-space: nowrap; }

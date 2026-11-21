@@ -10,9 +10,9 @@ import { diasEntre, fechaCorta } from '../lib/fechas'
 interface EstadoCliente { debe: number; vencido: number; meses: number; favor: number }
 
 export function ChipCliente({ e }: { e: EstadoCliente }) {
-  if (e.vencido > 0) return <span className="m-estado error" title={`Tiene ${quetzales(e.vencido)} vencido desde hace ${e.meses} ${e.meses === 1 ? 'mes' : 'meses'}`}>Vencido {quetzales(e.vencido)} · {e.meses} {e.meses === 1 ? 'mes' : 'meses'}</span>
-  if (e.debe > 0) return <span className="m-estado pendiente" title="Tiene cobros por pagar que todavía no vencen">Debe {quetzales(e.debe)}</span>
-  if (e.favor > 0) return <span className="m-estado en-proceso" title="Pagó por adelantado y le queda saldo a favor">Saldo a favor {quetzales(e.favor)}</span>
+  if (e.vencido > 0) return <span className="m-estado error" title={`Tiene ${quetzales(e.vencido)} vencido desde hace ${e.meses} ${e.meses === 1 ? 'mes' : 'meses'}`}>Vencido · {e.meses} {e.meses === 1 ? 'mes' : 'meses'}</span>
+  if (e.debe > 0) return <span className="m-estado pendiente" title={`Debe ${quetzales(e.debe)} que todavía no vence`}>Por vencer</span>
+  if (e.favor > 0) return <span className="m-estado en-proceso" title={`Pagó por adelantado: le quedan ${quetzales(e.favor)} a favor`}>Saldo a favor</span>
   return <span className="m-estado aprobado" title="No debe nada">Al día</span>
 }
 
