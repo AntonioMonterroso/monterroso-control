@@ -274,3 +274,4 @@ input.m-entrada[type="date"], input.m-entrada[type="month"] { min-height: 40px; 
 }
 @media (max-width: 860px) { .c-app .m-lateral { background: var(--card); backdrop-filter: none; } }
 .c-modos .c-modo-dato > span { display: block; }
+@media (max-width: 860px) { .c-velo { background: rgba(2, 6, 23, 0.62); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); } }
