@@ -67,7 +67,7 @@ export default function PagosRecibidos({ negocioClave }: { negocioClave?: 'canel
       <div className="c-cabeza">
         <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Dinero'}</span><h1 className="erp-titulo">Pagos que recibí</h1><Pasos /><p className="c-subtitulo">Todo el dinero que entró, el más nuevo arriba: de quién, por qué, cómo te pagaron y dónde cayó.</p></div>
         <div className="c-cabeza-acciones">
-          <BotonesSalidaPagos entradas={lista} nombre={`pagos-recibidos-${d0.slice(0, 7)}`} />
+          <BotonesSalidaPagos entradas={lista} nombre={`pagos-recibidos-${d0.slice(0, 7)}`} porMes={vista === 'mes'} />
           {!negocioClave && <MenuMas items={[{ texto: 'Registrar anticipo', titulo: 'Registra un pago adelantado que queda como saldo a favor del cliente', hacer: () => setAnticipo(true) }]} />}
           {negocioClave !== 'canela' && negocioClave !== 'salario' && <RegistrarPago />}
         </div>

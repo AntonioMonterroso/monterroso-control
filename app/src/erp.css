@@ -586,7 +586,7 @@ p.c-alerta-txt { font-size: var(--t-sm); margin: 0 0 var(--e-3); }
 @media (hover: hover) and (pointer: fine) { .c-tabla-erp .m-tabla tbody td.c-acciones .c-acc { opacity: .72; transition: opacity var(--dur-boton) var(--ease-out); } .c-tabla-erp .m-tabla tbody tr:hover td.c-acciones .c-acc, .c-tabla-erp .m-tabla tbody td.c-acciones .c-acc:focus-within { opacity: 1; } }
 .c-tabla-erp .m-tabla td.m-num, .c-tabla-erp .m-tabla th.m-num { width: 1%; white-space: nowrap; }
 .c-tabla-erp .m-tabla td[data-campo="WhatsApp"], .c-tabla-erp .m-tabla td[data-campo="NIT"], .c-tabla-erp .m-tabla td[data-campo="Fecha"], .c-tabla-erp .m-tabla td[data-campo="Vence"], .c-tabla-erp .m-tabla td[data-campo="Último pago"], .c-tabla-erp .m-tabla td[data-campo="Estado"] { width: 1%; white-space: nowrap; }
-.c-tabla-erp .m-tabla td.c-principal { width: auto; min-width: 220px; }
+.c-tabla-erp .m-tabla td.c-principal { width: auto; min-width: 180px; }
 .c-tabla-erp .m-tabla td.c-celda-vacia > * { display: none; }
 .c-tabla-erp .m-tabla td.c-celda-vacia::after { content: '—'; color: color-mix(in srgb, var(--text-muted) 60%, transparent); }
 .m-tabla-titulo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e-2) var(--e-3); }
@@ -621,3 +621,6 @@ p.c-alerta-txt { font-size: var(--t-sm); margin: 0 0 var(--e-3); }
 @container (min-width: 901px) and (max-width: 1240px) { .c-tabla-erp.c-tabla-adapta .m-tabla .c-baja { display: none; } }
 .c-total-avance { display: flex; align-items: center; gap: var(--e-2); flex-wrap: wrap; } .c-total-avance .c-barra { flex: 1 1 80px; }
 .m-tabla .m-estado, .c-tabla-erp .m-estado { white-space: nowrap; }
+.c-tabla-salida { display: inline-flex; gap: var(--e-2); flex-wrap: wrap; }
+.c-grupos-salida { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--e-2); margin-bottom: var(--e-2); }
+@container (min-width: 901px) { .c-tabla-erp.c-tabla-adapta .m-tabla td .m-estado { display: inline-block; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; } }

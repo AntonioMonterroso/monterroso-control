@@ -12,6 +12,7 @@ import { posiblesRepetidos, type EntradaDinero } from '../../lib/entradas'
 import { fechaCorta, nombreMes, partes } from '../../lib/fechas'
 import { esc as escHtml, imprimir } from '../../lib/imprimir'
 import { useModelo } from '../../lib/modelo'
+import { exportCSV, exportHtml, type TablaExportable } from '../../lib/exportarTabla'
 import { grupoDestino, nombreDestino, nombreForma } from '../../lib/pagosDestino'
 import { useSA } from '../../lib/saModelo'
 import { enCuentaPersonalSA } from '../../lib/traslados'
@@ -76,7 +77,7 @@ export default function TablaEntradas({ entradas, titulo, conCliente = true, agr
     { titulo: 'Fecha', valor: (e) => fechaCorta(e.fecha), orden: (e) => e.fecha },
     { titulo: 'Cliente', principal: true, oculto: !conCliente, valor: (e) => <>{e.tipo === 'tienda' ? 'Hogar Canela' : e.pago?.cobro_clave.startsWith('s:') ? 'Mi salario' : e.cliente_id ? <Link to={`/clientes/${encodeURIComponent(e.cliente_id)}`} className="c-enlace" onClick={(x) => x.stopPropagation()}>{n.cliente(e.cliente_id)}</Link> : <span className="m-vacia">—</span>}{e.proyecto_id && <small>{n.proyecto(e.proyecto_id)}</small>}</>, orden: (e) => n.cliente(e.cliente_id).toLowerCase() },
     { titulo: 'Concepto', principal: !conCliente, valor: (e) => <>{e.concepto}{e.tipo === 'anticipo' && <span className="m-estado en-proceso">Anticipo</span>}{repetidos.has(e.id) && <button type="button" className="m-estado error c-chip-boton" onClick={(x) => { x.stopPropagation(); setDetalle(e) }} title="Hay otro pago igual (mismo proyecto, monto y fecha, o la misma inscripción); ábrelo para revisar">¿Repetido?</button>}{e.pago?.origen === 'world' && e.pago.nota && <small>«{e.pago.nota}»</small>}<small className="c-origen">{origenDe(e)}</small>{(e.referencia || e.recibo || (!conCliente && e.proyecto_id)) && <small>{[!conCliente && e.proyecto_id ? n.proyecto(e.proyecto_id) : '', e.referencia ? `Ref. ${e.referencia}` : '', e.recibo ? `Recibo ${String(e.recibo).padStart(5, '0')}` : ''].filter(Boolean).join(' · ')}</small>}</> },
-    { titulo: 'Forma', valor: (e) => (e.forma ? nombreForma(e.forma) : <button type="button" className="m-estado pendiente c-chip-boton" onClick={(x) => { x.stopPropagation(); editar(e) }} title="Abre el pago para decir cómo te pagaron">Falta la forma</button>) },
+    { titulo: 'Forma', baja: true, valor: (e) => (e.forma ? nombreForma(e.forma) : <button type="button" className="m-estado pendiente c-chip-boton" onClick={(x) => { x.stopPropagation(); editar(e) }} title="Abre el pago para decir cómo te pagaron">Falta la forma</button>) },
     { titulo: 'Dónde cayó', valor: (e) => (e.forma === 'anticipo' ? <span className="m-vacia">Del saldo a favor</span> : <>{e.destino ? n.destino(e.destino) : <button type="button" className="m-estado pendiente c-chip-boton" onClick={(x) => { x.stopPropagation(); editar(e) }} title="Abre el pago para decir en qué cuenta cayó el dinero">Falta decir dónde cayó</button>}{enCuentaPersonalSA({ ...e, texto: e.concepto }, ids, inicio) && !m.traslados.some((t) => t.pagos.includes(e.id)) && <small className="c-alerta-txt">Pendiente de pasar a la S.A.</small>}</>), orden: (e) => grupoDestino(e.destino) },
     { titulo: 'Monto', etiqueta: 'Pagó', destacado: true, num: true, valor: (e) => quetzales(e.monto), orden: (e) => e.monto },
   ]
@@ -85,6 +86,7 @@ export default function TablaEntradas({ entradas, titulo, conCliente = true, agr
   const editar = (e: EntradaDinero) => (e.pago ? setEditarPago(e.pago) : e.anticipo ? setEditarAnticipo(e) : setEditarTienda(e))
   const tabla = (l: EntradaDinero[], tit?: string, nota?: string) => (
     <Tabla
+      exportar={false}
       titulo={tit}
       nota={nota}
       filas={l}
@@ -138,15 +140,16 @@ export default function TablaEntradas({ entradas, titulo, conCliente = true, agr
   )
 }
 
-export function BotonesSalidaPagos({ entradas, nombre }: { entradas: EntradaDinero[]; nombre: string }) {
+export function BotonesSalidaPagos({ entradas, nombre, porMes = false }: { entradas: EntradaDinero[]; nombre: string; porMes?: boolean }) {
   const n = useNombres()
-  const filas = entradas.map((e) => [e.fecha, n.cliente(e.cliente_id) || (e.tipo === 'tienda' ? 'Hogar Canela' : ''), n.proyecto(e.proyecto_id), e.concepto, nombreForma(e.forma), e.forma === 'anticipo' ? 'Del saldo a favor' : n.destino(e.destino), e.referencia ?? '', e.recibo ? String(e.recibo).padStart(5, '0') : '', e.monto.toFixed(2)])
-  const total = entradas.reduce((t, e) => t + Math.round(e.monto * 100), 0) / 100
+  const fila = (e: EntradaDinero) => [fechaCorta(e.fecha), n.cliente(e.cliente_id) || (e.tipo === 'tienda' ? 'Hogar Canela' : ''), n.proyecto(e.proyecto_id), e.concepto, nombreForma(e.forma), e.forma === 'anticipo' ? 'Del saldo a favor' : n.destino(e.destino), e.referencia ?? '', e.recibo ? String(e.recibo).padStart(5, '0') : '', quetzales(e.monto)]
+  const meses = [...entradas.reduce((g, e) => g.set(e.fecha.slice(0, 7), [...(g.get(e.fecha.slice(0, 7)) ?? []), e]), new Map<string, EntradaDinero[]>()).entries()]
+  const datos = (): TablaExportable => ({ titulo: 'Pagos que recibí', cab: ['Fecha', 'Cliente', 'Proyecto', 'Concepto', 'Forma de pago', 'Dónde cayó', 'Referencia', 'Recibo', 'Monto'], secciones: porMes && meses.length > 1 ? meses.map(([mes, l]) => { const [a, mm] = partes(`${mes}-01`); return { titulo: nombreMes(a, mm), filas: l.map(fila) } }) : [{ filas: entradas.map(fila) }] })
   const excel = async () => {
     const { aCSV, descargar } = await import('../../lib/csv')
-    descargar(`${nombre}.csv`, aCSV([['Fecha', 'Cliente', 'Proyecto', 'Concepto', 'Forma de pago', 'Dónde cayó', 'Referencia', 'Recibo', 'Monto'], ...filas, ['', '', '', '', '', '', '', 'Total', total.toFixed(2)]]))
+    descargar(`${nombre}.csv`, aCSV(exportCSV(datos())))
   }
-  const pdf = () => imprimir('Pagos que recibí', `<h1>Pagos que recibí</h1><p class="sub">${escHtml(nombre)} · ${entradas.length} pagos</p><table><thead><tr><th>Fecha</th><th>Cliente</th><th>Concepto</th><th>Forma</th><th>Dónde cayó</th><th class="n">Monto</th></tr></thead><tbody>${filas.map((f) => `<tr><td>${escHtml(fechaCorta(f[0]))}</td><td>${escHtml(f[1])}</td><td>${escHtml(f[3])}</td><td>${escHtml(f[4])}</td><td>${escHtml(f[5])}</td><td class="n">${escHtml(quetzales(Number(f[8])))}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="5">Total</td><td class="n">${escHtml(quetzales(total))}</td></tr></tfoot></table>`)
+  const pdf = () => imprimir('Pagos que recibí', exportHtml(datos(), `${nombre} · ${entradas.length} pagos`))
   return (
     <>
       <button type="button" className="m-btn m-btn-salida" disabled={!entradas.length} onClick={() => void excel()} title={entradas.length ? 'Baja a Descargas el historial filtrado para abrirlo en Excel' : 'Apagado: no hay pagos con estos filtros'}><FileDown size={16} aria-hidden /> Excel</button>

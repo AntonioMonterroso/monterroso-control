@@ -126,7 +126,7 @@ export default function BancosSA() {
               columnas={[
                 { titulo: 'Fecha', valor: (x) => fechaCorta(x.fecha), orden: (x) => x.fecha },
                 { titulo: 'Descripción', principal: true, valor: (x) => <>{x.descripcion}{x.referencia && <small>Ref. {x.referencia}</small>}</> },
-                { titulo: 'Origen', valor: (x) => { const [t, k] = ORIGENES[x.origen] ?? [x.origen, 'bloqueado']; return <span className={`m-estado ${k}`}>{t}</span> }, orden: (x) => x.origen },
+                { titulo: 'Origen', baja: true, valor: (x) => { const [t, k] = ORIGENES[x.origen] ?? [x.origen, 'bloqueado']; return <span className={`m-estado ${k}`}>{t}</span> }, orden: (x) => x.origen },
                 { titulo: 'Entra', num: true, valor: (x) => (x.tipo === 'ingreso' ? quetzales(x.monto) : ''), orden: (x) => (x.tipo === 'ingreso' ? x.monto : 0) },
                 { titulo: 'Sale', num: true, valor: (x) => (x.tipo === 'egreso' ? quetzales(x.monto) : ''), orden: (x) => (x.tipo === 'egreso' ? x.monto : 0) },
                 { titulo: 'Saldo', num: true, valor: (x) => quetzales(corrido.get(x.id) ?? 0), sinOrden: true },

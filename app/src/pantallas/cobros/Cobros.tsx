@@ -1,13 +1,15 @@
 import { porcentaje } from '../../lib/totales'
 import Pasos from '../../componentes/Pasos'
 import SelectBuscable from '../../componentes/SelectBuscable'
-import { CheckCheck, ChevronDown, FolderKanban, HandCoins, MessageCircle, User, X } from 'lucide-react'
+import { CheckCheck, ChevronDown, FileDown, FolderKanban, HandCoins, MessageCircle, Printer, User, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAvisar } from '../../componentes/Avisos'
 import Buscador, { coincide } from '../../componentes/Buscador'
 import SelectorMes from '../../componentes/SelectorMes'
-import Tabla, { type Columna } from '../../componentes/Tabla'
+import Tabla, { textoDe, type Columna } from '../../componentes/Tabla'
+import { exportCSV, exportHtml, type TablaExportable } from '../../lib/exportarTabla'
+import { imprimir } from '../../lib/imprimir'
 import { numeroWhatsApp, pendientes, totalSaldo, type Cobro } from '../../lib/cobros'
 import { useDatos } from '../../lib/datos'
 import { aCentavos, deCentavos, quetzales } from '../../lib/dinero'
@@ -117,6 +119,8 @@ export default function Cobros() {
     return [...g.entries()].sort((a, b) => a[1].nombre.localeCompare(b[1].nombre, 'es'))
   }, [lista, verPor])
 
+  const datosGrupos = (): TablaExportable => { const cs = columnas.filter((c) => !c.oculto); return { titulo: 'Lo que me deben', cab: cs.map((c) => c.titulo), secciones: grupos.map(([, g]) => ({ titulo: g.nombre, filas: g.filas.map((f) => cs.map((c) => (c.texto ? c.texto(f) : textoDe(c.valor(f))).replace(/\s+/g, ' ').trim())) })) } }
+  const bajarGrupos = async () => { const { aCSV, descargar } = await import('../../lib/csv'); descargar(`lo-que-me-deben-${periodo}.csv`, aCSV(exportCSV(datosGrupos()))) }
   const quitarSaldado = async (c: Cobro) => {
     if (!c.guardado) return
     await guardar('ctl_cobros', c.guardado.id, { saldado: false })
@@ -134,7 +138,7 @@ export default function Cobros() {
     { titulo: 'Cliente', principal: true, oculto: verPor === 'cliente', valor: (c) => (c.tipo === 'salario' ? <Link to="/salario" className="c-enlace" onClick={(e) => e.stopPropagation()}>Mi salario</Link> : <Link to={`/clientes/${encodeURIComponent(c.cliente_id ?? "")}`} className="c-enlace" onClick={(e) => e.stopPropagation()}>{cliente(c.cliente_id)?.nombre}</Link>), orden: (c) => (c.tipo === 'salario' ? 'mi salario' : (cliente(c.cliente_id)?.nombre ?? '').toLowerCase()) },
     { titulo: 'Proyecto', baja: true, oculto: verPor === 'proyecto', valor: (c) => (c.proyecto_id ? <Link to={`/proyectos/${c.proyecto_id}`} className="c-enlace-suave" onClick={(e) => e.stopPropagation()}>{proyecto(c.proyecto_id)}</Link> : <span className="m-vacia">{c.tipo === 'salario' ? 'Salario' : '—'}</span>), orden: (c) => proyecto(c.proyecto_id).toLowerCase() },
     { titulo: 'Concepto', baja: true, principal: verPor === 'cliente', valor: (c) => <>{c.concepto}{c.guardado?.saldado && c.guardado.nota && <small>{c.guardado.nota}</small>}</> },
-    { titulo: 'Estado', cabecera: true, valor: (c) => <EstadoCobro c={c} />, orden: (c) => ORDEN_ESTADO[c.estado] },
+    { titulo: 'Estado', cabecera: true, valor: (c) => <EstadoCobro c={c} />, texto: (c) => NOMBRE_ESTADO[c.estado][0], orden: (c) => ORDEN_ESTADO[c.estado] },
     { titulo: 'Monto', baja: true, num: true, valor: (c) => quetzales(c.monto), orden: (c) => c.monto },
     { titulo: 'Falta', etiqueta: 'Debe', destacado: true, num: true, valor: (c) => quetzales(c.saldo), orden: (c) => c.saldo },
   ]
@@ -261,6 +265,10 @@ export default function Cobros() {
             <div className="m-vacio c-vacio-chico"><b>Sin cobros con estos filtros</b></div>
           ) : (
             <div className="c-grupos">
+              <div className="c-grupos-salida">
+                <button type="button" className="m-btn m-btn-salida m-btn-sm" onClick={() => void bajarGrupos()} title="Baja a Descargas los cobros por grupo, con subtotal de cada grupo y total, para abrirlos en Excel"><FileDown size={16} aria-hidden /> Excel</button>
+                <button type="button" className="m-btn m-btn-salida m-btn-sm" onClick={() => imprimir('Lo que me deben', exportHtml(datosGrupos(), `${lista.length} cobros por grupo`))} title="Abre los cobros por grupo, con subtotal de cada grupo y total, listos para guardar en PDF o imprimir"><Printer size={16} aria-hidden /> PDF</button>
+              </div>
               {grupos.map(([k, g]) => {
                 const abierto = !cerrados.includes(k)
                 const link = verPor === 'cliente' && k !== 'salario' ? `/clientes/${encodeURIComponent(k ?? "")}` : verPor === 'proyecto' && k !== 'sin' && k !== 'salario' ? `/proyectos/${k}` : null
@@ -275,7 +283,7 @@ export default function Cobros() {
                       <Sub s={subtotales(g.filas)} />
                       {link && <Link to={link} className="m-icono-btn c-salida" aria-label={`Abrir ${g.nombre}`} title={`Abrir ${g.nombre}`}>{verPor === 'cliente' ? <User aria-hidden /> : <FolderKanban aria-hidden />}</Link>}
                     </div>
-                    {abierto && <Tabla buscador={false} filas={g.filas} clave={(c) => c.clave} vacio="" onFila={abrirFila} columnas={columnas} acciones={acciones} marcar={marcar} />}
+                    {abierto && <Tabla exportar={false} buscador={false} filas={g.filas} clave={(c) => c.clave} vacio="" onFila={abrirFila} columnas={columnas} acciones={acciones} marcar={marcar} />}
                   </section>
                 )
               })}

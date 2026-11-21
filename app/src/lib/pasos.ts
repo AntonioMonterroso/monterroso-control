@@ -25,6 +25,7 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'Marca varias casillas y toca «Borrar o archivar las marcadas»; antes te muestra cuáles se borran y cuáles se archivan.' },
       { texto: 'Con clic derecho o dejando presionada una fila tienes «Abrir», «Editar» y «Borrar o archivar»; los archivados se ven en «Archivados» y vuelven con «Reactivar».' },
       { texto: 'Cada cliente muestra su estado («Al día», «Por vencer», «Vencido» o «Saldo a favor»); abajo de la lista está el total y lo recurrente al mes y al año. En pantalla angosta usa «Ordenar por» y «Cómoda / Compacta»; al pie de cada tarjeta están WhatsApp, Registrar pago y Estado de cuenta.', ir: '.c-tabla-erp' },
+      { texto: 'Usa «Excel» o «PDF» arriba de la tabla para bajar lo que se ve, con su fila Total.', ir: '.c-tabla-salida' },
     ],
   },
   {
@@ -186,6 +187,7 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'En cada fila toca «Pago» para registrar lo que pagó, o «Saldar» para dejar de cobrarlo a propósito; marca varias y toca «Marcar como pagados».' },
       { texto: 'En «Más» tienes «Agregar cobro», «Registrar anticipo» y «Recordatorios por WhatsApp».', ir: 'button[aria-haspopup="menu"]' },
       { texto: 'La fila «Total» suma lo que se ve; al marcar varios, la barra de abajo dice cuántos y cuánto suman. En tarjetas, al pie están «Registrar pago» y «Recordar por WhatsApp».', ir: '.c-tabla-erp' },
+      { texto: 'Con «Ver por» elegido, «Excel» y «PDF» bajan los cobros por grupo con el subtotal de cada grupo y el total.', ir: '.c-dim-ver' },
     ],
   },
   {
@@ -353,6 +355,7 @@ export const PASOS: GuiaPasos[] = [
       { texto: 'Escribe en el buscador o toca «Todos» o un negocio para filtrar.', ir: '.c-herramientas' },
       { texto: 'Si aparece «Gastos fijos por registrar este mes», toca «Registrar» en cada uno.' },
       { texto: 'Cada gasto se edita con su lápiz; marca varios y toca «Quitar las marcadas» para quitarlos juntos.' },
+      { texto: 'Usa «Excel» o «PDF» arriba de la tabla para bajar los gastos que se ven, con su fila Total.', ir: '.c-tabla-salida' },
     ],
   },
   {

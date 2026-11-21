@@ -9,6 +9,13 @@ import { diasEntre, fechaCorta } from '../lib/fechas'
 
 interface EstadoCliente { debe: number; vencido: number; meses: number; favor: number }
 
+export function textoEstado(e: EstadoCliente): string {
+  if (e.vencido > 0) return `Vencido · ${e.meses} ${e.meses === 1 ? 'mes' : 'meses'}`
+  if (e.debe > 0) return 'Por vencer'
+  if (e.favor > 0) return 'Saldo a favor'
+  return 'Al día'
+}
+
 export function ChipCliente({ e }: { e: EstadoCliente }) {
   if (e.vencido > 0) return <span className="m-estado error" title={`Tiene ${quetzales(e.vencido)} vencido desde hace ${e.meses} ${e.meses === 1 ? 'mes' : 'meses'}`}>Vencido · {e.meses} {e.meses === 1 ? 'mes' : 'meses'}</span>
   if (e.debe > 0) return <span className="m-estado pendiente" title={`Debe ${quetzales(e.debe)} que todavía no vence`}>Por vencer</span>
@@ -110,7 +117,7 @@ export default function Clientes() {
           totalMarcadas={(l) => `debe ${quetzales(l.reduce((t, c) => t + Math.round(estadoDe(c.id).debe * 100), 0) / 100)}`}
           columnas={[
             { titulo: 'Cliente', principal: true, valor: (c) => <span className="c-con-avatar"><Avatar nombre={c.nombre} /><span><Link to={`/clientes/${encodeURIComponent(c.id ?? "")}`} className="c-enlace c-nombre-2" title={c.nombre} onClick={(e) => e.stopPropagation()}>{c.nombre}</Link>{c.rubro && <small>{c.rubro}</small>}{!c.activo && <span className="m-estado bloqueado">Inactivo</span>}</span></span>, orden: (c) => c.nombre.toLowerCase() },
-            { titulo: 'Estado', cabecera: true, valor: (c) => <ChipCliente e={estadoDe(c.id)} />, orden: (c) => -estadoDe(c.id).vencido * 1e6 - estadoDe(c.id).debe },
+            { titulo: 'Estado', cabecera: true, valor: (c) => <ChipCliente e={estadoDe(c.id)} />, texto: (c) => textoEstado(estadoDe(c.id)), orden: (c) => -estadoDe(c.id).vencido * 1e6 - estadoDe(c.id).debe },
             { titulo: 'Negocio', valor: (c) => negocio(c.negocio_id) },
             { titulo: 'WhatsApp', valor: (c) => c.whatsapp ?? <span className="m-vacia">Sin anotar</span> },
             { titulo: 'NIT', baja: true, valor: (c) => c.nit ?? <span className="m-vacia">Sin anotar</span> },

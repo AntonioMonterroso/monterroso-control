@@ -1,4 +1,6 @@
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, FileDown, Printer } from 'lucide-react'
+import { exportCSV, exportHtml, type TablaExportable } from '../lib/exportarTabla'
+import { imprimir } from '../lib/imprimir'
 import { Children, cloneElement, Fragment, isValidElement, useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import Buscador, { coincide } from './Buscador'
 import MenuFila, { type ItemMenu } from './MenuFila'
@@ -19,6 +21,7 @@ export interface Columna<T> {
   etiqueta?: string
   cabecera?: boolean
   baja?: boolean
+  texto?: (f: T) => string
 }
 
 export function textoDe(n: ReactNode): string {
@@ -30,7 +33,7 @@ export function textoDe(n: ReactNode): string {
     if (p.children != null) return textoDe(p.children)
     if (typeof p.nombre === 'string') return p.nombre
     if (typeof p.valor === 'string') return p.valor
-    if (p.c?.estado) return p.c.estado
+    if (p.c?.estado) return ({ pagado: 'Pagado', por_cobrar: 'Por cobrar', vencido: 'Vencido', saldado: 'Saldado' } as Record<string, string>)[p.c.estado] ?? p.c.estado
   }
   return ''
 }
@@ -59,7 +62,7 @@ export interface Marcar<T> { puede: (f: T) => boolean; marcadas: Set<string>; ca
 
 export interface AccionMasa<T> { texto: string; titulo: (n: number) => string; hacer: (filas: T[]) => void; peligro?: boolean }
 
-export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, onFila, acciones, pie, buscador = true, marcar: marcarExterno, quitarVarias, masa, menu, marcable, claseFila, llave, totalMarcadas, resumen, sinTotal }: {
+export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, onFila, acciones, pie, buscador = true, marcar: marcarExterno, quitarVarias, masa, menu, marcable, claseFila, llave, totalMarcadas, resumen, sinTotal, exportar }: {
   titulo?: ReactNode
   nota?: ReactNode
   columnas: Columna<T>[]
@@ -80,6 +83,7 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
   totalMarcadas?: (filas: T[]) => string
   resumen?: (vistas: T[]) => ReactNode
   sinTotal?: boolean
+  exportar?: string | false
 }) {
   const acciones_masa: AccionMasa<T>[] = [...(masa ?? []), ...(quitarVarias ? [{ texto: 'Quitar las marcadas', titulo: (n: number) => `Quita las ${n} filas marcadas; pregunta antes y se puede deshacer`, hacer: quitarVarias, peligro: true }] : [])]
   const [propias, setPropias] = useState<Set<string>>(new Set())
@@ -128,6 +132,17 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
   const conTotal = !pie && !sinTotal && filas.length > 1 && sumas.some((x) => x != null)
   const iPrincipalMonto = visibles.findIndex((c) => c.destacado) >= 0 && sumas[visibles.findIndex((c) => c.destacado)] != null ? visibles.findIndex((c) => c.destacado) : sumas.findIndex((x) => x != null)
   const totalMarcado = (l: T[]) => { if (totalMarcadas) return totalMarcadas(l); if (iPrincipalMonto < 0) return ''; const v = sumasPorColumna(textos(l))[iPrincipalMonto]; return v == null ? '' : quetzales(v) }
+  const pieTextos = (): string[] | undefined => {
+    if (!isValidElement(pie) || pie.type !== 'tr') return undefined
+    const r: string[] = []
+    Children.toArray((pie.props as { children?: ReactNode }).children).forEach((c) => { if (!isValidElement(c)) return; const pr = c.props as { colSpan?: number; children?: ReactNode }; r.push(textoDe(pr.children).replace(/\s+/g, " ").trim()); for (let k = 1; k < (pr.colSpan ?? 1); k++) r.push('') })
+    return r.slice(0, cols.length)
+  }
+  const puedeExportar = exportar !== false && filas.length > 0 && (conTotal || !!pie)
+  const nombreExport = () => (typeof exportar === 'string' ? exportar : typeof titulo === 'string' ? titulo : (document.querySelector('.m-contenido h1')?.textContent ?? 'Tabla').trim())
+  const datosExport = (): TablaExportable => ({ titulo: nombreExport(), cab: cols.map((c) => c.titulo), secciones: [{ filas: vistas.map((f) => cols.map((c) => (c.texto ? c.texto(f) : textoDe(c.valor(f))).replace(/\s+/g, ' ').trim())), pie: pieTextos() }] })
+  const bajarExcel = async () => { const { aCSV, descargar } = await import('../lib/csv'); const d = datosExport(); descargar(`${d.titulo} ${new Date().toISOString().slice(0, 10)}.csv`, aCSV(exportCSV(d))) }
+  const bajarPdf = () => { const d = datosExport(); imprimir(d.titulo, exportHtml(d, `${vistas.length} de ${filas.length}${q.trim() ? ` · búsqueda «${q.trim()}»` : ''}`)) }
   const marcables = marcar ? vistas.filter(marcar.puede).map(clave) : []
   const todasMarcadas = marcables.length > 0 && marcables.every((k) => marcar!.marcadas.has(k))
   const filtrando = conBuscador && q.trim() !== ''
@@ -135,7 +150,7 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
 
   return (
     <div className="m-tabla-envoltura c-tabla-adapta c-tabla-erp" data-densidad={densidad}>
-      {(titulo || nota || conBuscador || (marcar && !marcarExterno)) && (
+      {(titulo || nota || conBuscador || (marcar && !marcarExterno) || puedeExportar) && (
         <div className="m-tabla-titulo">
           {titulo && <b>{titulo}</b>}
           {nota && <span className="c-tabla-nota">{nota}</span>}
@@ -145,6 +160,12 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
               <button type="button" className="m-btn m-btn-secundario m-btn-sm" onClick={() => marcar.cambiar(marcables, !todasMarcadas)} title={todasMarcadas ? 'Quita la marca de todas las filas que se ven' : filtrando ? 'Marca solo las filas que quedan con la búsqueda' : 'Marca todas las filas de la tabla'}>
                 {todasMarcadas ? 'Desmarcar todas' : filtrando ? `Marcar todas las que se ven · ${marcables.length}` : `Marcar todas · ${marcables.length}`}
               </button>
+            </span>
+          )}
+          {puedeExportar && (
+            <span className="c-tabla-salida">
+              <button type="button" className="m-btn m-btn-salida m-btn-sm" onClick={() => void bajarExcel()} title="Baja a Descargas lo que se ve en esta tabla, con su fila Total, para abrirlo en Excel"><FileDown size={16} aria-hidden /> Excel</button>
+              <button type="button" className="m-btn m-btn-salida m-btn-sm" onClick={bajarPdf} title="Abre lo que se ve en esta tabla, con su fila Total, listo para guardar en PDF o imprimir"><Printer size={16} aria-hidden /> PDF</button>
             </span>
           )}
           {vistas.length > 1 && (
@@ -201,7 +222,7 @@ export default function Tabla<T>({ titulo, nota, columnas, filas, clave, vacio, 
               onTouchMove={menu ? () => window.clearTimeout(presion.current.t) : undefined}
               onTouchEnd={menu ? () => window.clearTimeout(presion.current.t) : undefined} tabIndex={onFila ? 0 : undefined} onKeyDown={onFila ? (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onFila(f) } : undefined}>
               {marcar && <td className="c-marca" data-campo="Marcar" onClick={(e) => e.stopPropagation()}>{marcar.puede(f) && <input type="checkbox" aria-label="Marcar" title="Marcar para hacerlo junto con otros" checked={marcar.marcadas.has(clave(f))} onChange={(e) => marcar.cambiar([clave(f)], e.target.checked)} />}</td>}
-              {cols.map((c, i) => { if (constantes.has(c.titulo)) return null; const v = c.valor(f); return <td key={c.titulo} data-campo={c.etiqueta ?? c.titulo} title={c.principal ? textoDe(v) : undefined} className={[c.num ? 'm-num' : '', c.principal ? 'c-principal' : c.cabecera ? 'c-cabecera' : i === iDestacado ? 'c-destacado' : 'c-campo', vacio_(v) ? 'c-celda-vacia' : '', c.baja ? 'c-baja' : ''].join(' ').trim()}>{v}</td> })}
+              {cols.map((c, i) => { if (constantes.has(c.titulo)) return null; const v = c.valor(f); return <td key={c.titulo} data-campo={c.etiqueta ?? c.titulo} title={(() => { const t = textoDe(v).trim(); return c.principal || t.length > 26 ? t : undefined })()} className={[c.num ? 'm-num' : '', c.principal ? 'c-principal' : c.cabecera ? 'c-cabecera' : i === iDestacado ? 'c-destacado' : 'c-campo', vacio_(v) ? 'c-celda-vacia' : '', c.baja ? 'c-baja' : ''].join(' ').trim()}>{v}</td> })}
               {acciones && <td className="c-acciones" onClick={(e) => e.stopPropagation()}><div className="c-acc">{acciones(f)}</div></td>}
             </tr>
           ))}

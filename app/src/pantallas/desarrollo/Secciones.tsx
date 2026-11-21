@@ -33,7 +33,8 @@ function useComun(f: Filtro) {
 
 export function EstadoAviso({ a }: { a?: AvisoDev }) {
   if (!a) return <span className="m-estado aprobado">Al día</span>
-  return <span className={`m-estado ${a.nivel === 'peligro' ? 'error' : 'pendiente'}`}>{a.detalle.replace(/\.$/, '')}</span>
+  const corto = a.detalle.split(/[:.;,]/)[0].trim()
+  return <span className={`m-estado ${a.nivel === 'peligro' ? 'error' : 'pendiente'}`} title={a.detalle}>{corto}</span>
 }
 
 function ProyectoCol({ id, nombre }: { id: string | null; nombre: string }) {
@@ -188,7 +189,7 @@ export function SeccionTokens({ f }: { f: Filtro }) {
           { titulo: 'Proyecto', valor: (x) => <ProyectoCol id={x.proyecto_id} nombre={nombreProyecto(x.proyecto_id)} /> },
           { titulo: 'Dónde', baja: true, valor: (x) => x.donde ?? <span className="m-vacia">Sin anotar</span> },
           { titulo: 'Vence / revocar', valor: (x) => [x.vence && `Vence ${fechaCorta(x.vence)}`, x.revocar_el && `Revocar ${fechaCorta(x.revocar_el)}`].filter(Boolean).join(' · ') || <span className="m-vacia">Sin fecha</span> },
-          { titulo: 'Estado', valor: (x) => (x.revocado ? <span className="m-estado bloqueado">Revocado{x.revocado_el ? ` ${fechaCorta(x.revocado_el)}` : ''}</span> : <EstadoAviso a={conAviso(x.id)} />) },
+          { titulo: 'Estado', valor: (x) => (x.revocado ? <span className="m-estado bloqueado" title={x.revocado_el ? `Revocado el ${fechaCorta(x.revocado_el)}` : undefined}>Revocado</span> : <EstadoAviso a={conAviso(x.id)} />) },
         ]}
         acciones={(x) => (
           <>
@@ -330,7 +331,7 @@ export function SeccionEnlaces({ f }: { f: Filtro }) {
           { titulo: 'Enlace', principal: true, valor: (x) => <><a className="c-enlace" href={x.url} target="_blank" rel="noreferrer" onClick={(ev) => ev.stopPropagation()}>{x.nombre}</a><small className="c-url">{x.url.replace(/^https?:\/\//, '')}</small></> },
           { titulo: 'Tipo', baja: true, valor: (x) => nombreTipo(x.tipo) },
           { titulo: 'Proyecto', valor: (x) => <ProyectoCol id={x.proyecto_id} nombre={nombreProyecto(x.proyecto_id)} /> },
-          { titulo: 'Estado', valor: (x) => (x.responde == null ? <span className="m-vacia">Sin revisar</span> : <span className={`m-estado ${x.responde ? 'aprobado' : 'error'}`}>{x.responde ? 'Responde' : 'No responde'}{x.revisado_en ? ` · ${fechaCorta(x.revisado_en)}` : ''}</span>) },
+          { titulo: 'Estado', valor: (x) => (x.responde == null ? <span className="m-vacia">Sin revisar</span> : <span className={`m-estado ${x.responde ? 'aprobado' : 'error'}`} title={x.revisado_en ? `Revisado el ${fechaCorta(x.revisado_en)}` : undefined}>{x.responde ? 'Responde' : 'No responde'}</span>) },
         ]}
         acciones={(x) => (
           <>

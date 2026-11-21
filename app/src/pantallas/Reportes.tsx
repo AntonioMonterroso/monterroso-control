@@ -96,10 +96,10 @@ export default function Reportes() {
             <label className="c-dim"><span>Dónde cayó</span><select className="m-entrada" value={fDestino} onChange={(e) => setFDestino(e.target.value)}><option value="">Todas</option>{[...new Set(todasEntradas.map((e) => e.destino).filter(Boolean))].map((d) => <option key={d!} value={d!}>{n.destino(d)}</option>)}<option value="sin">Sin indicar</option></select></label>
           </div>
           <div className="c-dos">
-            <Tabla titulo="Por forma de pago" filas={porForma} clave={(x) => x.c || 'sin'} vacio="No entró dinero con estos filtros."
+            <Tabla exportar={false} titulo="Por forma de pago" filas={porForma} clave={(x) => x.c || 'sin'} vacio="No entró dinero con estos filtros."
               columnas={[{ titulo: 'Forma', principal: true, valor: (x) => (x.c ? nombreForma(x.c) : 'Sin indicar') }, { titulo: 'Monto', num: true, valor: (x) => quetzales(x.v), orden: (x) => x.v }]}
               pie={<tr><td>Total</td><td className="m-num">{quetzales(totalEntradas)}</td></tr>} />
-            <Tabla titulo="Por cuenta de destino" filas={porDestino} clave={(x) => x.c || 'sin'} vacio="No entró dinero con estos filtros."
+            <Tabla exportar={false} titulo="Por cuenta de destino" filas={porDestino} clave={(x) => x.c || 'sin'} vacio="No entró dinero con estos filtros."
               columnas={[{ titulo: 'Cuenta', principal: true, valor: (x) => (x.c ? n.destino(x.c) : 'Sin indicar') }, { titulo: 'Monto', num: true, valor: (x) => quetzales(x.v), orden: (x) => x.v }]}
               pie={<tr><td>Total</td><td className="m-num">{quetzales(totalEntradas)}</td></tr>} />
           </div>
@@ -114,10 +114,10 @@ export default function Reportes() {
             <div className="erp-kpi"><span className="m-etiqueta">Utilidad {anio}</span><b className={`${r.utilidad < 0 ? ' m-negativo' : ''}`}>{quetzales(r.utilidad)}</b></div>
           </div>
           <div className="c-dos">
-            <Tabla titulo="Ingresos" filas={ingresosCat} clave={(x) => x.c.id} vacio="Sin ingresos en el año." columnas={[{ titulo: 'Categoría', principal: true, valor: (x) => x.c.nombre }, { titulo: 'Total', num: true, valor: (x) => quetzales(x.total) }]} pie={<tr><td>Total</td><td className="m-num">{quetzales(r.ingresos)}</td></tr>} />
-            <Tabla titulo="Gastos" filas={gastosCat} clave={(x) => x.c.id} vacio="Sin gastos en el año." columnas={[{ titulo: 'Categoría', principal: true, valor: (x) => x.c.nombre }, { titulo: 'Total', num: true, valor: (x) => quetzales(x.total) }]} pie={<tr><td>Total</td><td className="m-num">{quetzales(r.gastos)}</td></tr>} />
+            <Tabla exportar={false} titulo="Ingresos" filas={ingresosCat} clave={(x) => x.c.id} vacio="Sin ingresos en el año." columnas={[{ titulo: 'Categoría', principal: true, valor: (x) => x.c.nombre }, { titulo: 'Total', num: true, valor: (x) => quetzales(x.total) }]} pie={<tr><td>Total</td><td className="m-num">{quetzales(r.ingresos)}</td></tr>} />
+            <Tabla exportar={false} titulo="Gastos" filas={gastosCat} clave={(x) => x.c.id} vacio="Sin gastos en el año." columnas={[{ titulo: 'Categoría', principal: true, valor: (x) => x.c.nombre }, { titulo: 'Total', num: true, valor: (x) => quetzales(x.total) }]} pie={<tr><td>Total</td><td className="m-num">{quetzales(r.gastos)}</td></tr>} />
           </div>
-          <Tabla titulo="Mes a mes" filas={meses} clave={(p) => p} vacio=""
+          <Tabla exportar={false} titulo="Mes a mes" filas={meses} clave={(p) => p} vacio=""
             columnas={[
               { titulo: 'Mes', principal: true, valor: (p) => nomMes(p) },
               { titulo: 'Ingresos', num: true, valor: (p) => quetzales(sumar(movs, (x) => x.tipo === 'ingreso' && periodoDe(x.fecha) === p)) },
@@ -128,7 +128,7 @@ export default function Reportes() {
       )}
 
       {vista === 'flujo' && (
-        <Tabla titulo={`Flujo de caja ${anio}`} nota="Entradas: cobros, ventas y salario. Salidas: gastos, costos de pedidos y pagos de deudas." filas={flujo} clave={(x) => x.p} vacio=""
+        <Tabla exportar={false} titulo={`Flujo de caja ${anio}`} nota="Entradas: cobros, ventas y salario. Salidas: gastos, costos de pedidos y pagos de deudas." filas={flujo} clave={(x) => x.p} vacio=""
           columnas={[
             { titulo: 'Mes', principal: true, valor: (x) => nomMes(x.p) },
             { titulo: 'Entradas', num: true, valor: (x) => quetzales(x.e) },
@@ -140,7 +140,7 @@ export default function Reportes() {
       )}
 
       {vista === 'clientes' && (
-        <Tabla titulo={`Ganancia por cliente ${anio}`} filas={clientes} clave={(x) => x.c.id} vacio="Sin pagos ni gastos de clientes en el año."
+        <Tabla exportar={false} titulo={`Ganancia por cliente ${anio}`} filas={clientes} clave={(x) => x.c.id} vacio="Sin pagos ni gastos de clientes en el año."
           columnas={[
             { titulo: 'Cliente', principal: true, valor: (x) => x.c.nombre },
             { titulo: 'Ingresos', num: true, valor: (x) => quetzales(x.ingresos) },
