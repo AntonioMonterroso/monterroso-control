@@ -111,7 +111,7 @@ export default function PagosTienda() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Hogar Canela</span><h1 className="erp-titulo">Pagos de la tienda</h1><Pasos /></div>
+        <div><span className="m-etiqueta">Hogar Canela</span><h1 className="erp-titulo">Pagos de pedidos</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           <SelectorMes periodo={periodo} onCambio={setPeriodo} />
           <button type="button" className="m-btn m-btn-primario" onClick={() => setNuevo(true)} title="Registrar lo que entró y ligarlo a sus pedidos"><Plus size={16} aria-hidden /> Registrar pago</button>

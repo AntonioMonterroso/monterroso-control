@@ -35,7 +35,7 @@ const pantalla = (recibido = false): Escena => ({
 
 const guia: GuiaVideo = {
   ruta: '/salario',
-  menu: 'Mi salario',
+  menu: 'Resumen',
   caps: [
     {
       t: '1 · Tu salario',

@@ -34,7 +34,7 @@ const delMes = (conFijos = true, ok = false): Escena => ({
 
 const guia: GuiaVideo = {
   ruta: '/tienda/gastos',
-  menu: 'Gastos de la tienda',
+  menu: 'Gastos',
   caps: [
     {
       t: '1 · Gastos del mes',

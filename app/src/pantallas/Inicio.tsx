@@ -16,12 +16,14 @@ import { EstadoCobro } from './cobros/Cobros'
 import Barra from './presupuesto/Barra'
 import ParaNoOlvidar from './desarrollo/ParaNoOlvidar'
 
-export default function Inicio() {
+export default function Inicio({ negocioClave }: { negocioClave?: 'dev' } = {}) {
   const m = useModelo()
   const hoy = useHoy()
   const periodo = hoy.slice(0, 7)
   const [a, mes] = partes(hoy)
-  const [negocio, setNegocio] = useState('')
+  const fijo = negocioClave ? m.negocios.find((n) => n.clave === negocioClave) : undefined
+  const [negocioSel, setNegocio] = useState('')
+  const negocio = fijo?.id ?? negocioSel
   const [desde, hasta] = rangoMes(periodo)
   const movs = useMemo(() => movimientos(m, desde, hasta, hoy), [m, desde, hasta, hoy])
   const cobros = useCobros()
@@ -43,19 +45,19 @@ export default function Inicio() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">{nombreMes(a, mes)}</span><h1 className="erp-titulo">Inicio</h1><Pasos /></div>
+        <div><span className="m-etiqueta">{nombreMes(a, mes)}</span><h1 className="erp-titulo">{fijo ? 'Resumen' : 'Inicio'}</h1><Pasos /></div>
       </div>
-      <div className="c-chips" role="group" aria-label="Negocio">
+      {!fijo && <div className="c-chips" role="group" aria-label="Negocio">
         <button type="button" className="m-chip" aria-pressed={!negocio} onClick={() => setNegocio('')} title="Ver todos los negocios juntos">Todos</button>
         {activos.map((n) => <button key={n.id} type="button" className="m-chip" aria-pressed={negocio === n.id} onClick={() => setNegocio(n.id)} title={`Ver solo ${n.nombre}`}>{n.nombre}</button>)}
-      </div>
+      </div>}
 
       <ParaNoOlvidar limite={5} ocultarVacio />
 
       <div className="erp-kpis">
-        <div className="erp-kpi exito"><span className="m-etiqueta">Entró este mes</span><b>{quetzales(r.ingresos)}</b><small>cobros, ventas de la tienda y salario recibido</small></div>
+        <div className="erp-kpi exito"><span className="m-etiqueta">Entró este mes</span><b>{quetzales(r.ingresos)}</b><small>{fijo ? 'cobros de tus clientes' : 'cobros, ventas de la tienda y salario recibido'}</small></div>
         <div className="erp-kpi aviso"><span className="m-etiqueta">Me deben</span><b>{quetzales(falta)}</b><small>{tiendaDebe > 0 ? `incluye ${quetzales(tiendaDebe)} de pedidos de la tienda` : 'hasta fin de mes, con lo vencido'}</small></div>
-        <div className="erp-kpi peligro"><span className="m-etiqueta">Gastos del mes</span><b>{quetzales(r.gastos)}</b><small>empresa, clientes, deudas y pedidos</small></div>
+        <div className="erp-kpi peligro"><span className="m-etiqueta">Gastos del mes</span><b>{quetzales(r.gastos)}</b><small>{fijo ? 'del estudio y de cada cliente' : 'empresa, clientes, deudas y pedidos'}</small></div>
         <div className="erp-kpi"><span className="m-etiqueta">Utilidad del mes</span><b className={`${r.utilidad < 0 ? ' m-negativo' : ''}`}>{quetzales(r.utilidad)}</b><small>lo que entró menos los gastos</small></div>
       </div>
 
@@ -79,7 +81,7 @@ export default function Inicio() {
         <section>
           <h2 className="m-seccion-titulo">Presupuesto del mes</h2>
           {lineas.length === 0 ? (
-            <div className="m-vacio c-vacio-chico"><b>Sin presupuesto este mes</b><span>Ponlo en <Link to="/presupuestos">Presupuestos</Link>.</span></div>
+            <div className="m-vacio c-vacio-chico"><b>Sin presupuesto este mes</b><span>Ponlo en <Link to={fijo ? '/dev/presupuesto' : '/presupuestos'}>{fijo ? 'Presupuesto' : 'Presupuestos'}</Link>.</span></div>
           ) : (
             <ul className="c-lista-presupuesto">
               {lineas.map((l) => (
@@ -103,7 +105,7 @@ export default function Inicio() {
                   <span className="c-fila-botones"><EstadoCobro c={c} /><b className="m-cifra">{quetzales(c.saldo)}</b></span>
                 </li>
               ))}
-              <li className="c-lista-pie"><Link to="/cobros" className="c-enlace">Ver todo lo que me deben</Link></li>
+              <li className="c-lista-pie"><Link to={fijo ? '/dev/cobros' : '/cobros'} className="c-enlace">Ver todo lo que me deben</Link></li>
             </ul>
           )}
         </section>
@@ -112,7 +114,7 @@ export default function Inicio() {
       <section>
         <div className="c-ficha-cabeza">
           <h2 className="m-seccion-titulo">Pagos que recibí</h2>
-          <Link to="/pagos" className="m-btn m-btn-secundario m-btn-sm" title="Abre el historial completo de pagos recibidos">Ver todos</Link>
+          <Link to={fijo ? '/dev/pagos' : '/pagos'} className="m-btn m-btn-secundario m-btn-sm" title="Abre el historial completo de pagos recibidos">Ver todos</Link>
         </div>
         {ultimos.length === 0 ? <div className="m-vacio c-vacio-chico"><b>Todavía no hay pagos</b></div> : (
           <ul className="c-lista-saldos">

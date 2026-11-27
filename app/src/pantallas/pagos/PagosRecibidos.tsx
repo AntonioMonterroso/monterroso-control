@@ -30,13 +30,14 @@ function rangoDe(p: Periodo, desde: string, hasta: string): [string, string] {
   return ['0000-01-01', '9999-12-31']
 }
 
-export default function PagosRecibidos({ negocioClave }: { negocioClave?: 'canela' | 'salario' }) {
+export default function PagosRecibidos({ negocioClave }: { negocioClave?: 'dev' | 'canela' | 'salario' }) {
   const m = useModelo()
   const todas = useEntradas()
   const n = useNombres()
   const { ids, inicio } = useSA()
   const destinos = useOpcionesDestino()
   const fijo = negocioClave ? m.negocios.find((x) => x.clave === negocioClave) : undefined
+  const simple = negocioClave === 'canela' || negocioClave === 'salario'
   const [periodo, setPeriodo] = useState<Periodo>('mes')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
@@ -65,10 +66,10 @@ export default function PagosRecibidos({ negocioClave }: { negocioClave?: 'canel
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Dinero'}</span><h1 className="erp-titulo">Pagos que recibí</h1><Pasos /><p className="c-subtitulo">Todo el dinero que entró, el más nuevo arriba: de quién, por qué, cómo te pagaron y dónde cayó.</p></div>
+        <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Todos los negocios'}</span><h1 className="erp-titulo">Pagos que recibí</h1><Pasos /><p className="c-subtitulo">Todo el dinero que entró, el más nuevo arriba: de quién, por qué, cómo te pagaron y dónde cayó.</p></div>
         <div className="c-cabeza-acciones">
           <BotonesSalidaPagos entradas={lista} nombre={`pagos-recibidos-${d0.slice(0, 7)}`} porMes={vista === 'mes'} />
-          {!negocioClave && <MenuMas items={[{ texto: 'Registrar anticipo', titulo: 'Registra un pago adelantado que queda como saldo a favor del cliente', hacer: () => setAnticipo(true) }]} />}
+          {!simple && <MenuMas items={[{ texto: 'Registrar anticipo', titulo: 'Registra un pago adelantado que queda como saldo a favor del cliente', hacer: () => setAnticipo(true) }]} />}
           {negocioClave !== 'canela' && negocioClave !== 'salario' && <RegistrarPago />}
         </div>
       </div>
@@ -101,8 +102,8 @@ export default function PagosRecibidos({ negocioClave }: { negocioClave?: 'canel
       </div>
 
       <div className="c-filtros-dim">
-        {!negocioClave && <label className="c-dim"><span>Cliente</span><SelectBuscable id="pr-f-cli" valor={f.cliente} onCambio={(v) => poner('cliente', v)} vacio="Todos" opciones={m.clientes.map((c) => ({ valor: c.id, nombre: c.nombre }))} /></label>}
-        {!negocioClave && <label className="c-dim"><span>Proyecto</span><SelectBuscable id="pr-f-pro" valor={f.proyecto} onCambio={(v) => poner('proyecto', v)} vacio="Todos" opciones={m.proyectos.filter((p) => !f.cliente || p.cliente_id === f.cliente).map((p) => ({ valor: p.id, nombre: p.nombre }))} /></label>}
+        {!simple && <label className="c-dim"><span>Cliente</span><SelectBuscable id="pr-f-cli" valor={f.cliente} onCambio={(v) => poner('cliente', v)} vacio="Todos" opciones={m.clientes.map((c) => ({ valor: c.id, nombre: c.nombre }))} /></label>}
+        {!simple && <label className="c-dim"><span>Proyecto</span><SelectBuscable id="pr-f-pro" valor={f.proyecto} onCambio={(v) => poner('proyecto', v)} vacio="Todos" opciones={m.proyectos.filter((p) => !f.cliente || p.cliente_id === f.cliente).map((p) => ({ valor: p.id, nombre: p.nombre }))} /></label>}
         {!negocioClave && <label className="c-dim"><span>Negocio</span><SelectBuscable id="pr-f-neg" valor={f.negocio} onCambio={(v) => poner('negocio', v)} vacio="Todos" opciones={m.negocios.map((x) => ({ valor: x.id, nombre: x.nombre }))} /></label>}
         <label className="c-dim"><span>Forma de pago</span><SelectBuscable id="pr-f-forma" valor={f.forma} onCambio={(v) => poner('forma', v)} vacio="Todas" opciones={[...FORMAS, { valor: 'anticipo', nombre: 'Saldo a favor' }, { valor: 'sin', nombre: 'Sin indicar' }]} /></label>
         <label className="c-dim"><span>Dónde cayó</span><SelectBuscable id="pr-f-dest" valor={f.destino} onCambio={(v) => poner('destino', v)} vacio="Todas" opciones={[{ valor: 'personal', nombre: 'Cuentas personales (todas)' }, { valor: 'sa', nombre: 'Cuentas de la S.A. (todas)' }, ...destinos, { valor: 'sin', nombre: 'Sin indicar' }]} /></label>

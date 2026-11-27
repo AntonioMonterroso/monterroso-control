@@ -14,7 +14,7 @@ import { useHoy, usePeriodo } from '../../lib/usos'
 import Barra from './Barra'
 import { porcentaje } from '../../lib/totales'
 
-export default function Presupuestos({ negocioClave }: { negocioClave?: 'canela' | 'salario' } = {}) {
+export default function Presupuestos({ negocioClave }: { negocioClave?: 'dev' | 'canela' | 'salario' } = {}) {
   const m = useModelo()
   const { guardar, insertar, borrar } = useDatos()
   const avisar = useAvisar()

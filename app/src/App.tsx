@@ -60,7 +60,7 @@ function Contenido() {
     <Marco>
       <AplicarSolo />
       <Routes>
-        <Route path="/" element={<Inicio />} />
+        <Route path="/" element={<Inicio key="i-todos" />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/clientes/:id" element={<ClienteFicha />} />
         <Route path="/proyectos" element={<Proyectos />} />
@@ -75,8 +75,13 @@ function Contenido() {
         <Route path="/sa/estados" element={<EstadosSA />} />
         <Route path="/sa/tramites" element={<TramitesSA />} />
         <Route path="/sa/recordatorios" element={<RecordatoriosSA />} />
-        <Route path="/cobros" element={<Cobros />} />
-        <Route path="/pagos" element={<PagosRecibidos />} />
+        <Route path="/dev" element={<Inicio key="i-dev" negocioClave="dev" />} />
+        <Route path="/dev/cobros" element={<Cobros key="c-dev" negocioClave="dev" />} />
+        <Route path="/dev/pagos" element={<PagosRecibidos key="r-dev" negocioClave="dev" />} />
+        <Route path="/dev/gastos" element={<Gastos key="g-dev" negocioClave="dev" />} />
+        <Route path="/dev/presupuesto" element={<Presupuestos key="p-dev" negocioClave="dev" />} />
+        <Route path="/cobros" element={<Cobros key="c-todos" />} />
+        <Route path="/pagos" element={<PagosRecibidos key="r-todos" />} />
         <Route path="/cuentas" element={<Cuentas />} />
         <Route path="/saldo-a-favor" element={<SaldoAFavor />} />
         <Route path="/tienda/recibidos" element={<PagosRecibidos key="r-canela" negocioClave="canela" />} />

@@ -13,14 +13,14 @@ const tabla: Pieza = {
 
 const pantalla = (): Escena => ({
   etiqueta: 'Hogar Canela',
-  titulo: 'Pagos de la tienda',
+  titulo: 'Pagos de pedidos',
   acciones: [{ t: 'Registrar pago', g: 'registrar', p: true }],
   piezas: [{ k: 'campos', g: 'mes', l: [{ et: 'Mes', v: 'noviembre 2026' }] }, tabla],
 })
 
 const guia: GuiaVideo = {
   ruta: '/tienda/pagos',
-  menu: 'Pagos',
+  menu: 'Pagos de pedidos',
   caps: [
     {
       t: '1 · Registrar un pago',

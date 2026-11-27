@@ -23,7 +23,7 @@ import PorCliente from './PorCliente'
 
 type Vista = 'gastos' | 'fijos' | 'clientes'
 
-export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'salario' } = {}) {
+export default function Gastos({ negocioClave }: { negocioClave?: 'dev' | 'canela' | 'salario' } = {}) {
   const m = useModelo()
   const { guardar, insertar } = useDatos()
   const avisar = useAvisar()
@@ -59,7 +59,7 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'sa
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Empresa'}</span><h1 className="erp-titulo">{negocioClave === 'canela' ? 'Gastos de la tienda' : negocioClave === 'salario' ? 'Gastos del salario' : 'Gastos'}</h1><Pasos /></div>
+        <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Todos los negocios'}</span><h1 className="erp-titulo">{negocioClave === 'canela' ? 'Gastos de la tienda' : negocioClave === 'salario' ? 'Gastos del salario' : 'Gastos'}</h1><Pasos /></div>
         <div className="c-cabeza-acciones">
           {vista !== 'fijos' && <SelectorMes periodo={periodo} onCambio={setPeriodo} />}
           {vista === 'fijos'
@@ -71,7 +71,7 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'canela' | 'sa
       <Pestanas etiqueta="Ver" valor={vista} onCambio={setVista} opciones={[
         { valor: 'gastos', nombre: 'Gastos del mes', cuenta: delMes.length },
         { valor: 'fijos', nombre: 'Gastos fijos', cuenta: fijosNeg.filter((x) => x.activo).length },
-        ...(negocioClave ? [] : [{ valor: 'clientes' as Vista, nombre: 'Costo y ganancia por cliente' }]),
+        ...(negocioClave && negocioClave !== 'dev' ? [] : [{ valor: 'clientes' as Vista, nombre: 'Costo y ganancia por cliente' }]),
       ]} />
 
       {vista === 'gastos' && (

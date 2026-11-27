@@ -9,8 +9,11 @@ import { PASOS } from '../lib/pasos'
 import { useAvisar } from './Avisos'
 import Ventana from './Ventana'
 
+const IGUAL_QUE: Record<string, string> = { '/dev': '/', '/dev/cobros': '/cobros', '/dev/pagos': '/pagos', '/dev/gastos': '/gastos', '/dev/presupuesto': '/presupuestos' }
+
 export function pasosDe(ruta: string) {
-  return PASOS.find((g) => matchPath({ path: g.ruta, end: true }, ruta))
+  const r = IGUAL_QUE[ruta] ?? ruta
+  return PASOS.find((g) => matchPath({ path: g.ruta, end: true }, r))
 }
 
 export function irAParte(selector: string): boolean {

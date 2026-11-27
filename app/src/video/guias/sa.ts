@@ -19,7 +19,7 @@ const ficha = (): Escena => ({
 
 const guia: GuiaVideo = {
   ruta: '/sa',
-  menu: 'Ficha',
+  menu: 'Resumen',
   caps: [
     {
       t: '1 · La ficha',

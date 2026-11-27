@@ -61,14 +61,14 @@ function Sub({ s }: { s: ReturnType<typeof subtotales> }) {
   )
 }
 
-export default function Cobros() {
+export default function Cobros({ negocioClave }: { negocioClave?: 'dev' } = {}) {
   const m = useModelo()
   const { guardar } = useDatos()
   const avisar = useAvisar()
   const ir = useNavigate()
   const hoy = useHoy()
   const [periodo, setPeriodo] = usePeriodo()
-  const todos = useCobros(periodo)
+  const todosLos = useCobros(periodo)
   const [anticipo, setAnticipo] = useState(false)
   const [filtro, setFiltro] = useState<Filtro>('pendientes')
   const [verPor, setVerPor] = useState<VerPor>('nada')
@@ -87,6 +87,8 @@ export default function Cobros() {
   const salario = m.negocios.find((n) => n.clave === 'salario')
   const cliente = (id: string | null) => m.clientes.find((c) => c.id === id)
   const proyecto = (id: string | null) => m.proyectos.find((p) => p.id === id)?.nombre ?? ''
+  const fijo = negocioClave ? m.negocios.find((n) => n.clave === negocioClave) : undefined
+  const todos = fijo ? todosLos.filter((c) => c.tipo !== 'salario' && cliente(c.cliente_id)?.negocio_id === fijo.id) : todosLos
   const valorDim = (c: Cobro, d: Dim): [string, string] => {
     const cl = cliente(c.cliente_id)
     if (d === 'cliente') return c.tipo === 'salario' ? ['salario', 'Mi salario'] : [c.cliente_id, cl?.nombre ?? 'Sin cliente']
@@ -107,7 +109,7 @@ export default function Cobros() {
     : delMes
   const lista = base.filter((c) => (Object.entries(dims) as [Dim, string][]).every(([d, v]) => !v || valorDim(c, d)[0] === v) && coincide(q, cliente(c.cliente_id)?.nombre, c.concepto, proyecto(c.proyecto_id)))
   const st = subtotales(lista)
-  const pagosMes = m.pagos.filter((p) => periodoDe(p.fecha) === periodo && coincide(q, cliente(p.cliente_id)?.nombre, p.referencia))
+  const pagosMes = m.pagos.filter((p) => periodoDe(p.fecha) === periodo && (!fijo || cliente(p.cliente_id)?.negocio_id === fijo.id) && coincide(q, cliente(p.cliente_id)?.nombre, p.referencia))
   const cobrado = deCentavos(pagosMes.reduce((s, p) => s + aCentavos(p.monto), 0))
   const porCobrarMes = totalSaldo(delMes)
   const vencido = totalSaldo(todos.filter((c) => c.estado === 'vencido'))
@@ -171,7 +173,7 @@ export default function Cobros() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Dinero</span><h1 className="erp-titulo">Lo que me deben</h1><Pasos /><p className="c-subtitulo">Lo que cada cliente tiene que pagarte: lo vencido, lo de este mes y lo que viene.</p></div>
+        <div><span className="m-etiqueta">{fijo ? fijo.nombre : 'Todos los negocios'}</span><h1 className="erp-titulo">Lo que me deben</h1><Pasos /><p className="c-subtitulo">Lo que cada cliente tiene que pagarte: lo vencido, lo de este mes y lo que viene.</p></div>
         <div className="c-cabeza-acciones">
           <SelectorMes periodo={periodo} onCambio={setPeriodo} />
           <MenuMas items={[
@@ -187,7 +189,7 @@ export default function Cobros() {
         <div className="erp-kpi"><span className="m-etiqueta">Me deben en total</span><b>{quetzales(totalSaldo(todos))}</b><small>{pendientes(todos).length} {pendientes(todos).length === 1 ? 'cobro' : 'cobros'}</small></div>
         <div className={`erp-kpi${vencido > 0 ? ' peligro' : ''}`}><span className="m-etiqueta">Vencido</span><b className={vencido > 0 ? 'm-negativo' : undefined}>{quetzales(vencido)}</b><small>{todos.filter((c) => c.estado === 'vencido').length} vencidos</small></div>
         <div className="erp-kpi"><span className="m-etiqueta">Falta de este mes</span><b>{quetzales(porCobrarMes)}</b><small>{pendientes(delMes).length} {pendientes(delMes).length === 1 ? 'cobro' : 'cobros'}</small></div>
-        <div className="erp-kpi exito"><span className="m-etiqueta">Entró este mes</span><b>{quetzales(cobrado)}</b><small><Link to="/pagos" className="c-enlace">{pagosMes.length} {pagosMes.length === 1 ? 'pago' : 'pagos'} · ver</Link></small></div>
+        <div className="erp-kpi exito"><span className="m-etiqueta">Entró este mes</span><b>{quetzales(cobrado)}</b><small><Link to={fijo ? '/dev/pagos' : '/pagos'} className="c-enlace">{pagosMes.length} {pagosMes.length === 1 ? 'pago' : 'pagos'} · ver</Link></small></div>
       </div>
 
       {vencido > 0 && filtro !== 'vencidos' && (
@@ -209,7 +211,7 @@ export default function Cobros() {
       {(
         <>
           <div className="c-filtros-dim">
-            {(['cliente', 'proyecto', 'rubro', 'negocio'] as Dim[]).map((d) => (
+            {(['cliente', 'proyecto', 'rubro', 'negocio'] as Dim[]).filter((d) => !fijo || d !== 'negocio').map((d) => (
               <label key={d} className="c-dim">
                 <span>{nombreDim[d]}</span>
                 <SelectBuscable id={`dim-${d}`} valor={dims[d] ?? ''} onCambio={(v) => ponerDim(d, v)} vacio="Todos" opciones={opciones(d).map(([k, n]) => ({ valor: k, nombre: n }))} />
