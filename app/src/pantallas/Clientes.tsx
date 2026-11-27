@@ -1,3 +1,4 @@
+import type { ClaveEstudio } from '../lib/estudio'
 import Avatar from '../componentes/Avatar'
 import MenuMas from '../componentes/MenuMas'
 import RegistrarPago from './pagos/RegistrarPago'
@@ -40,8 +41,10 @@ import { useBorrarOArchivar } from './clientes/BorrarOArchivar'
 
 type Filtro = 'activos' | 'todos' | 'inactivos' | 'archivados'
 
-export default function Clientes() {
-  const { clientes, proyectos, negocios } = useModelo()
+export default function Clientes({ negocioClave }: { negocioClave?: ClaveEstudio } = {}) {
+  const { clientes: todosClientes, proyectos, negocios } = useModelo()
+  const fijo = negocioClave ? negocios.find((n) => n.clave === negocioClave) : undefined
+  const clientes = fijo ? todosClientes.filter((c) => c.negocio_id === fijo.id) : todosClientes
   const ir = useNavigate()
   const esc = useEscribir()
   const avisar = useAvisar()
@@ -82,7 +85,7 @@ export default function Clientes() {
     <>
       <div className="c-cabeza">
         <div>
-          <span className="m-etiqueta">Dev Studio</span>
+          <span className="m-etiqueta">{fijo?.nombre ?? 'Todos los negocios'}</span>
           <h1 className="erp-titulo">Clientes</h1><Pasos />
         </div>
         <button type="button" className="m-btn m-btn-primario" onClick={() => setNuevo(true)} title="Abre la ventana para crear un cliente nuevo"><Plus size={16} aria-hidden /> Nuevo cliente</button>
@@ -151,7 +154,7 @@ export default function Clientes() {
         />
       )}
 
-      <FormCliente abierta={nuevo} cliente={null} onCerrar={() => setNuevo(false)} onGuardado={(c) => ir(`/clientes/${encodeURIComponent(c.id ?? "")}`)} />
+      <FormCliente abierta={nuevo} cliente={null} negocioInicial={fijo?.id} onCerrar={() => setNuevo(false)} onGuardado={(c) => ir(`/clientes/${encodeURIComponent(c.id ?? "")}`)} />
       <FormCliente abierta={editar != null} cliente={editar} onCerrar={() => setEditar(null)} />
       {bo.ventana}
       <VentanaEstadoCuenta cliente={estadoCuenta} cobros={cobros} onCerrar={() => setEstadoCuenta(null)} />

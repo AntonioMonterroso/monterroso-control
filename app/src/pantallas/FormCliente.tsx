@@ -8,8 +8,9 @@ import type { Cliente, Regimen } from '../lib/tipos'
 
 const vacio = (s: string) => (s.trim() ? s.trim() : null)
 
-export default function FormCliente({ abierta, cliente, onCerrar, onGuardado }: {
+export default function FormCliente({ abierta, cliente, onCerrar, onGuardado, negocioInicial }: {
   abierta: boolean
+  negocioInicial?: string
   cliente: Cliente | null
   onCerrar: () => void
   onGuardado?: (c: Cliente) => void
@@ -27,8 +28,8 @@ export default function FormCliente({ abierta, cliente, onCerrar, onGuardado }: 
     setError(''); setOcupado(false)
     setV(cliente
       ? { nombre: cliente.nombre, negocio_id: cliente.negocio_id, rubro: cliente.rubro ?? '', whatsapp: cliente.whatsapp ?? '', correo: cliente.correo ?? '', nit: cliente.nit ?? '', direccion: cliente.direccion ?? '', regimen: cliente.regimen ?? '', notas: cliente.notas ?? '', activo: cliente.activo }
-      : { nombre: '', negocio_id: dev?.id ?? '', rubro: '', whatsapp: '', correo: '', nit: '', direccion: '', regimen: '', notas: '', activo: true })
-  }, [abierta, cliente, dev?.id])
+      : { nombre: '', negocio_id: negocioInicial ?? dev?.id ?? '', rubro: '', whatsapp: '', correo: '', nit: '', direccion: '', regimen: '', notas: '', activo: true })
+  }, [abierta, cliente, dev?.id, negocioInicial])
 
   const cambiar = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setV((x) => ({ ...x, [k]: e.target.value }))
   const repetido = v.nombre.trim() && !esc.claveLibre(v.nombre, cliente?.id) ? clientes.find((c) => c.id !== cliente?.id && (c.id === clientKey(v.nombre) || c.aka?.includes(clientKey(v.nombre)))) : undefined

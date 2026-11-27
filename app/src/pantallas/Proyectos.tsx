@@ -1,3 +1,4 @@
+import type { ClaveEstudio } from '../lib/estudio'
 import Pasos from '../componentes/Pasos'
 import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
@@ -38,8 +39,11 @@ export function TablaProyectos({ proyectos, conCliente, onEditar, buscador = tru
   )
 }
 
-export default function Proyectos() {
-  const { proyectos, clientes } = useModelo()
+export default function Proyectos({ negocioClave }: { negocioClave?: ClaveEstudio } = {}) {
+  const { proyectos: todosProyectos, clientes: todosClientes, negocios } = useModelo()
+  const fijo = negocioClave ? negocios.find((n) => n.clave === negocioClave) : undefined
+  const clientes = fijo ? todosClientes.filter((c) => c.negocio_id === fijo.id) : todosClientes
+  const proyectos = fijo ? todosProyectos.filter((p) => clientes.some((c) => c.id === p.cliente_id)) : todosProyectos
   const [q, setQ] = useState('')
   const [estado, setEstado] = useState<EstadoProyecto | 'abiertos' | 'todos'>('abiertos')
   const [editar, setEditar] = useState<Proyecto | 'nuevo' | null>(null)
@@ -48,7 +52,7 @@ export default function Proyectos() {
   return (
     <>
       <div className="c-cabeza">
-        <div><span className="m-etiqueta">Dev Studio</span><h1 className="erp-titulo">Proyectos</h1><Pasos /></div>
+        <div><span className="m-etiqueta">{fijo?.nombre ?? 'Todos los negocios'}</span><h1 className="erp-titulo">Proyectos</h1><Pasos /></div>
         <button type="button" className="m-btn m-btn-primario" disabled={clientes.length === 0} onClick={() => setEditar('nuevo')} title={clientes.length ? 'Crear un proyecto para un cliente' : 'Primero crea un cliente'}><Plus size={16} aria-hidden /> Nuevo proyecto</button>
       </div>
       <div className="c-herramientas">

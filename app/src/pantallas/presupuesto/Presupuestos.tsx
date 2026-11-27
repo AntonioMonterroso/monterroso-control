@@ -1,3 +1,4 @@
+import type { ClaveEstudio } from '../../lib/estudio'
 import Pasos from '../../componentes/Pasos'
 import { Copy, Pencil } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -14,7 +15,7 @@ import { useHoy, usePeriodo } from '../../lib/usos'
 import Barra from './Barra'
 import { porcentaje } from '../../lib/totales'
 
-export default function Presupuestos({ negocioClave }: { negocioClave?: 'dev' | 'canela' | 'salario' } = {}) {
+export default function Presupuestos({ negocioClave }: { negocioClave?: ClaveEstudio | 'canela' | 'salario' } = {}) {
   const m = useModelo()
   const { guardar, insertar, borrar } = useDatos()
   const avisar = useAvisar()

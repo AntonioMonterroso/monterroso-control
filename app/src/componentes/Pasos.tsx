@@ -9,10 +9,15 @@ import { PASOS } from '../lib/pasos'
 import { useAvisar } from './Avisos'
 import Ventana from './Ventana'
 
-const IGUAL_QUE: Record<string, string> = { '/dev': '/', '/dev/cobros': '/cobros', '/dev/pagos': '/pagos', '/dev/gastos': '/gastos', '/dev/presupuesto': '/presupuestos' }
+const IGUAL_QUE: Record<string, string> = { '': '/', '/cobros': '/cobros', '/pagos': '/pagos', '/gastos': '/gastos', '/presupuesto': '/presupuestos', '/clientes': '/clientes', '/proyectos': '/proyectos' }
+
+function rutaBase(ruta: string): string {
+  const m = ruta.match(/^\/(dev|musica|diseno)(\/[a-z]+)?$/)
+  return m ? IGUAL_QUE[m[2] ?? ''] ?? ruta : ruta
+}
 
 export function pasosDe(ruta: string) {
-  const r = IGUAL_QUE[ruta] ?? ruta
+  const r = rutaBase(ruta)
   return PASOS.find((g) => matchPath({ path: g.ruta, end: true }, r))
 }
 

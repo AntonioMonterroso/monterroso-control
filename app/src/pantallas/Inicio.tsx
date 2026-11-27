@@ -1,3 +1,4 @@
+import type { ClaveEstudio } from '../lib/estudio'
 import { useEntradas } from '../lib/usos'
 import { nombreForma } from '../lib/pagosDestino'
 import Pasos from '../componentes/Pasos'
@@ -16,7 +17,7 @@ import { EstadoCobro } from './cobros/Cobros'
 import Barra from './presupuesto/Barra'
 import ParaNoOlvidar from './desarrollo/ParaNoOlvidar'
 
-export default function Inicio({ negocioClave }: { negocioClave?: 'dev' } = {}) {
+export default function Inicio({ negocioClave }: { negocioClave?: ClaveEstudio } = {}) {
   const m = useModelo()
   const hoy = useHoy()
   const periodo = hoy.slice(0, 7)
@@ -57,7 +58,7 @@ export default function Inicio({ negocioClave }: { negocioClave?: 'dev' } = {}) 
       <div className="erp-kpis">
         <div className="erp-kpi exito"><span className="m-etiqueta">Entró este mes</span><b>{quetzales(r.ingresos)}</b><small>{fijo ? 'cobros de tus clientes' : 'cobros, ventas de la tienda y salario recibido'}</small></div>
         <div className="erp-kpi aviso"><span className="m-etiqueta">Me deben</span><b>{quetzales(falta)}</b><small>{tiendaDebe > 0 ? `incluye ${quetzales(tiendaDebe)} de pedidos de la tienda` : 'hasta fin de mes, con lo vencido'}</small></div>
-        <div className="erp-kpi peligro"><span className="m-etiqueta">Gastos del mes</span><b>{quetzales(r.gastos)}</b><small>{fijo ? 'del estudio y de cada cliente' : 'empresa, clientes, deudas y pedidos'}</small></div>
+        <div className="erp-kpi peligro"><span className="m-etiqueta">Gastos del mes</span><b>{quetzales(r.gastos)}</b><small>{fijo ? 'del negocio y de cada cliente' : 'empresa, clientes, deudas y pedidos'}</small></div>
         <div className="erp-kpi"><span className="m-etiqueta">Utilidad del mes</span><b className={`${r.utilidad < 0 ? ' m-negativo' : ''}`}>{quetzales(r.utilidad)}</b><small>lo que entró menos los gastos</small></div>
       </div>
 
@@ -81,7 +82,7 @@ export default function Inicio({ negocioClave }: { negocioClave?: 'dev' } = {}) 
         <section>
           <h2 className="m-seccion-titulo">Presupuesto del mes</h2>
           {lineas.length === 0 ? (
-            <div className="m-vacio c-vacio-chico"><b>Sin presupuesto este mes</b><span>Ponlo en <Link to={fijo ? '/dev/presupuesto' : '/presupuestos'}>{fijo ? 'Presupuesto' : 'Presupuestos'}</Link>.</span></div>
+            <div className="m-vacio c-vacio-chico"><b>Sin presupuesto este mes</b><span>Ponlo en <Link to={negocioClave ? `/${negocioClave}/presupuesto` : '/presupuestos'}>{fijo ? 'Presupuesto' : 'Presupuestos'}</Link>.</span></div>
           ) : (
             <ul className="c-lista-presupuesto">
               {lineas.map((l) => (
@@ -105,7 +106,7 @@ export default function Inicio({ negocioClave }: { negocioClave?: 'dev' } = {}) 
                   <span className="c-fila-botones"><EstadoCobro c={c} /><b className="m-cifra">{quetzales(c.saldo)}</b></span>
                 </li>
               ))}
-              <li className="c-lista-pie"><Link to={fijo ? '/dev/cobros' : '/cobros'} className="c-enlace">Ver todo lo que me deben</Link></li>
+              <li className="c-lista-pie"><Link to={negocioClave ? `/${negocioClave}/cobros` : '/cobros'} className="c-enlace">Ver todo lo que me deben</Link></li>
             </ul>
           )}
         </section>
@@ -114,7 +115,7 @@ export default function Inicio({ negocioClave }: { negocioClave?: 'dev' } = {}) 
       <section>
         <div className="c-ficha-cabeza">
           <h2 className="m-seccion-titulo">Pagos que recibí</h2>
-          <Link to={fijo ? '/dev/pagos' : '/pagos'} className="m-btn m-btn-secundario m-btn-sm" title="Abre el historial completo de pagos recibidos">Ver todos</Link>
+          <Link to={negocioClave ? `/${negocioClave}/pagos` : '/pagos'} className="m-btn m-btn-secundario m-btn-sm" title="Abre el historial completo de pagos recibidos">Ver todos</Link>
         </div>
         {ultimos.length === 0 ? <div className="m-vacio c-vacio-chico"><b>Todavía no hay pagos</b></div> : (
           <ul className="c-lista-saldos">
@@ -128,7 +129,7 @@ export default function Inicio({ negocioClave }: { negocioClave?: 'dev' } = {}) 
         )}
       </section>
 
-      {m.clientes.length === 0 && (
+      {!fijo && m.clientes.length === 0 && (
         <section className="m-tarjeta c-primeros">
           <h2 className="m-seccion-titulo">Para empezar</h2>
           <ol>

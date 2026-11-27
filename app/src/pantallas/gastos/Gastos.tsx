@@ -1,3 +1,4 @@
+import type { ClaveEstudio } from '../../lib/estudio'
 import { porcentaje } from '../../lib/totales'
 import Pasos from '../../componentes/Pasos'
 import { CalendarCheck, Pencil, Plus, Trash2 } from 'lucide-react'
@@ -23,7 +24,7 @@ import PorCliente from './PorCliente'
 
 type Vista = 'gastos' | 'fijos' | 'clientes'
 
-export default function Gastos({ negocioClave }: { negocioClave?: 'dev' | 'canela' | 'salario' } = {}) {
+export default function Gastos({ negocioClave }: { negocioClave?: ClaveEstudio | 'canela' | 'salario' } = {}) {
   const m = useModelo()
   const { guardar, insertar } = useDatos()
   const avisar = useAvisar()
@@ -71,7 +72,7 @@ export default function Gastos({ negocioClave }: { negocioClave?: 'dev' | 'canel
       <Pestanas etiqueta="Ver" valor={vista} onCambio={setVista} opciones={[
         { valor: 'gastos', nombre: 'Gastos del mes', cuenta: delMes.length },
         { valor: 'fijos', nombre: 'Gastos fijos', cuenta: fijosNeg.filter((x) => x.activo).length },
-        ...(negocioClave && negocioClave !== 'dev' ? [] : [{ valor: 'clientes' as Vista, nombre: 'Costo y ganancia por cliente' }]),
+        ...(negocioClave === 'canela' || negocioClave === 'salario' ? [] : [{ valor: 'clientes' as Vista, nombre: 'Costo y ganancia por cliente' }]),
       ]} />
 
       {vista === 'gastos' && (

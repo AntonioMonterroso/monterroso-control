@@ -1,3 +1,4 @@
+import type { ClaveEstudio } from '../../lib/estudio'
 import { porcentaje } from '../../lib/totales'
 import Pasos from '../../componentes/Pasos'
 import SelectBuscable from '../../componentes/SelectBuscable'
@@ -61,7 +62,7 @@ function Sub({ s }: { s: ReturnType<typeof subtotales> }) {
   )
 }
 
-export default function Cobros({ negocioClave }: { negocioClave?: 'dev' } = {}) {
+export default function Cobros({ negocioClave }: { negocioClave?: ClaveEstudio } = {}) {
   const m = useModelo()
   const { guardar } = useDatos()
   const avisar = useAvisar()
@@ -189,7 +190,7 @@ export default function Cobros({ negocioClave }: { negocioClave?: 'dev' } = {}) 
         <div className="erp-kpi"><span className="m-etiqueta">Me deben en total</span><b>{quetzales(totalSaldo(todos))}</b><small>{pendientes(todos).length} {pendientes(todos).length === 1 ? 'cobro' : 'cobros'}</small></div>
         <div className={`erp-kpi${vencido > 0 ? ' peligro' : ''}`}><span className="m-etiqueta">Vencido</span><b className={vencido > 0 ? 'm-negativo' : undefined}>{quetzales(vencido)}</b><small>{todos.filter((c) => c.estado === 'vencido').length} vencidos</small></div>
         <div className="erp-kpi"><span className="m-etiqueta">Falta de este mes</span><b>{quetzales(porCobrarMes)}</b><small>{pendientes(delMes).length} {pendientes(delMes).length === 1 ? 'cobro' : 'cobros'}</small></div>
-        <div className="erp-kpi exito"><span className="m-etiqueta">Entró este mes</span><b>{quetzales(cobrado)}</b><small><Link to={fijo ? '/dev/pagos' : '/pagos'} className="c-enlace">{pagosMes.length} {pagosMes.length === 1 ? 'pago' : 'pagos'} · ver</Link></small></div>
+        <div className="erp-kpi exito"><span className="m-etiqueta">Entró este mes</span><b>{quetzales(cobrado)}</b><small><Link to={negocioClave ? `/${negocioClave}/pagos` : '/pagos'} className="c-enlace">{pagosMes.length} {pagosMes.length === 1 ? 'pago' : 'pagos'} · ver</Link></small></div>
       </div>
 
       {vencido > 0 && filtro !== 'vencidos' && (

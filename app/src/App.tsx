@@ -61,9 +61,9 @@ function Contenido() {
       <AplicarSolo />
       <Routes>
         <Route path="/" element={<Inicio key="i-todos" />} />
-        <Route path="/clientes" element={<Clientes />} />
+        <Route path="/clientes" element={<Clientes key="cl-dev" negocioClave="dev" />} />
         <Route path="/clientes/:id" element={<ClienteFicha />} />
-        <Route path="/proyectos" element={<Proyectos />} />
+        <Route path="/proyectos" element={<Proyectos key="pr-dev" negocioClave="dev" />} />
         <Route path="/proyectos/:id" element={<ProyectoFicha />} />
         <Route path="/desarrollo" element={<Desarrollo />} />
         <Route path="/documentos" element={<Documentos />} />
@@ -80,6 +80,20 @@ function Contenido() {
         <Route path="/dev/pagos" element={<PagosRecibidos key="r-dev" negocioClave="dev" />} />
         <Route path="/dev/gastos" element={<Gastos key="g-dev" negocioClave="dev" />} />
         <Route path="/dev/presupuesto" element={<Presupuestos key="p-dev" negocioClave="dev" />} />
+        <Route path="/musica" element={<Inicio key="i-musica" negocioClave="musica" />} />
+        <Route path="/musica/cobros" element={<Cobros key="c-musica" negocioClave="musica" />} />
+        <Route path="/musica/pagos" element={<PagosRecibidos key="r-musica" negocioClave="musica" />} />
+        <Route path="/musica/gastos" element={<Gastos key="g-musica" negocioClave="musica" />} />
+        <Route path="/musica/presupuesto" element={<Presupuestos key="p-musica" negocioClave="musica" />} />
+        <Route path="/musica/clientes" element={<Clientes key="cl-musica" negocioClave="musica" />} />
+        <Route path="/musica/proyectos" element={<Proyectos key="pr-musica" negocioClave="musica" />} />
+        <Route path="/diseno" element={<Inicio key="i-diseno" negocioClave="diseno" />} />
+        <Route path="/diseno/cobros" element={<Cobros key="c-diseno" negocioClave="diseno" />} />
+        <Route path="/diseno/pagos" element={<PagosRecibidos key="r-diseno" negocioClave="diseno" />} />
+        <Route path="/diseno/gastos" element={<Gastos key="g-diseno" negocioClave="diseno" />} />
+        <Route path="/diseno/presupuesto" element={<Presupuestos key="p-diseno" negocioClave="diseno" />} />
+        <Route path="/diseno/clientes" element={<Clientes key="cl-diseno" negocioClave="diseno" />} />
+        <Route path="/diseno/proyectos" element={<Proyectos key="pr-diseno" negocioClave="diseno" />} />
         <Route path="/cobros" element={<Cobros key="c-todos" />} />
         <Route path="/pagos" element={<PagosRecibidos key="r-todos" />} />
         <Route path="/cuentas" element={<Cuentas />} />

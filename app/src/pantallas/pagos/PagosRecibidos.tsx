@@ -1,3 +1,4 @@
+import type { ClaveEstudio } from '../../lib/estudio'
 import { X } from 'lucide-react'
 import MenuMas from '../../componentes/MenuMas'
 import RegistrarPago from './RegistrarPago'
@@ -30,7 +31,7 @@ function rangoDe(p: Periodo, desde: string, hasta: string): [string, string] {
   return ['0000-01-01', '9999-12-31']
 }
 
-export default function PagosRecibidos({ negocioClave }: { negocioClave?: 'dev' | 'canela' | 'salario' }) {
+export default function PagosRecibidos({ negocioClave }: { negocioClave?: ClaveEstudio | 'canela' | 'salario' }) {
   const m = useModelo()
   const todas = useEntradas()
   const n = useNombres()
