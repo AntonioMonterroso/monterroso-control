@@ -9,6 +9,7 @@ import { nombreMes } from '../lib/fechas'
 import { notificar } from '../lib/notificar'
 import { guardarTemaEnUsuario, temaApi, traerTemaDelUsuario } from '../lib/tema'
 import Temas from './Temas'
+import Asistente from './Asistente'
 import LogoStudio from './Logo'
 import { rutaAviso } from '../pantallas/desarrollo/ParaNoOlvidar'
 
@@ -337,6 +338,7 @@ export default function Marco({ children }: { children: ReactNode }) {
         </div>
       </nav>
       <Temas abierta={temas} onCambio={temaCambio} onCerrar={() => setTemas(false)} />
+      <Asistente />
       <main className="m-contenido" id="contenido">
         {prueba && <div className="m-franja c-franja-prueba">Modo de prueba: lo que guardes aquí vive solo en este navegador y no toca la base.</div>}
         {donde.enlace && (

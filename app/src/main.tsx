@@ -4,6 +4,7 @@ import App from './App'
 import './marca.css'
 import './app.css'
 import './erp.css'
+import './asistente.css'
 import { instalarCopiarMonto } from './lib/copiarMonto'
 
 instalarCopiarMonto()

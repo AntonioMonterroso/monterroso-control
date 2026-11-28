@@ -36,7 +36,9 @@ export function guardarUltimoDestino(v: string) {
   try { localStorage.setItem('mc_ultimo_destino', v) } catch { void 0 }
 }
 
-export function VentanaPago({ cobro, varios, onCerrar, onHecho }: { cobro?: Cobro | null; varios?: Cobro[] | null; onCerrar: () => void; onHecho?: () => void }) {
+export interface InicialPago { fecha?: string; monto?: number; forma?: string; destino?: string; nota?: string }
+
+export function VentanaPago({ cobro, varios, inicial, onCerrar, onHecho }: { cobro?: Cobro | null; varios?: Cobro[] | null; inicial?: InicialPago; onCerrar: () => void; onHecho?: () => void }) {
   const esc = useEscribir()
   const m = useModelo()
   const { almacen } = useDatos()
@@ -60,7 +62,7 @@ export function VentanaPago({ cobro, varios, onCerrar, onHecho }: { cobro?: Cobr
   const clave = lista.map((c) => c.clave).join('|')
   useEffect(() => {
     if (!abierta) return
-    setFecha(hoy); setMonto(uno ? uno.saldo.toFixed(2) : ''); setForma('transferencia'); setDestino(leerUltimoDestino()); setReferencia(''); setNota(''); setUsarSaldo(true); setComp(SIN_COMPROBANTES); setOcupado(false)
+    setFecha(inicial?.fecha ?? hoy); setMonto(uno ? (inicial?.monto ?? uno.saldo).toFixed(2) : ''); setForma(inicial?.forma ?? 'transferencia'); setDestino(inicial?.destino ?? leerUltimoDestino()); setReferencia(''); setNota(inicial?.nota ?? ''); setUsarSaldo(true); setComp(SIN_COMPROBANTES); setOcupado(false)
   }, [clave, abierta])
   const total = uno ? leerMonto(monto) ?? 0 : lista.reduce((t, c) => t + c.saldo, 0)
   const pendienteTotal = lista.reduce((t, c) => t + c.saldo, 0)
