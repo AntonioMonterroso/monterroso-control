@@ -1,3 +1,4 @@
+import { capsResumen } from '../resumen'
 import type { Escena, GuiaVideo } from '../tipos'
 
 const pantalla = (): Escena => ({
@@ -18,8 +19,9 @@ const guia: GuiaVideo = {
   ruta: '/tienda',
   menu: 'Resumen',
   caps: [
+    ...capsResumen('Hogar Canela', 'Tu tienda en Shopify con Dropi'),
     {
-      t: '1 · El mes de la tienda',
+      t: '4 · El mes de la tienda',
       e0: pantalla(),
       tomas: [
         { t: 'Arriba ves las ventas, el costo, la utilidad y lo que falta cobrar de los pedidos del mes.', en: 'kpis', ms: 4200 },

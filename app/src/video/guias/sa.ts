@@ -1,3 +1,4 @@
+import { capsResumen } from '../resumen'
 import type { Escena, GuiaVideo } from '../tipos'
 
 const ficha = (): Escena => ({
@@ -21,8 +22,9 @@ const guia: GuiaVideo = {
   ruta: '/sa',
   menu: 'Resumen',
   caps: [
+    ...capsResumen('Sociedad anónima', 'Dev Studio, Música, Diseño y los gastos generales'),
     {
-      t: '1 · La ficha',
+      t: '4 · La ficha',
       e0: ficha(),
       tomas: [
         { t: 'Toca «Llenar la ficha» o «Editar» para poner los datos de la escritura, el registro y el representante.', en: 'editar', clic: true, luego: { hoja: { titulo: 'Ficha de la sociedad', piezas: [{ k: 'campos', g: 'form', l: [{ et: 'Denominación social', v: 'Ejemplo, Sociedad Anónima' }, { et: 'Número de escritura constitutiva', v: '25' }, { et: 'Representante legal', v: '' }] }], pie: [{ t: 'Cancelar' }, { t: 'Guardar', g: 'guardar', p: true }] } } },
@@ -32,7 +34,7 @@ const guia: GuiaVideo = {
       ],
     },
     {
-      t: '2 · Documentos',
+      t: '5 · Documentos',
       e0: ficha(),
       tomas: [
         { t: 'En «Documentos» toca «Documento» para agregar la escritura, patentes o nombramiento con su archivo.', en: 'documento' },

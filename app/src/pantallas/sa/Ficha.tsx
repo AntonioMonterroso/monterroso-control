@@ -1,4 +1,4 @@
-import Pasos from '../../componentes/Pasos'
+import ResumenNegocio from '../../componentes/ResumenNegocio'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import FormRegistro, { type Campo } from '../../componentes/FormRegistro'
@@ -55,13 +55,7 @@ export default function FichaSA() {
   ]
   const negociosSA = m.negocios.filter((n) => NEGOCIOS_SA.includes(n.clave))
   return (
-    <>
-      <div className="c-cabeza">
-        <div><span className="m-etiqueta">Sociedad anónima</span><h1 className="erp-titulo">{s?.denominacion || 'Ficha de la sociedad'}</h1><Pasos /></div>
-        <div className="c-cabeza-acciones">
-          <button type="button" className="m-btn m-btn-primario" onClick={() => setEditar(true)} title="Editar los datos de la sociedad"><Pencil size={16} aria-hidden /> {s ? 'Editar' : 'Llenar la ficha'}</button>
-        </div>
-      </div>
+    <ResumenNegocio clave="sa" titulo={s?.denominacion || 'Ficha de la sociedad'} accion={<button type="button" className="m-btn m-btn-primario" onClick={() => setEditar(true)} title="Editar los datos de la sociedad"><Pencil size={16} aria-hidden /> {s ? 'Editar' : 'Llenar la ficha'}</button>}>
       {!s && <div className="m-vacio m-tarjeta"><b>La ficha está vacía</b><span>Llénala cuando tengas la escritura. Mientras no haya fecha de inicio de operaciones, todo sigue a tu nombre.</span></div>}
       {s && bloques.map(([t, filas]) => (
         <section key={t} className="m-tarjeta c-ficha">
@@ -112,6 +106,6 @@ export default function FichaSA() {
         onGuardar={async (x) => { await guardar('ctl_sa_documentos', d?.id ?? null, x) }}
         onCerrar={() => setDoc(null)} />
       {q.ventana}
-    </>
+    </ResumenNegocio>
   )
 }

@@ -1,3 +1,4 @@
+import { capsResumen } from '../resumen'
 import type { Escena, GuiaVideo, Pieza } from '../tipos'
 
 const historial: Pieza = {
@@ -37,8 +38,9 @@ const guia: GuiaVideo = {
   ruta: '/salario',
   menu: 'Resumen',
   caps: [
+    ...capsResumen('Salario', 'Tu sueldo fijo y lo que gastas de él'),
     {
-      t: '1 · Tu salario',
+      t: '4 · Tu salario',
       e0: pantalla(),
       tomas: [
         { t: 'Toca «Poner salario» la primera vez; después el botón dice «Registrar aumento» para un aumento desde un mes.', en: 'aumento', clic: true, luego: { hoja: { titulo: 'Registrar aumento', piezas: [{ k: 'campos', g: 'form', l: [{ et: 'Desde el mes de', v: '01 dic 2026' }, { et: 'Día de pago', v: '30' }, { et: 'Salario bruto', v: 'Q 6,500.00' }, { et: 'Descuentos (IGSS, ISR, otros)', v: 'Q 700.00' }] }], pie: [{ t: 'Cancelar', g: 'cancelar' }, { t: 'Guardar', p: true }] } } },
@@ -48,7 +50,7 @@ const guia: GuiaVideo = {
       ],
     },
     {
-      t: '2 · Marcar recibido',
+      t: '5 · Marcar recibido',
       e0: pantalla(),
       tomas: [
         { t: 'En «Últimos 12 meses» ves cada mes con su fecha de pago y estado.', en: 'meses' },

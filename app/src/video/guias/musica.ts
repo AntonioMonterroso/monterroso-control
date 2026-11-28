@@ -1,6 +1,6 @@
 import type { GuiaVideo } from '../tipos'
-import base from './inicio'
+import { capsResumen } from '../resumen'
 
-const guia: GuiaVideo = { ...base, ruta: '/musica', menu: 'Resumen' }
+const guia: GuiaVideo = { ruta: '/musica', menu: 'Resumen', caps: capsResumen('Música', 'Tus clientes y proyectos de música') }
 
 export default guia

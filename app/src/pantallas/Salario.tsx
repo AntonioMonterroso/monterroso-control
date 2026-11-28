@@ -1,4 +1,4 @@
-import Pasos from '../componentes/Pasos'
+import ResumenNegocio from '../componentes/ResumenNegocio'
 import { HandCoins, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useQuitar } from '../lib/quitar'
 import { useState } from 'react'
@@ -33,11 +33,7 @@ export default function Salario() {
   const cobroDe = (p: string) => cobrosSal.find((c) => c.clave === `s:${p}`)
   const a = editar && editar !== 'nuevo' ? editar : null
   return (
-    <>
-      <div className="c-cabeza">
-        <div><span className="m-etiqueta">Salario</span><h1 className="erp-titulo">Mi salario</h1><Pasos /></div>
-        <button type="button" className="m-btn m-btn-primario" onClick={() => setEditar('nuevo')} title={actual ? 'Registrar un aumento desde un mes' : 'Poner tu salario'}><Plus size={16} aria-hidden /> {actual ? 'Registrar aumento' : 'Poner salario'}</button>
-      </div>
+    <ResumenNegocio clave="salario" titulo="Tu salario" accion={<button type="button" className="m-btn m-btn-primario" onClick={() => setEditar('nuevo')} title={actual ? 'Registrar un aumento desde un mes' : 'Poner tu salario'}><Plus size={16} aria-hidden /> {actual ? 'Registrar aumento' : 'Poner salario'}</button>}>
       <p className="m-texto-suave c-intro">Es un monto fijo que se repite solo cada mes: sale en Cobros como «por recibir» y, al marcarlo recibido, entra a los ingresos. Cuando te suben el sueldo, registras el aumento desde ese mes. Sus gastos (transporte, tokens de API, internet…) se registran en <Link to="/gastos" className="c-enlace">Gastos</Link> con el negocio «Salario».</p>
       <div className="erp-kpis">
         <div className="erp-kpi exito"><span className="m-etiqueta">Neto mensual</span><b>{quetzales(netoSalario(actual))}</b><small>{actual ? `bruto ${quetzales(actual.bruto)} menos ${quetzales(actual.descuentos)}` : 'sin salario registrado'}</small></div>
@@ -102,6 +98,6 @@ export default function Salario() {
         onGuardar={async (d) => { await guardar('ctl_salario_aumentos', a?.id ?? null, { ...d, desde: `${String(d.desde).slice(0, 7)}-01` }) }}
         onCerrar={() => setEditar(null)}
       />
-    </>
+    </ResumenNegocio>
   )
 }
